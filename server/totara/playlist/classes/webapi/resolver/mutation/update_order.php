@@ -23,8 +23,10 @@
 namespace totara_playlist\webapi\resolver\mutation;
 
 use core\webapi\execution_context;
+use core\webapi\middleware\require_advanced_feature;
+use core\webapi\middleware\require_login;
 use core\webapi\mutation_resolver;
-use totara_core\advanced_feature;
+use core\webapi\resolver\has_middleware;
 use totara_engage\access\access_manager;
 use totara_playlist\local\helper;
 use totara_playlist\playlist;
@@ -32,8 +34,7 @@ use totara_playlist\playlist;
 /**
  * Mutation resolver for updating card order.
  */
-final class update_order implements mutation_resolver {
-
+final class update_order implements mutation_resolver, has_middleware {
     /**
      * Mutation resolver.
      *
@@ -44,23 +45,33 @@ final class update_order implements mutation_resolver {
     public static function resolve(array $args, execution_context $ec): bool {
         global $DB, $USER;
 
-        require_login();
-        advanced_feature::require('engage_resources');
+        if (!$ec->has_relevant_context()) {
+            $ec->set_relevant_context(\context_user::instance($USER->id));
+        }
 
-        $playlist = playlist::from_id($args['id']);
+        $playlist = playlist::from_id($args['id'], true);
         $actor = (int)$USER->id;
 
         // If current user is not owner of playlist and not admin, exception has to be fired.
-        if ($actor !== $playlist->get_userid() && access_manager::can_manage_engage($actor)) {
+        if ($actor !== $playlist->get_userid() && access_manager::can_manage_engage($playlist->get_context())) {
             throw new \coding_exception('Current user can not order cards in the playlist');
         }
 
-        // As sortorder starts from 1, order needs to plus 1.
-        $order = ++$args['order'];
-
         $transaction = $DB->start_delegated_transaction();
-        helper::swap_card_sort_order($playlist, $args['instanceid'], $order);
+        helper::swap_card_sort_order($playlist, $args['instanceid'], $args['order']);
         $transaction->allow_commit();
+
         return true;
     }
+
+    /**
+     * @inheritDoc
+     */
+    public static function get_middleware(): array {
+        return [
+            new require_login(),
+            new require_advanced_feature('engage_resources'),
+        ];
+    }
+
 }

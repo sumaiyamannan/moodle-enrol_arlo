@@ -23,15 +23,17 @@
 namespace totara_engage\webapi\resolver\mutation;
 
 use core\webapi\execution_context;
+use core\webapi\middleware\require_advanced_feature;
+use core\webapi\middleware\require_login;
 use core\webapi\mutation_resolver;
-use totara_core\advanced_feature;
+use core\webapi\resolver\has_middleware;
 use totara_engage\share\provider as share_provider;
 use totara_engage\share\manager as share_manager;
 
 /**
  * Resolver for unshare recipient.
  */
-final class unshare implements mutation_resolver {
+final class unshare implements mutation_resolver, has_middleware {
 
     /**
      * @param array $args
@@ -39,10 +41,10 @@ final class unshare implements mutation_resolver {
      * @return bool
      */
     public static function resolve(array $args, execution_context $ec): bool {
-        global $DB;
-
-        require_login();
-        advanced_feature::require('engage_resources');
+        global $DB, $USER;
+        if (!$ec->has_relevant_context()) {
+            $ec->set_relevant_context(\context_user::instance($USER->id));
+        }
 
         $transaction = $DB->start_delegated_transaction();
 
@@ -50,14 +52,26 @@ final class unshare implements mutation_resolver {
         $item_id = $args['item_id'];
         $component = $args['component'];
 
+        // Get the share provider for the specific component.
         $provider = share_provider::create($component);
         $instance = $provider->get_item_instance($item_id);
 
+        // Unshare the item for this recipient.
         share_manager::unshare($recipient_id, $instance);
 
         $transaction->allow_commit();
 
         return true;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public static function get_middleware(): array {
+        return [
+            new require_login(),
+            new require_advanced_feature('engage_resources'),
+        ];
     }
 
 }

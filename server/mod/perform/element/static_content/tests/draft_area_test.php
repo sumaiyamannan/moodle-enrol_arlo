@@ -30,13 +30,14 @@ use mod_perform\models\activity\section_element;
 use performelement_static_content\static_content;
 use totara_webapi\phpunit\webapi_phpunit_helper;
 
-class performelement_static_content_draft_area_testcase extends advanced_testcase {
+require_once(__DIR__ . '/static_content_testcase.php');
+
+class performelement_static_content_draft_area_testcase extends performelement_static_content_testcase {
 
     use webapi_phpunit_helper;
 
     public function test_post_create_update(): void {
         global $USER;
-
         $this->setAdminUser();
 
         // Generate some data.
@@ -45,22 +46,14 @@ class performelement_static_content_draft_area_testcase extends advanced_testcas
         $activity = $perform_generator->create_activity_in_container();
         $section = $perform_generator->create_section($activity);
 
-        // First get unused draft id.
-        $draft_id = file_get_unused_draft_itemid();
-        $context = \context_user::instance($USER->id);
-
-        // Create a file in draft area.
-        $data['wekaDoc'] = $this->create_document($draft_id, $context);
-        $data['docFormat'] = 'FORMAT_JSON_EDITOR';
-        $data['format'] = 'HTML';
-        $data['draftId'] = $draft_id;
-        $data = json_encode($data);
+        // Get element data.
+        $data = $this->create_element_data();
 
         // Create element.
         $default_context = context_coursecat::instance(perform::get_default_category_id());
         $element = element::create(
             $default_context,
-            'short_text',
+            'static_content',
             'test element 1 title',
             'test identifier',
             $data,
@@ -97,7 +90,7 @@ class performelement_static_content_draft_area_testcase extends advanced_testcas
 
         // Confirm that the draft area contains the image added to element content.
         $fs = get_file_storage();
-        $file_exist = $fs->file_exists($context->id,
+        $file_exist = $fs->file_exists(\context_user::instance($USER->id)->id,
             'user',
             'draft',
             $draft_id,
@@ -105,47 +98,6 @@ class performelement_static_content_draft_area_testcase extends advanced_testcas
             'test_file.png'
         );
         $this->assertEquals(true, $file_exist);
-    }
-
-    private function create_document(int $draft_id, context $context): string {
-        // Create a draft image.
-        $draft = new \stdClass();
-        $draft->filename = "test_file.png";
-        $draft->filepath = '/';
-        $draft->component = 'user';
-        $draft->filearea = 'draft';
-        $draft->itemid = $draft_id;
-        $draft->contextid = $context->id;
-
-        $fs = get_file_storage();
-        $file = $fs->create_file_from_string($draft, 'blah blah');
-        $url = \moodle_url::make_draftfile_url(
-            $draft_id,
-            $draft->filepath,
-            $draft->filename
-        )->out(false);
-
-        return json_encode(
-            [
-                'type' => 'doc',
-                'content' => [
-                    [
-                        'type' => 'attachments',
-                        'content' => [
-                            [
-                                'type' => 'attachment',
-                                'attrs' => [
-                                    'url' => $url,
-                                    'filename' => $draft->filename,
-                                    'size' => $file->get_filesize(),
-                                ]
-                            ]
-                        ]
-                    ]
-                ]
-            ],
-            JSON_UNESCAPED_SLASHES
-        );
     }
 
 }
