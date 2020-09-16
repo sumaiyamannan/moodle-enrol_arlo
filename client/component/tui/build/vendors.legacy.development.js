@@ -1,4 +1,4 @@
-(window["webpackJsonp"] = window["webpackJsonp"] || []).push([["tui/build/vendors.legacy.development"],{
+(window["webpackJsonp"] = window["webpackJsonp"] || []).push([["vendors"],{
 
 /***/ "./node_modules/@babel/runtime/helpers/arrayLikeToArray.js":
 /*!*****************************************************************!*\

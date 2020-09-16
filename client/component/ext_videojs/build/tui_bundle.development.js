@@ -1,66 +1,6 @@
 /******/ (function(modules) { // webpackBootstrap
-/******/ 	// install a JSONP callback for chunk loading
-/******/ 	function webpackJsonpCallback(data) {
-/******/ 		var chunkIds = data[0];
-/******/ 		var moreModules = data[1];
-/******/ 		var executeModules = data[2];
-/******/
-/******/ 		// add "moreModules" to the modules object,
-/******/ 		// then flag all "chunkIds" as loaded and fire callback
-/******/ 		var moduleId, chunkId, i = 0, resolves = [];
-/******/ 		for(;i < chunkIds.length; i++) {
-/******/ 			chunkId = chunkIds[i];
-/******/ 			if(Object.prototype.hasOwnProperty.call(installedChunks, chunkId) && installedChunks[chunkId]) {
-/******/ 				resolves.push(installedChunks[chunkId][0]);
-/******/ 			}
-/******/ 			installedChunks[chunkId] = 0;
-/******/ 		}
-/******/ 		for(moduleId in moreModules) {
-/******/ 			if(Object.prototype.hasOwnProperty.call(moreModules, moduleId)) {
-/******/ 				modules[moduleId] = moreModules[moduleId];
-/******/ 			}
-/******/ 		}
-/******/ 		if(parentJsonpFunction) parentJsonpFunction(data);
-/******/
-/******/ 		while(resolves.length) {
-/******/ 			resolves.shift()();
-/******/ 		}
-/******/
-/******/ 		// add entry modules from loaded chunk to deferred list
-/******/ 		deferredModules.push.apply(deferredModules, executeModules || []);
-/******/
-/******/ 		// run deferred modules when all chunks ready
-/******/ 		return checkDeferredModules();
-/******/ 	};
-/******/ 	function checkDeferredModules() {
-/******/ 		var result;
-/******/ 		for(var i = 0; i < deferredModules.length; i++) {
-/******/ 			var deferredModule = deferredModules[i];
-/******/ 			var fulfilled = true;
-/******/ 			for(var j = 1; j < deferredModule.length; j++) {
-/******/ 				var depId = deferredModule[j];
-/******/ 				if(installedChunks[depId] !== 0) fulfilled = false;
-/******/ 			}
-/******/ 			if(fulfilled) {
-/******/ 				deferredModules.splice(i--, 1);
-/******/ 				result = __webpack_require__(__webpack_require__.s = deferredModule[0]);
-/******/ 			}
-/******/ 		}
-/******/
-/******/ 		return result;
-/******/ 	}
-/******/
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
-/******/
-/******/ 	// object to store loaded and loading chunks
-/******/ 	// undefined = chunk not loaded, null = chunk preloaded/prefetched
-/******/ 	// Promise = chunk loading, 0 = chunk loaded
-/******/ 	var installedChunks = {
-/******/ 		"ext_videojs.development": 0
-/******/ 	};
-/******/
-/******/ 	var deferredModules = [];
 /******/
 /******/ 	// The require function
 /******/ 	function __webpack_require__(moduleId) {
@@ -139,18 +79,9 @@
 /******/ 	// __webpack_public_path__
 /******/ 	__webpack_require__.p = "";
 /******/
-/******/ 	var jsonpArray = window["webpackJsonp"] = window["webpackJsonp"] || [];
-/******/ 	var oldJsonpFunction = jsonpArray.push.bind(jsonpArray);
-/******/ 	jsonpArray.push = webpackJsonpCallback;
-/******/ 	jsonpArray = jsonpArray.slice();
-/******/ 	for(var i = 0; i < jsonpArray.length; i++) webpackJsonpCallback(jsonpArray[i]);
-/******/ 	var parentJsonpFunction = oldJsonpFunction;
 /******/
-/******/
-/******/ 	// add entry module to deferred list
-/******/ 	deferredModules.push(["./client/component/ext_videojs/src/tui.json","tui/build/vendors.development"]);
-/******/ 	// run deferred modules when ready
-/******/ 	return checkDeferredModules();
+/******/ 	// Load entry module and return exports
+/******/ 	return __webpack_require__(__webpack_require__.s = "./client/component/ext_videojs/src/tui.json");
 /******/ })
 /************************************************************************/
 /******/ ({
@@ -318,6 +249,17 @@ eval("/**\n * Copyright 2013 vtt.js Contributors\n *\n * Licensed under the Apac
 /***/ (function(module, exports) {
 
 eval("/**\n * Copyright 2013 vtt.js Contributors\n *\n * Licensed under the Apache License, Version 2.0 (the \"License\");\n * you may not use this file except in compliance with the License.\n * You may obtain a copy of the License at\n *\n *   http://www.apache.org/licenses/LICENSE-2.0\n *\n * Unless required by applicable law or agreed to in writing, software\n * distributed under the License is distributed on an \"AS IS\" BASIS,\n * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.\n * See the License for the specific language governing permissions and\n * limitations under the License.\n */\n\nvar scrollSetting = {\n  \"\": true,\n  \"up\": true\n};\n\nfunction findScrollSetting(value) {\n  if (typeof value !== \"string\") {\n    return false;\n  }\n  var scroll = scrollSetting[value.toLowerCase()];\n  return scroll ? value.toLowerCase() : false;\n}\n\nfunction isValidPercentValue(value) {\n  return typeof value === \"number\" && (value >= 0 && value <= 100);\n}\n\n// VTTRegion shim http://dev.w3.org/html5/webvtt/#vttregion-interface\nfunction VTTRegion() {\n  var _width = 100;\n  var _lines = 3;\n  var _regionAnchorX = 0;\n  var _regionAnchorY = 100;\n  var _viewportAnchorX = 0;\n  var _viewportAnchorY = 100;\n  var _scroll = \"\";\n\n  Object.defineProperties(this, {\n    \"width\": {\n      enumerable: true,\n      get: function() {\n        return _width;\n      },\n      set: function(value) {\n        if (!isValidPercentValue(value)) {\n          throw new Error(\"Width must be between 0 and 100.\");\n        }\n        _width = value;\n      }\n    },\n    \"lines\": {\n      enumerable: true,\n      get: function() {\n        return _lines;\n      },\n      set: function(value) {\n        if (typeof value !== \"number\") {\n          throw new TypeError(\"Lines must be set to a number.\");\n        }\n        _lines = value;\n      }\n    },\n    \"regionAnchorY\": {\n      enumerable: true,\n      get: function() {\n        return _regionAnchorY;\n      },\n      set: function(value) {\n        if (!isValidPercentValue(value)) {\n          throw new Error(\"RegionAnchorX must be between 0 and 100.\");\n        }\n        _regionAnchorY = value;\n      }\n    },\n    \"regionAnchorX\": {\n      enumerable: true,\n      get: function() {\n        return _regionAnchorX;\n      },\n      set: function(value) {\n        if(!isValidPercentValue(value)) {\n          throw new Error(\"RegionAnchorY must be between 0 and 100.\");\n        }\n        _regionAnchorX = value;\n      }\n    },\n    \"viewportAnchorY\": {\n      enumerable: true,\n      get: function() {\n        return _viewportAnchorY;\n      },\n      set: function(value) {\n        if (!isValidPercentValue(value)) {\n          throw new Error(\"ViewportAnchorY must be between 0 and 100.\");\n        }\n        _viewportAnchorY = value;\n      }\n    },\n    \"viewportAnchorX\": {\n      enumerable: true,\n      get: function() {\n        return _viewportAnchorX;\n      },\n      set: function(value) {\n        if (!isValidPercentValue(value)) {\n          throw new Error(\"ViewportAnchorX must be between 0 and 100.\");\n        }\n        _viewportAnchorX = value;\n      }\n    },\n    \"scroll\": {\n      enumerable: true,\n      get: function() {\n        return _scroll;\n      },\n      set: function(value) {\n        var setting = findScrollSetting(value);\n        // Have to check for false as an empty string is a legal value.\n        if (setting === false) {\n          throw new SyntaxError(\"An invalid or illegal string was specified.\");\n        }\n        _scroll = setting;\n      }\n    }\n  });\n}\n\nmodule.exports = VTTRegion;\n\n\n//# sourceURL=webpack:///./node_modules/videojs-vtt.js/lib/vttregion.js?");
+
+/***/ }),
+
+/***/ "./node_modules/webpack/buildin/global.js":
+/*!***********************************!*\
+  !*** (webpack)/buildin/global.js ***!
+  \***********************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+eval("var g;\n\n// This works in non-strict mode\ng = (function() {\n\treturn this;\n})();\n\ntry {\n\t// This works if eval is allowed (see CSP)\n\tg = g || new Function(\"return this\")();\n} catch (e) {\n\t// This works if the window reference is available\n\tif (typeof window === \"object\") g = window;\n}\n\n// g can still be undefined, but nothing to do about it...\n// We return undefined, instead of nothing here, so it's\n// easier to handle this case. if(!global) { ...}\n\nmodule.exports = g;\n\n\n//# sourceURL=webpack:///(webpack)/buildin/global.js?");
 
 /***/ }),
 

@@ -28,6 +28,8 @@ use engage_survey\event\survey_reshared;
 use engage_survey\event\survey_shared;
 use engage_survey\repository\survey_question_repository;
 use engage_survey\result\vote_result;
+use engage_survey\totara_engage\resource\input\answer_length_validator;
+use engage_survey\totara_engage\resource\input\question_length_validator;
 use totara_engage\access\access_manager;
 use totara_engage\answer\answer_factory;
 use engage_survey\totara_engage\resource\input\question_validator;
@@ -44,6 +46,11 @@ use engage_survey\result\question as question_stat;
  * Engage resource for survey
  */
 final class survey extends resource_item {
+    /**
+     * @var string
+     */
+    public const REACTION_AREA = 'media';
+
     /**
      * @var survey_entity
      */
@@ -220,7 +227,11 @@ final class survey extends resource_item {
                     [
                         'required-on-add' => true,
                         'required-on-update' => false,
-                        'validators' => [new question_validator()],
+                        'validators' => [
+                            new question_validator(),
+                            new question_length_validator(75),
+                            new answer_length_validator(80),
+                        ],
                     ]
                 )
             ]
@@ -366,16 +377,20 @@ final class survey extends resource_item {
      */
     public function can_update(int $userid): bool {
         $owner = $this->get_userid();
-        if ($owner == $userid) {
+        $context = $this->get_context();
+
+        if (access_manager::can_manage_engage($context, $userid)) {
             return true;
         }
 
-        if (access_manager::can_manage_engage($this->get_context(), $userid)) {
-            return true;
+        if (!has_capability('engage/survey:update', $context, $userid)) {
+            // If the user does not have any capability to do update, then we will
+            // skip it from here.
+            return false;
         }
 
-        $context = \context_user::instance($owner);
-        return has_capability('engage/survey:update', $context, $userid);
+        // Otherwise, user can only update the survey when user is the owner of this very survey.
+        return $owner == $userid;
     }
 
     /**

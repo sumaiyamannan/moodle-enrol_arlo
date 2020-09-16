@@ -16,19 +16,24 @@
   @module container_workspace
 -->
 <template>
-  <article class="tui-workspaceMemberCard">
+  <article
+    class="tui-workspaceMemberCard"
+    :aria-describedby="owner ? $id('lozenge') : false"
+  >
     <MiniProfileCard
       :display="userCardDisplay"
       :label-id="labelId"
       :drop-down-button-aria-label="
         $str('more_action_for_member', 'container_workspace', userFullName)
       "
+      :aria-describedby="owner ? $id('lozenge') : false"
       class="tui-workspaceMemberCard__profileCard"
     >
       <template v-slot:tag>
         <Lozenge
           v-if="owner"
-          :text="$str('admin', 'moodle')"
+          :id="$id('lozenge')"
+          :text="$str('owner', 'container_workspace')"
           type="neutral"
           class="tui-workspaceMemberCard__profileCard__tag"
         />
@@ -158,14 +163,14 @@ export default {
 <lang-strings>
   {
     "moodle": [
-      "remove",
-      "admin"
+      "remove"
     ],
     "container_workspace": [
       "error:remove_user",
       "delete_warning_title",
       "remove_member_warning_msg",
-      "more_action_for_member"
+      "more_action_for_member",
+      "owner"
     ]
   }
 </lang-strings>

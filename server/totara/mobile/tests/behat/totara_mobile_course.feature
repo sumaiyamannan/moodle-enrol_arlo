@@ -33,6 +33,9 @@ Feature: Test the totara_mobile_course query
     And I click on "Submit Request 2" "button"
     Then I should not see "Coding error detected" in the "#response2" "css_element"
     And I should see "\"fullname\": \"Course 1\"" in the "#response2" "css_element"
+    And I should see "\"summary\": \"Test course 1" in the "#response2" "css_element"
+    And I should see "\"summaryformat\": \"HTML\"" in the "#response2" "css_element"
+    And I should see "\"format\": \"topics\"" in the "#response2" "css_element"
     And I should see "\"criteria\": []" in the "#response2" "css_element"
     And I should see "\"statuskey\": \"notyetstarted\"" in the "#response2" "css_element"
     And I should see "\"native\": false" in the "#response2" "css_element"
@@ -60,7 +63,7 @@ Feature: Test the totara_mobile_course query
     And I click on "link1" "link" in the "#response2" "css_element"
     Then I should see "26) File request HTTP ok."
     And I should see "27) File received image/png"
-    And I should see "28) File response 3312 bytes"
+    And I should see the mobile file response on line "28"
 
   Scenario: Test the query with a course that has a custom default image
     When I navigate to "Course default settings" node in "Site administration >  Courses"

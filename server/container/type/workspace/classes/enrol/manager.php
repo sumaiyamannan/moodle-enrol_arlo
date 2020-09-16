@@ -123,7 +123,7 @@ final class manager {
         );
 
         if (null === $record || false === $record) {
-            throw enrol_exception::on_self_enrol($this->workspace->fullname);
+            throw enrol_exception::on_self_enrol();
         }
 
         $context = $this->workspace->get_context();
@@ -209,7 +209,7 @@ final class manager {
             $context = $this->workspace->get_context();
 
             if (!has_capability('container/workspace:invite', $context, $actor_id)) {
-                throw enrol_exception::on_manual_enrol($this->workspace->fullname);
+                throw enrol_exception::on_manual_enrol();
             }
         }
 

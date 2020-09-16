@@ -28,6 +28,9 @@ use totara_engage\exception\resource_exception;
 use core\webapi\execution_context;
 use totara_engage\timeview\time_view;
 use totara_webapi\graphql;
+use core\json_editor\node\paragraph;
+use core\json_editor\node\mention;
+use core\json_editor\node\text;
 
 class engage_article_update_testcase extends advanced_testcase {
     /**
@@ -51,7 +54,7 @@ class engage_article_update_testcase extends advanced_testcase {
         $this->assertEquals($data['content'], $resource->get_content());
 
         $result = $resource->can_update($user->id);
-        
+
         $data['name'] = "Bolobala xxoxo";
         $data['access'] = access::PUBLIC;
         $resource->update($data);
@@ -155,5 +158,132 @@ class engage_article_update_testcase extends advanced_testcase {
 
         $this->assertEquals('Bolobala', $article['resource']['name']);
         $this->assertEquals('PUBLIC', $article['resource']['access']);
+    }
+
+    /**
+     * @return void
+     */
+    public function test_article_name_validation(): void {
+        $user = $this->getDataGenerator()->create_user();
+        $this->setUser($user);
+
+        $article = article::create(
+            [
+                'name' => "Hello world",
+                'content' => "test content",
+                'timeview' => time_view::LESS_THAN_FIVE
+            ]
+        );
+
+        $data['name'] = "TfIKQ8IXoycfkcbGaav6B1XVVibwtIYTlyGIOiJukJ4xVOVd4dlbDBnVioSmM5LwdJ7lEv7MCNax";
+        $this->assertEquals(76, strlen('TfIKQ8IXoycfkcbGaav6B1XVVibwtIYTlyGIOiJukJ4xVOVd4dlbDBnVioSmM5LwdJ7lEv7MCNax'));
+
+        $this->expectException('coding_exception');
+        $this->expectExceptionMessage("Validation run for property 'name' has been failed");
+        $article->update($data, $user->id);
+    }
+
+    /**
+     * @return void
+     */
+    public function test_article_name_validation_via_graphql(): void {
+        $user = $this->getDataGenerator()->create_user();
+        $this->setUser($user);
+
+        $article = article::create(
+            [
+                'name' => "Hello world",
+                'content' => "Abcde eee",
+                'timeview' => time_view::LESS_THAN_FIVE
+            ]
+        );
+
+        $args = [
+            'resourceid' => $article->get_id(),
+            'name' => "TfIKQ8IXoycfkcbGaav6B1XVVibwtIYTlyGIOiJukJ4xVOVd4dlbDBnVioSmM5LwdJ7lEv7MCNax",
+            'access' => 'PUBLIC',
+            'format' => FORMAT_PLAIN
+        ];
+
+        $ec = execution_context::create('ajax', 'engage_article_update_article');
+        $result = graphql::execute_operation($ec, $args);
+
+        $this->assertNotEmpty($result->errors);
+        $error = current($result->errors);
+        $this->assertEquals(
+            "Coding error detected, it must be fixed by a programmer: Validation run for property 'name' has been failed",
+            $error->getMessage()
+        );
+    }
+
+    /**
+     * @return void
+     */
+    public function test_update_api_as_guest() {
+        $generator = $this->getDataGenerator();
+
+        // Set up the user as this user will be passed as argument to the function
+        // so that we can see if this user is going thru all of the process or not.
+        $user_one = $generator->create_user();
+
+        // But we're going to do it as the guest, to bump into user id mismatching and global USER problems.
+        $this->setGuestUser();
+        $guest_user = guest_user();
+
+        $original_content = json_encode([
+            'type' => 'doc',
+            'content' => [paragraph::create_json_node_from_text("This is document")]
+        ]);
+
+        /** @var article $article */
+        $article = article::create(
+            [
+                'name' => "Hello world",
+                'content' => $original_content,
+                'format' => FORMAT_JSON_EDITOR
+
+            ],
+            $user_one->id
+        );
+
+        self::assertInstanceOf(article::class, $article);
+        self::assertEquals("Hello world", $article->get_name());
+        self::assertEquals($original_content, $article->get_content());
+
+        $article_owner_id = $article->get_userid();
+        self::assertEquals($user_one->id, $article_owner_id);
+        self::assertNotEquals($guest_user->id, $article_owner_id);
+
+        // Update the article as same user actor, but the content to be mention the second user.
+        // We are using the mention content because we want to be sure that the content processor
+        // is working as expected.
+        $user_two = $generator->create_user();
+        $mention_content = json_encode([
+            'type' => 'doc',
+            'content' => [
+                [
+                    'type' => paragraph::get_type(),
+                    'content' => [
+                        text::create_json_node_from_text("This is article is about user two"),
+                        mention::create_raw_node($user_two->id)
+                    ]
+                ]
+            ]
+        ]);
+
+        $article->update(
+            [
+                'content' => $mention_content,
+                'format' => FORMAT_JSON_EDITOR
+            ],
+            $user_one->id
+        );
+
+        self::assertEquals($mention_content, $article->get_content());
+        self::assertNotEquals($original_content, $article->get_content());
+
+        // User one is still the owner of this article.
+        self::assertEquals($user_one->id, $article_owner_id);
+        self::assertNotEquals($guest_user->id, $article_owner_id);
     }
 }

@@ -44,7 +44,6 @@ use totara_playlist\event\playlist_updated;
 use totara_playlist\exception\playlist_exception;
 use totara_playlist\local\helper;
 use totara_playlist\local\image_processor;
-use totara_playlist\repository\playlist_repository;
 use totara_playlist\repository\playlist_resource_repository;
 use totara_engage\resource\resource_item;
 use totara_topic\provider\topic_provider;
@@ -56,6 +55,7 @@ use totara_topic\topic_helper;
 final class playlist implements accessible, shareable {
     /**
      * Playlist image file area
+     * @var string
      */
     public const IMAGE_AREA = 'image';
 
@@ -65,9 +65,16 @@ final class playlist implements accessible, shareable {
     public const RATING_MAX = 5;
 
     /**
-     * Area used for rating
+     * Area used for rating.
+     * @var string
      */
     public const RATING_AREA = 'playlist';
+
+    /**
+     * Area used for comment.
+     * @var string
+     */
+    public const COMMENT_AREA = 'comment';
 
     /**
      * @var playlist_entity
@@ -201,7 +208,7 @@ final class playlist implements accessible, shareable {
         $entity->save();
         $playlist = new static($entity);
 
-        $event = playlist_created::from_playlist($playlist);
+        $event = playlist_created::from_playlist($playlist, $userid);
         $event->trigger();
 
         return $playlist;
@@ -263,7 +270,7 @@ final class playlist implements accessible, shareable {
         $rating_mangager = rating_manager::instance($this->playlist->id, 'totara_playlist', static::RATING_AREA);
         $rating_mangager->delete();
 
-        $event = playlist_deleted::from_playlist($this);
+        $event = playlist_deleted::from_playlist($this, $userid);
         $event->trigger();
 
         share_manager::delete($this->playlist->id, static::get_resource_type());
@@ -300,25 +307,7 @@ final class playlist implements accessible, shareable {
             return true;
         }
 
-        if (CONTEXT_USER == $context->contextlevel) {
-            if ($this->playlist->userid != $userid) {
-                return false;
-            }
-
-            return has_capability('totara/playlist:delete', $context, $userid);
-        } else {
-            if (CONTEXT_COURSE == $context->contextlevel) {
-                // todo: Add container check here
-            }
-
-            debugging(
-                "Invalid context level '{$context->contextlevel}' being added as original place for " .
-                "playlist '{$this->playlist->id}'",
-                DEBUG_DEVELOPER
-            );
-        }
-
-        return true;
+        return $this->playlist->userid == $userid;
     }
 
     /**
@@ -750,7 +739,7 @@ final class playlist implements accessible, shareable {
 
         // Note: we don't care much about the processes after everything related to the playlist
         // had done updated. Hence no transaction from here.
-        $event = playlist_updated::from_playlist($this);
+        $event = playlist_updated::from_playlist($this, $userid);
         $event->trigger();
     }
 
@@ -794,13 +783,15 @@ final class playlist implements accessible, shareable {
      * @inheritDoc
      */
     public function can_share(int $userid): bool {
-        // First check if user is allowed to share playlists.
-        $context = \context_user::instance($userid);
-        if (!has_capability('totara/playlist:share', $context, $userid)) {
-            return false;
+        $context = $this->get_context();
+
+        if (access_manager::can_manage_engage($context, $userid)) {
+            return true;
         }
 
-        return true;
+        // Every one can share the playlist. Note that the intention of this function
+        // does not check whether the playlist is able to be shared or not.
+        return has_capability('totara/playlist:share', $context, $userid);
     }
 
     /**

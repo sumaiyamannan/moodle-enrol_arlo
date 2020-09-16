@@ -22,7 +22,6 @@
  */
 
 use totara_engage\access\access;
-use totara_engage\generator\engage_generator;
 use engage_survey\totara_engage\resource\survey;
 use totara_engage\answer\answer_type;
 use core_user\totara_engage\share\recipient\user as user_recipient;
@@ -31,7 +30,7 @@ use totara_engage\share\share as share_model;
 use totara_engage\share\shareable;
 use totara_topic\provider\topic_provider;
 
-final class engage_survey_generator extends component_generator_base implements engage_generator {
+final class engage_survey_generator extends component_generator_base {
     /**
      * @var array
      */
@@ -55,6 +54,10 @@ final class engage_survey_generator extends component_generator_base implements 
 
         if (null === $question) {
             $question = $this->generate_question();
+
+            if (core_text::strlen($question) > 75) {
+                $question = \core_text::substr($question, 0, 75);
+            }
         }
 
         if (empty($options)) {
@@ -94,10 +97,16 @@ final class engage_survey_generator extends component_generator_base implements 
     }
 
     /**
-     * @return void
+     * @param string|null $question
+     * @param array $options
+     * @param int $answer_type
+     *
+     * @return survey
      */
-    public function generate_random(): void {
-        $this->create_survey();
+    public function create_public_survey(?string $question = null, array $options = [],
+                                         int $answer_type = answer_type::MULTI_CHOICE): survey {
+        $parameters = ['access' => access::PUBLIC];
+        return $this->create_survey($question, $options, $answer_type, $parameters);
     }
 
     /**

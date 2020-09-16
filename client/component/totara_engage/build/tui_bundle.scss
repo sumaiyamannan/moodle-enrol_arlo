@@ -543,8 +543,13 @@
   }
 }
 
+:root {
+  --contributionModal-min-height: 744px;
+  --contributionContent-min-height: 574px;
+}
 .tui-contributeModal {
   position: relative;
+  min-height: var(--contributionModal-min-height);
 
   &__adderContainer {
     margin-bottom: var(--gap-2);
@@ -586,8 +591,8 @@
     flex-direction: column;
     width: 100%;
     height: 100%;
-    min-height: 510px;
-    padding: 0 var(--gap-8);
+    min-height: var(--contributionContent-min-height);
+    padding: var(--gap-8);
   }
 
   .tui-modalContent__title {
@@ -597,16 +602,9 @@
   .tui-modalContent__content {
     display: flex;
     flex-direction: column;
-    min-height: 510px;
+    min-height: var(--contributionContent-min-height);
     margin-top: 0;
     padding: 0;
-  }
-
-  .tui-tabContent {
-    position: relative;
-    flex: 1;
-    min-height: 400px;
-    padding: var(--gap-8) 0;
   }
 
   .tui-modalContent__header-title {
@@ -785,7 +783,7 @@
 
       &:hover,
       &:focus {
-        background-color: var(--color-state-highlight);
+        background-color: var(--color-state-highlight-neutral);
       }
     }
 
@@ -919,6 +917,14 @@
 }
 
 .tui-shareSetting {
+  &__buttonLabel {
+    &-hoverContent {
+      text-align: center;
+      -webkit-hyphens: none;
+          -ms-hyphens: none;
+              hyphens: none;
+    }
+  }
   &__recipient {
     display: flex;
     flex-direction: column;

@@ -1,4 +1,4 @@
-(window["webpackJsonp"] = window["webpackJsonp"] || []).push([["tui/build/vendors.development"],{
+(window["webpackJsonp"] = window["webpackJsonp"] || []).push([["vendors"],{
 
 /***/ "./node_modules/@wry/context/lib/context.esm.js":
 /*!******************************************************!*\

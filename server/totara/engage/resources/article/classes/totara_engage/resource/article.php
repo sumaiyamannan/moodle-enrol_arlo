@@ -38,6 +38,7 @@ use totara_engage\entity\engage_resource;
 use totara_engage\link\builder;
 use totara_engage\resource\input\access_validator;
 use totara_engage\resource\input\definition;
+use totara_engage\resource\input\name_length_validator;
 use totara_engage\resource\input\topic_validator;
 use totara_engage\resource\resource_item;
 use totara_engage\share\share as share_model;
@@ -60,6 +61,11 @@ final class article extends resource_item implements time_viewable {
      * @var string
      */
     public const IMAGE_AREA = 'image';
+
+    /**
+     * @var string
+     */
+    public const REACTION_AREA = 'media';
 
     /**
      * @var article_entity
@@ -215,11 +221,12 @@ final class article extends resource_item implements time_viewable {
     /**
      * @param article|resource_item $item
      * @param array                 $data
+     * @param int|null              $user_id
      *
      * @return void
      */
-    protected static function post_create(resource_item $item, array $data): void {
-        $event = article_created::from_article($item);
+    protected static function post_create(resource_item $item, array $data, ?int $user_id = null): void {
+        $event = article_created::from_article($item, $user_id);
         $event->trigger();
     }
 
@@ -280,7 +287,10 @@ final class article extends resource_item implements time_viewable {
                 'name',
                 [
                     'required-on-add' => true,
-                    'validators' => [new name_validator()]
+                    'validators' => [
+                        new name_validator(),
+                        new name_length_validator(75)
+                    ]
                 ]
             ),
             definition::from_parameters(
@@ -378,11 +388,13 @@ final class article extends resource_item implements time_viewable {
     }
 
     /**
-     * Triggering event for update
+     * Triggering event for update.
+     *
+     * @param int|null $user_id     The actor's id who is responsible for the whole process.
      * @return void
      */
-    protected function post_update(): void {
-        $event = article_updated::from_article($this);
+    protected function post_update(?int $user_id = null): void {
+        $event = article_updated::from_article($this, $user_id);
         $event->trigger();
     }
 

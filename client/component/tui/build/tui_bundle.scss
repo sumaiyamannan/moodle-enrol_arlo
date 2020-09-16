@@ -1695,6 +1695,56 @@ html {
   }
 }
 
+.tui-errorModal {
+  &__detailsToggle {
+    display: block;
+    margin-top: var(--gap-4);
+    text-decoration: none;
+
+    &:hover,
+    &:focus {
+      text-decoration: none;
+    }
+  }
+
+  &__buttons {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  &__navButtons {
+    display: flex;
+    align-items: center;
+    @include tui-stack-horizontal(var(--gap-4));
+  }
+
+  &__details {
+    margin-top: var(--gap-3);
+  }
+
+  &__label {
+    @include tui-font-heading-x-small();
+  }
+
+  &__context {
+    color: var(--color-text-hint);
+  }
+
+  &__extraInfo {
+    white-space: pre-wrap;
+  }
+
+  &__stackPre {
+    margin: var(--gap-2) 0 0 0;
+    padding: var(--gap-4);
+    color: var(--color-neutral-7);
+    word-break: break-word;
+    background-color: var(--color-neutral-3);
+    border-radius: 4px;
+  }
+}
+
 .tui-errorDisplay {
   padding: var(--gap-8);
   background: var(--color-neutral-3);
@@ -3860,6 +3910,13 @@ input[type].tui-formInput {
   }
 }
 
+.tui-componentLoading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--gap-3);
+}
+
 .tui-loader {
   $loading-fullpage: #{&}--fullpage;
 
@@ -3919,9 +3976,9 @@ input[type].tui-formInput {
   display: inline-flex;
   padding: 0 var(--gap-2) calc(var(--gap-1) / 2);
   color: var(--color-neutral-1);
-  @include tui-font-heading-label-small();
-  font-weight: 500;
-  line-height: 1.2;
+  @include tui-font-body-x-small();
+  font-weight: 700;
+  line-height: 1.25;
   background: var(--color-prompt-info);
   border-radius: var(--border-radius-small);
 

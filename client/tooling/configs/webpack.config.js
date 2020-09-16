@@ -23,42 +23,13 @@ const webpack = require('webpack');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const VueLoaderPlugin = require('vue-loader/lib/plugin');
 const FixStyleOnlyEntriesPlugin = require('webpack-fix-style-only-entries');
-const scanEntry = require('../webpack/scan_entry');
+const scanTuiJson = require('../webpack/scan_tui_json');
 const { rootDir, arrayUnique } = require('../lib/common');
 const tuiExternals = require('../webpack/tui_externals');
 const TuiAliasPlugin = require('../webpack/TuiAliasPlugin');
 const babelConfigs = require('./babel');
 const globSync = require('tiny-glob/sync');
 const cssVarExtract = require('./webpack/css_var_extract');
-
-let entryCache = null;
-const getEntry = () =>
-  entryCache ? entryCache : (entryCache = scanEntry({ rootDir }));
-
-const isCoreBundleChunk = function(x) {
-  return x.name === 'tui' || x.name.startsWith('tui.');
-};
-
-const separateNameAndSuffix = function(name) {
-  let suffix = '';
-  let dotIndex = name.indexOf('.');
-  if (dotIndex !== -1) {
-    suffix = name.substr(dotIndex);
-    name = name.substr(0, dotIndex);
-  }
-  return {
-    name: name,
-    suffix: suffix,
-  };
-};
-
-const getTuiDirs = () => {
-  let entry = getEntry();
-  const tuiDirs = arrayUnique(
-    ...Object.values(entry).map(x => (Array.isArray(x) ? x : [x]))
-  ).map(x => path.dirname(x));
-  return tuiDirs;
-};
 
 /**
  * Create a webpack config with the specified options.
@@ -77,33 +48,32 @@ const getTuiDirs = () => {
  *     If present, appended to the name of output files with a dot.
  */
 function createConfig({
-  name,
+  targetVariant,
   mode,
   watch,
   define,
   analyze,
   primary,
   bundleTag,
+  tuiComponent,
+  tuiJson,
 }) {
-  let entry = getEntry();
+  const name = tuiComponent + '_' + targetVariant;
 
-  // update output filenames base on config options
-  entry = Object.entries(entry).reduce((acc, [key, val]) => {
-    const tagSuffix = bundleTag ? '.' + bundleTag : '';
-    const modeSuffix = mode == 'production' ? '' : '.' + mode;
-    acc[key + tagSuffix + modeSuffix] = val;
-    return acc;
-  }, {});
+  // update output filenames based on config options
+  const tagSuffix = bundleTag ? '.' + bundleTag : '';
+  const modeSuffix = mode == 'production' ? '' : '.' + mode;
+  const suffix = tagSuffix + modeSuffix;
+  const entry = {
+    tui_bundle: tuiJson,
+  };
 
   const plugins = [
     new VueLoaderPlugin(),
-    new MiniCssExtractPlugin({
-      moduleFilename: function({ name }) {
-        let bits = separateNameAndSuffix(name);
-        name = bits.name + '/build/tui_bundle' + bits.suffix + '.scss';
-        return name;
-      },
-    }),
+    primary &&
+      new MiniCssExtractPlugin({
+        moduleFilename: ({ name }) => name + suffix + '.scss',
+      }),
     new webpack.DefinePlugin({
       'process.env.LEGACY_BUNDLE': 'false',
       ...define,
@@ -125,102 +95,122 @@ function createConfig({
       new (require('webpack-bundle-analyzer').BundleAnalyzerPlugin)(),
   ].filter(Boolean);
 
-  const rules = [
-    {
-      test: /[/\\]tui\.json$/,
-      type: 'javascript/auto',
-      use: {
+  const rules = [];
+  const ruleIds = [];
+
+  const addRule = (id, rule) => {
+    // normalize use
+    rule.use = rule.use.map(x => {
+      const useEntry = typeof x == 'string' ? { loader: x } : x;
+      if (!useEntry.options) useEntry.options = {};
+      return useEntry;
+    });
+
+    rules.push(rule);
+    ruleIds.push(id);
+  };
+
+  const addRuleBefore = (before, id, rule) => {
+    const index = ruleIds.indexOf(before);
+    if (index == -1) {
+      return addRule(id, rule);
+    }
+    rules.splice(index, 0, rule);
+    ruleIds.splice(index, 0, id);
+  };
+
+  const removeRule = id => {
+    const index = ruleIds.indexOf(id);
+    if (index == -1) {
+      return;
+    }
+    rules.splice(index, 1);
+    ruleIds.splice(index, 1);
+  };
+
+  const getRule = id => {
+    return rules[ruleIds.indexOf(id)];
+  };
+
+  const getRuleIds = () => [...ruleIds];
+
+  addRule('tui.json', {
+    test: /[/\\]tui\.json$/,
+    type: 'javascript/auto',
+    use: [
+      {
         loader: require.resolve('../webpack/tui_json_loader'),
         options: { silent: false },
       },
-    },
-    {
-      test: /\.js$/,
-      exclude: /node_modules/,
-      use: [
-        babelConfigs[name] && {
-          loader: 'babel-loader',
-          options: babelConfigs[name],
+    ],
+  });
+
+  addRule('js', {
+    test: /\.js$/,
+    exclude: /node_modules/,
+    use: [
+      babelConfigs[targetVariant] && {
+        loader: 'babel-loader',
+        options: babelConfigs[targetVariant],
+      },
+    ].filter(Boolean),
+  });
+
+  addRule('vue', {
+    test: /\.vue$/,
+    use: [
+      require.resolve('../webpack/tui_vue_loader'),
+      {
+        loader: 'vue-loader',
+        options: {
+          productionMode: mode === 'production',
+          // having prettify enabled increases build time around 40%
+          prettify: false,
         },
-      ].filter(Boolean),
-    },
-    {
-      test: /\.vue$/,
-      use: [require.resolve('../webpack/tui_vue_loader'), 'vue-loader'],
-    },
-    {
-      test: /\.s?css$/,
-      use: primary
-        ? [
-            MiniCssExtractPlugin.loader,
-            // css-loader cannot parse SCSS
-            {
-              loader: require.resolve('../webpack/css_raw_loader'),
-              options: { sourceMap: true },
-            },
-            {
-              loader: 'postcss-loader',
-              options: {
-                parser: 'postcss-scss',
-                plugins: [require('autoprefixer')],
-                sourceMap: true,
-              },
-            },
-          ]
-        : ['null-loader'],
-    },
-    {
-      test: /\.(graphql|gql)$/,
-      exclude: /node_modules/,
-      loader: require.resolve('../webpack/graphql_loader'),
-    },
-    {
-      test: /icons[/\\]internal[/\\]obj[/\\].*\.svg/,
-      type: 'javascript/auto',
-      loader: require.resolve('../webpack/icons_svg_loader'),
-    },
-    {
-      resourceQuery: /blockType=lang-strings/,
-      loader: require.resolve('../webpack/tui_lang_strings_loader'),
-    },
-  ].filter(Boolean);
-
-  // code splitting configuration
-  const cacheGroups = {
-    vendors: {
-      test(module, chunks) {
-        // only split code used by the core bundle
-        if (!chunks.some(isCoreBundleChunk)) {
-          return false;
-        }
-        if (
-          module.nameForCondition &&
-          /[\\/]node_modules[\\/]/.test(module.nameForCondition())
-        ) {
-          return true;
-        }
-        return false;
       },
-      name(module, chunks) {
-        const bundleChunk = chunks.find(isCoreBundleChunk);
-        if (!bundleChunk) {
-          return false;
-        }
-        let vendorName = 'tui/build/vendors';
-        if (bundleChunk.name !== 'tui') {
-          // '' or '.legacy' or '.development' or '.legacy.development'
-          const index = bundleChunk.name.indexOf('.');
-          if (index === -1) {
-            throw new Error('Unexpected chunk name ' + bundleChunk.name);
-          }
-          vendorName = 'tui/build/vendors' + bundleChunk.name.slice(index);
-        }
-        return vendorName;
-      },
-    },
-  };
+    ],
+  });
 
-  return {
+  addRule('scss', {
+    test: /\.s?css$/,
+    use: primary
+      ? [
+          MiniCssExtractPlugin.loader,
+          // css-loader cannot parse SCSS
+          {
+            loader: require.resolve('../webpack/css_raw_loader'),
+            options: { sourceMap: true },
+          },
+          {
+            loader: 'postcss-loader',
+            options: {
+              parser: 'postcss-scss',
+              plugins: [require('autoprefixer')],
+              sourceMap: true,
+            },
+          },
+        ]
+      : ['null-loader'],
+  });
+
+  addRule('graphql', {
+    test: /\.(graphql|gql)$/,
+    exclude: /node_modules/,
+    use: [require.resolve('../webpack/graphql_loader')],
+  });
+
+  addRule('svg-icon-obj', {
+    test: /icons[/\\]internal[/\\]obj[/\\].*\.svg/,
+    type: 'javascript/auto',
+    use: [require.resolve('../webpack/icons_svg_loader')],
+  });
+
+  addRule('block-lang-strings', {
+    resourceQuery: /blockType=lang-strings/,
+    use: [require.resolve('../webpack/tui_lang_strings_loader')],
+  });
+
+  const config = {
     name,
     entry,
     mode,
@@ -236,13 +226,12 @@ function createConfig({
     performance: { hints: false },
 
     output: {
-      path: path.resolve(rootDir, 'client/component'),
-      filename: pathData => {
-        let bits = separateNameAndSuffix(pathData.chunk.name);
-        name = bits.name + '/build/tui_bundle' + bits.suffix + '.js';
-        return name;
-      },
-      chunkFilename: '[name].js',
+      path: path.resolve(
+        rootDir,
+        'client/component/' + tuiComponent + '/build'
+      ),
+      filename: '[name]' + suffix + '.js',
+      chunkFilename: '[name]' + suffix + '.js',
     },
 
     resolve: {
@@ -258,14 +247,47 @@ function createConfig({
     },
 
     plugins,
-
-    optimization: {
-      splitChunks: {
-        chunks: 'all',
-        cacheGroups,
-      },
-    },
   };
+
+  const overrideContext = {
+    webpack,
+    mode,
+    targetVariant: targetVariant,
+    targetVariantIsPrimary: primary,
+    configs: {
+      babel: babelConfigs[targetVariant],
+    },
+    component: tuiComponent,
+    suffix,
+    addRule,
+    addRuleBefore,
+    removeRule,
+    getRule,
+    getRuleIds,
+  };
+
+  return overrideConfig('webpackTui', tuiJson, overrideContext, config);
+}
+
+function overrideConfig(key, tuiJson, overrideContext, config) {
+  const configFile = path.join(
+    rootDir,
+    path.dirname(tuiJson),
+    'build.config.js'
+  );
+  if (!fs.existsSync(configFile)) {
+    return config;
+  }
+  const buildConfig = require(configFile);
+  if (buildConfig && buildConfig[key]) {
+    config = buildConfig[key](config, overrideContext);
+    if (config && !config.name) {
+      throw new Error(
+        `Custom config from ${overrideContext.compoennt} does not have a name`
+      );
+    }
+  }
+  return config;
 }
 
 /**
@@ -275,7 +297,7 @@ function createConfig({
  * @return {object}
  */
 function modernConfig(opts) {
-  return createConfig({ ...opts, name: 'modern', primary: true });
+  return createConfig({ ...opts, targetVariant: 'modern', primary: true });
 }
 
 /**
@@ -287,7 +309,7 @@ function modernConfig(opts) {
 function legacyConfig(opts) {
   return createConfig({
     ...opts,
-    name: 'legacy',
+    targetVariant: 'legacy',
     bundleTag: 'legacy',
     define: { ...opts.define, 'process.env.LEGACY_BUNDLE': 'true' },
   });
@@ -299,7 +321,7 @@ function legacyConfig(opts) {
  * @param {object} opts
  * @return {object}
  */
-function scssToScssConfig({ mode, watch }) {
+function scssToScssConfig({ mode, watch }, { getTuiDirs }) {
   const tuiDirs = getTuiDirs();
 
   const scssEntry = tuiDirs.reduce((acc, dir) => {
@@ -311,7 +333,7 @@ function scssToScssConfig({ mode, watch }) {
         }
         const out = path.join(
           dir.replace(
-            /^\.[\/\\]client[\/\\]component[\/\\]([^\/\\]+)[\/\\]src/,
+            /^\.[/\\]client[/\\]component[/\\]([^/\\]+)[/\\]src/,
             './client/component/$1/build'
           ),
           'global_styles',
@@ -377,15 +399,88 @@ function scssToScssConfig({ mode, watch }) {
   };
 }
 
+/**
+ * Generate webpack config.
+ *
+ * @param {object} opts
+ * @param {?bool} opts.legacy false if legacy disabled, undefined or true if legacy enabled
+ * @returns {object[]}
+ */
 module.exports = function(opts) {
   if (!opts.mode) {
     opts = { ...opts, mode: 'production' };
   }
+
+  let configOpts = {
+    mode: opts.mode,
+    analyze: opts.analyze,
+  };
+
+  const tuiJsonFiles = scanTuiJson({
+    rootDir,
+    components: opts.tuiComponents,
+    vendor: opts.vendor,
+  });
+
+  const getTuiDirs = () => {
+    return arrayUnique(Object.values(tuiJsonFiles)).map(x => path.dirname(x));
+  };
+
   const configs = [
-    modernConfig(opts),
-    legacyConfig(opts),
-    scssToScssConfig(opts),
-    cssVarExtract(opts, { getTuiDirs }),
+    scssToScssConfig(configOpts, { getTuiDirs }),
+    cssVarExtract(configOpts, { getTuiDirs }),
   ];
+
+  Object.entries(tuiJsonFiles).forEach(([tuiComponent, path]) => {
+    configs.push(modernConfig({ ...configOpts, tuiComponent, tuiJson: path }));
+    if (opts.legacy !== false) {
+      configs.push(
+        legacyConfig({ ...configOpts, tuiComponent, tuiJson: path })
+      );
+    }
+  });
+
+  const customConfigOpts = {
+    webpack,
+    mode: opts.mode,
+    legacyEnabled: opts.legacy !== false,
+  };
+
+  // add custom webpack builds
+  Object.entries(tuiJsonFiles).forEach(([tuiComponent, tuiJson]) => {
+    const tuiDir = path.dirname(tuiJson);
+    const configPath = path.join(tuiDir, 'build.config.js');
+    const fullConfigPath = path.join(rootDir, configPath);
+    if (!fs.existsSync(fullConfigPath)) {
+      return;
+    }
+    const buildConfig = require(fullConfigPath);
+    if (buildConfig.webpack) {
+      const result = buildConfig.webpack({
+        ...customConfigOpts,
+        component: tuiComponent,
+      });
+      if (result) {
+        if (Array.isArray(result)) {
+          result.forEach(config => {
+            if (!config.name) {
+              throw new Error(
+                `Custom config from ${configPath} does not have a name`
+              );
+            }
+            configs.push(config);
+          });
+        } else {
+          if (!result.name) {
+            throw new Error(
+              `Custom config from ${configPath} does not have a name`
+            );
+          }
+          configs.push(result);
+        }
+      }
+    }
+  });
+
   return configs.filter(Boolean);
 };

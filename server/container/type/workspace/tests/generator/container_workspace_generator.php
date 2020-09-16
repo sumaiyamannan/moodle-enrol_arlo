@@ -22,7 +22,6 @@
  */
 use container_workspace\workspace;
 use container_workspace\local\workspace_helper;
-use totara_engage\generator\engage_generator;
 use container_workspace\discussion\discussion;
 use core\json_editor\node\paragraph;
 use container_workspace\discussion\discussion_helper;
@@ -33,7 +32,7 @@ use container_workspace\totara_engage\share\recipient\library as library_recipie
 /**
  * Generator for container workspace
  */
-final class container_workspace_generator extends component_generator_base implements engage_generator {
+final class container_workspace_generator extends component_generator_base {
     /**
      * @var array
      */
@@ -45,24 +44,19 @@ final class container_workspace_generator extends component_generator_base imple
     private static $discussions;
 
     /**
-     * @return void
-     */
-    public function generate_random(): void {
-        $this->create_workspace();
-    }
-
-    /**
      * @param string|null   $name
      * @param string|null   $summary
      * @param int|null      $summary_format
      * @param int|null      $owner
      * @param bool          $is_private
      * @param bool          $is_hidden
+     * @param int|null      $draft_id
      * @return workspace
      */
     public function create_workspace(?string $name = null, ?string $summary = null,
                                      ?int $summary_format = null, ?int $owner = null,
-                                     bool $is_private = false, bool $is_hidden = false): workspace {
+                                     bool $is_private = false, bool $is_hidden = false,
+                                     ?int $draft_id = null): workspace {
         global $USER;
 
         if (null === $name || '' === $name) {
@@ -83,7 +77,7 @@ final class container_workspace_generator extends component_generator_base imple
             null,
             $summary,
             $summary_format,
-            null,
+            $draft_id,
             $is_private,
             $is_hidden
         );
@@ -228,7 +222,7 @@ final class container_workspace_generator extends component_generator_base imple
     public function create_workspace_from_params(array $parameters): workspace {
         if (!isset($parameters['name']) || empty($parameters['owner'])) {
             throw new \coding_exception(
-                "Workspace name, topics and owner are required"
+                "Workspace name and owner are required"
             );
         }
 
@@ -294,5 +288,14 @@ final class container_workspace_generator extends component_generator_base imple
             $user_context = context_user::instance($userid, MUST_EXIST);
             assign_capability('container/workspace:create', $permission, $role->id, $user_context, true);
         }
+    }
+
+    /**
+     * @param workspace $workspace
+     * @param int $user_id
+     * @return member
+     */
+    public function create_self_join_member(workspace $workspace, int $user_id): member {
+        return member::join_workspace($workspace, $user_id);
     }
 }

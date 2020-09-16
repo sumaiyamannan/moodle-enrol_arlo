@@ -38,12 +38,17 @@
     <div class="tui-modalContent__content">
       <slot />
     </div>
-    <div v-if="$scopedSlots.buttons" class="tui-modalContent__footer">
-      <div class="tui-modalContent__footer-buttons">
-        <ButtonGroup>
-          <slot name="buttons" />
-        </ButtonGroup>
-      </div>
+    <div
+      v-if="$scopedSlots['footer-content'] || $scopedSlots.buttons"
+      class="tui-modalContent__footer"
+    >
+      <slot name="footer-content">
+        <div class="tui-modalContent__footer-buttons">
+          <ButtonGroup>
+            <slot name="buttons" />
+          </ButtonGroup>
+        </div>
+      </slot>
     </div>
   </div>
 </template>
@@ -73,7 +78,11 @@ export default {
   },
 
   mounted() {
-    if (!this.title && !(this.$slots.title && this.$slots.title.length > 0)) {
+    if (
+      this.titleVisible &&
+      !this.title &&
+      !(this.$slots.title && this.$slots.title.length > 0)
+    ) {
       console.error(
         '[ModalContent] You must pass either a non-empty title prop or define a non-empty title slot.'
       );
