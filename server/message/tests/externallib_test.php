@@ -23,6 +23,9 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use core_user\access_controller;
+use totara_core\advanced_feature;
+
 defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
@@ -32,6 +35,11 @@ require_once($CFG->dirroot . '/message/externallib.php');
 
 class core_message_externallib_testcase extends externallib_advanced_testcase {
 
+    private function disable_engage_features() {
+        advanced_feature::disable('engage_resources');
+        access_controller::clear_instance_cache();
+    }
+
     /**
      * Tests set up
      */
@@ -39,6 +47,10 @@ class core_message_externallib_testcase extends externallib_advanced_testcase {
         global $CFG;
 
         require_once($CFG->dirroot . '/message/lib.php');
+
+        // Engage allows several properties of users to become visible to all other users. To test that user
+        // properties are hidden when appropritate, we need to disable engage.
+        $this->disable_engage_features();
     }
 
     /**

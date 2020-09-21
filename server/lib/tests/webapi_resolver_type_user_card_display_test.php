@@ -22,13 +22,24 @@
  */
 defined('MOODLE_INTERNAL') || die();
 
+use core_user\access_controller;
 use totara_webapi\phpunit\webapi_phpunit_helper;
 use core_user\profile\user_field_resolver;
 use core_user\profile\card_display;
 use core_user\profile\display_setting;
+use totara_core\hook\manager as hook_manager;
 
 class core_webapi_resolver_type_user_card_display_testcase extends advanced_testcase {
+
     use webapi_phpunit_helper;
+
+    public function setUp(): void {
+        parent::setUp();
+
+        // Clear all the hooks so that the test can be accurate.
+        hook_manager::phpunit_replace_watchers([]);
+        access_controller::clear_instance_cache();
+    }
 
     /**
      * @return void

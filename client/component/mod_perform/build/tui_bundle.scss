@@ -287,8 +287,7 @@
 @media (min-width: $tui-screen-sm) {
   .tui-assignmentScheduleToggles {
     &__group {
-      border-right: var(--border-width-thin) solid
-        var(--color-neutral-6);
+      border-right: var(--border-width-thin) solid var(--color-neutral-6);
 
       &:last-child {
         border-right: none;
@@ -366,8 +365,7 @@
 
     &--autoSave {
       margin-top: var(--gap-4);
-      border-bottom: var(--border-width-thin) solid
-        var(--card-border-color);
+      border-bottom: var(--border-width-thin) solid var(--card-border-color);
     }
   }
 
@@ -462,43 +460,6 @@
       margin: auto 0;
       padding: var(--gap-2);
     }
-  }
-}
-
-.tui-performEditSectionContentAddElement {
-  /* Mobile Dropdown Width*/
-  @media screen and (max-width: $tui-screen-sm) {
-    width: 100%;
-  }
-
-  /* Tablet/Small Desktop Dropdown Width*/
-  @media screen and (min-width: $tui-screen-sm) and (max-width: $tui-screen-lg) {
-    width: 50%;
-  }
-
-  /* Desktop Dropdown Width*/
-  @media screen and (min-width: $tui-screen-lg) {
-    width: 30%;
-  }
-
-  & &__dropDownGroupItem {
-    font-weight: bold;
-    font-size: var(--font-size-14);
-    cursor: text;
-    pointer-events: none;
-
-    &:hover {
-      background-color: var(--dropdown-item-bg-color);
-    }
-
-    &:focus {
-      background-color: var(--dropdown-item-bg-color);
-    }
-  }
-
-  & &__dropDownItem {
-    padding-left: var(--gap-8);
-    font-size: var(--font-size-14);
   }
 }
 
@@ -1026,8 +987,7 @@
     flex-direction: row;
 
     &__userDetails {
-      border-right: var(--border-width-thin) solid
-        var(--color-neutral-5);
+      border-right: var(--border-width-thin) solid var(--color-neutral-5);
       border-bottom: none;
     }
 

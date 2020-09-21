@@ -48,7 +48,11 @@
         >
           <template v-slot:row="{ row, expand, expandState }">
             <!-- Course details expand cell -->
-            <ExpandCell :expand-state="expandState" @click="expand()" />
+            <ExpandCell
+              :aria-label="getCourseName(row)"
+              :expand-state="expandState"
+              @click="expand()"
+            />
 
             <!-- Course name cell -->
             <Cell size="9" :column-header="$str('courses', 'totara_criteria')">
@@ -65,7 +69,7 @@
                 v-if="hasProgress(row)"
                 class="tui-criteriaCourseAchievement__progress-bar"
               >
-                <Progress :value="row.course.progress" />
+                <Progress v-if="displayed" :value="row.course.progress" />
               </div>
               <div v-else class="tui-criteriaCourseAchievement__progress-empty">
                 {{ $str('not_available', 'totara_criteria') }}
@@ -148,6 +152,7 @@ export default {
       required: true,
       type: Object,
     },
+    displayed: Boolean,
   },
 
   computed: {
@@ -157,7 +162,10 @@ export default {
      * @return {Boolean}
      */
     criteriaFulfilled() {
-      return this.targetNumberOfCourses > 0 && this.completedNumberOfCourses >= this.targetNumberOfCourses;
+      return (
+        this.targetNumberOfCourses > 0 &&
+        this.completedNumberOfCourses >= this.targetNumberOfCourses
+      );
     },
 
     /**

@@ -22,6 +22,7 @@
  */
 
 use core_user\access_controller;
+use totara_core\advanced_feature;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -29,6 +30,20 @@ defined('MOODLE_INTERNAL') || die();
  * Tests covering core_user\access_controller tenant support.
  */
 class totara_tenant_core_user_access_controller_testcase extends advanced_testcase {
+
+    private function disable_engage_features() {
+        advanced_feature::disable('engage_resources');
+        access_controller::clear_instance_cache();
+    }
+
+    public function setUp(): void {
+        parent::setUp();
+
+        // Engage allows several properties of users to become visible to all other users. To test that user
+        // properties are hidden when appropritate, we need to disable engage.
+        $this->disable_engage_features();
+    }
+
     public function test_can_view_profile() {
         global $DB;
 

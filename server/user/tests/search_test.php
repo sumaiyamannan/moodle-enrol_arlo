@@ -22,6 +22,9 @@
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use core_user\access_controller;
+use totara_core\hook\manager as hook_manager;
+
 defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
@@ -49,6 +52,10 @@ class user_search_testcase extends advanced_testcase {
     public function setUp(): void {
         $this->resetAfterTest(true);
         set_config('enableglobalsearch', true);
+
+        // Remove hook's watchers so that we can have more accurate tests.
+        hook_manager::phpunit_replace_watchers([]);
+        access_controller::clear_instance_cache();
 
         $this->userareaid = \core_search\manager::generate_areaid('core_user', 'user');
 

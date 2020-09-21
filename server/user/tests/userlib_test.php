@@ -23,6 +23,9 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use core_user\access_controller;
+use totara_core\hook\manager as hook_manager;
+
 defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
@@ -37,6 +40,15 @@ require_once($CFG->dirroot.'/user/lib.php');
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class core_user_userlib_testcase extends advanced_testcase {
+
+    public function setUp(): void {
+        parent::setUp();
+
+        // Remove hook's watchers so that we can have more accurate tests.
+        hook_manager::phpunit_replace_watchers([]);
+        access_controller::clear_instance_cache();
+    }
+
     /**
      * Test user_get_user_details_courses
      */

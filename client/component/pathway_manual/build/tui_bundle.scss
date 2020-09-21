@@ -37,14 +37,14 @@
 }
 
 .tui-bulkManualRatingRateUserCompetencies {
-  margin-top: var(--gap-4);
-
-  &__filters {
-    margin-bottom: var(--gap-5);
+  & > * + * {
+    margin-top: var(--gap-5);
   }
 
-  &__frameworkGroup {
-    margin-bottom: var(--gap-5);
+  &__frameworks {
+    & > * + * {
+      margin-top: var(--gap-5);
+    }
   }
 
   &__noCompetencies {
@@ -96,7 +96,7 @@
     margin-right: var(--gap-2);
 
     &-hasComment {
-      margin-left: var(--gap-1);
+      margin-left: var(--gap-2);
     }
 
     &-noValue {
@@ -110,8 +110,8 @@
 }
 
 .tui-bulkManualRatingPopover {
-  &__scaleValues {
-    margin-bottom: var(--gap-4);
+  & > * + * {
+    margin-top: var(--gap-4);
   }
 
   &__comment,
@@ -128,7 +128,6 @@
 .tui-bulkManualRatingRoleSelector {
   display: flex;
   align-items: center;
-  margin-top: var(--gap-4);
 
   &__ratingAs {
     @include tui-font-heading-x-small;
@@ -182,6 +181,12 @@
     &-role {
       @include tui-font-heavy();
     }
+  }
+}
+
+.tui-rateCompetencies {
+  & > * + * {
+    margin-top: var(--gap-4);
   }
 }
 

@@ -33,12 +33,7 @@
         class="tui-playlistSummary__content"
         v-html="summary"
       />
-      <div
-        v-else
-        slot="content"
-        ref="content"
-        class="tui-playlistSummary__placeholder"
-      >
+      <div v-else slot="content" class="tui-playlistSummary__placeholder">
         {{ $str('adddescription', 'totara_playlist') }}
       </div>
     </InlineEditing>
@@ -64,13 +59,12 @@
 
 <script>
 import { debounce } from 'tui/util';
+import tui from 'tui/tui';
 import { FORMAT_JSON_EDITOR } from 'tui/format';
-
 import Weka from 'editor_weka/components/Weka';
 
 import DoneCancelGroup from 'totara_engage/components/buttons/DoneCancelGroup';
 import InlineEditing from 'totara_engage/components/form/InlineEditing';
-
 import getPlaylist from 'totara_playlist/graphql/get_playlist_raw';
 import updatePlaylist from 'totara_playlist/graphql/update_playlist_summary';
 
@@ -137,6 +131,13 @@ export default {
       },
     },
   },
+  mounted() {
+    this.$_scan();
+  },
+
+  updated() {
+    this.$_scan();
+  },
 
   methods: {
     handleUpdate(opt) {
@@ -189,6 +190,15 @@ export default {
           this.editing = false;
           this.submitting = false;
         });
+    },
+
+    $_scan() {
+      if (!this.$refs.content) {
+        return;
+      }
+
+      let element = this.$refs.content;
+      tui.scan(element);
     },
   },
 };

@@ -78,6 +78,7 @@
 
         <div class="tui-playlistSidePanel__overview__setting">
           <PlaylistStarRating
+            v-if="!isPrivate"
             :owned="playlist.owned"
             :count="playlist.rating.count"
             :rating="playlist.rating.rating"
@@ -123,7 +124,7 @@ import EngageSidePanel from 'totara_engage/components/sidepanel/EngageSidePanel'
 import SidePanelCommentBox from 'totara_comment/components/box/SidePanelCommentBox';
 import AccessSetting from 'totara_engage/components/sidepanel/access/AccessSetting';
 import AccessDisplay from 'totara_engage/components/sidepanel/access/AccessDisplay';
-import PageLoader from 'tui/components/loader/Loader';
+import PageLoader from 'tui/components/loading/Loader';
 import PlaylistSummary from 'totara_playlist/components/sidepanel/PlaylistSummary';
 import ModalPresenter from 'tui/components/modal/ModalPresenter';
 import EngageWarningModal from 'totara_engage/components/modal/EngageWarningModal';
@@ -132,6 +133,7 @@ import PlaylistStarRating from 'totara_playlist/components/sidepanel/PlaylistSta
 import Related from 'totara_playlist/components/sidepanel/Related';
 import MiniProfileCard from 'tui/components/profile/MiniProfileCard';
 import DropdownItem from 'tui/components/dropdown/DropdownItem';
+import { AccessManager } from 'totara_engage/index';
 
 // GraphQL queries
 import getPlaylist from 'totara_playlist/graphql/get_playlist';
@@ -209,6 +211,10 @@ export default {
 
     canUpdate() {
       return this.playlist.updatable || this.canManage;
+    },
+
+    isPrivate() {
+      return AccessManager.isPrivate(this.playlist.access);
     },
   },
 

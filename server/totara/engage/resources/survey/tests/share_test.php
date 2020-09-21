@@ -228,7 +228,7 @@ class engage_survey_share_testcase extends advanced_testcase {
         $sharer = reset($sharers);
 
         // Sharer should match the user details.
-        $user = \core_user::get_user($sharer['sharerid']);
+        $user = \core_user::get_user($sharer->id);
         $this->assertEquals('Some1', $user->firstname);
         $this->assertEquals('Any1', $user->lastname);
     }
@@ -286,6 +286,7 @@ class engage_survey_share_testcase extends advanced_testcase {
 
         // Create users.
         $users = $surveygen->create_users(5);
+        $this->engage_capabilize($users[0]);
         $this->setUser($users[0]);
 
         // Create surveys.
@@ -404,5 +405,12 @@ class engage_survey_share_testcase extends advanced_testcase {
 
         $access = access_manager::can_access($survey3, $users[1]->id);
         $this->assertTrue($access);
+    }
+
+    private function engage_capabilize($user) {
+        $roleid = $this->getDataGenerator()->create_role();
+        $syscontext = context_system::instance();
+        assign_capability('moodle/user:viewdetails', CAP_ALLOW, $roleid, $syscontext);
+        role_assign($roleid, $user->id, $syscontext);
     }
 }

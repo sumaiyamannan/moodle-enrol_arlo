@@ -24,10 +24,12 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+use core_user\access_controller;
 use totara_webapi\phpunit\webapi_phpunit_helper;
 use core\format;
 use core\date_format;
 use core_user\profile\card_display;
+use totara_core\hook\manager as hook_manager;
 
 /**
  * Tests the user type
@@ -35,6 +37,13 @@ use core_user\profile\card_display;
 class core_webapi_resolver_type_user_testcase extends advanced_testcase {
 
     use webapi_phpunit_helper;
+
+    public function setUp(): void {
+        parent::setUp();
+
+        hook_manager::phpunit_replace_watchers([]);
+        access_controller::clear_instance_cache();
+    }
 
     public function test_resolver_id() {
         $user = $this->getDataGenerator()->create_user();

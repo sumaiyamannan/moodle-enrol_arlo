@@ -168,12 +168,10 @@ export default {
     color: var(--color-neutral-1);
     background: var(--color-prompt-info);
     // -1px to avoid isue with razor thin white line between icon container and notification border
-    border-top-left-radius: calc(
-      var(--border-radius-small) - var(--border-width-thin) - 1px
-    );
-    border-bottom-left-radius: calc(
-      var(--border-radius-small) - var(--border-width-thin) - 1px
-    );
+    // prettier-ignore
+    border-top-left-radius: calc(var(--border-radius-small) - var(--border-width-thin) - 1px);
+    // prettier-ignore
+    border-bottom-left-radius: calc(var(--border-radius-small) - var(--border-width-thin) - 1px);
   }
 
   &__message {
@@ -192,14 +190,8 @@ export default {
   }
 }
 
-@include tui-notification-banner-color(
-  'success',
-  var(--color-prompt-success)
-);
-@include tui-notification-banner-color(
-  'warning',
-  var(--color-prompt-warning)
-);
+@include tui-notification-banner-color('success', var(--color-prompt-success));
+@include tui-notification-banner-color('warning', var(--color-prompt-warning));
 @include tui-notification-banner-color('error', var(--color-prompt-alert));
 
 @media screen and (min-width: $tui-screen-sm) {
@@ -210,12 +202,10 @@ export default {
 
     &__icon {
       // -1px to avoid isue with razor thin white line between icon container and notification border
-      border-top-left-radius: calc(
-        var(--border-radius-normal) - var(--border-width-thin) - 1px
-      );
-      border-bottom-left-radius: calc(
-        var(--border-radius-normal) - var(--border-width-thin) - 1px
-      );
+      // prettier-ignore
+      border-top-left-radius: calc(var(--border-radius-normal) - var(--border-width-thin) - 1px);
+      // prettier-ignore
+      border-bottom-left-radius: calc(var(--border-radius-normal) - var(--border-width-thin) - 1px);
     }
   }
 }

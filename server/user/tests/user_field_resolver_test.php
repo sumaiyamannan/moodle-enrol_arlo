@@ -22,9 +22,20 @@
  */
 defined('MOODLE_INTERNAL') || die();
 
+use core_user\access_controller;
 use core_user\profile\user_field_resolver;
+use totara_core\hook\manager as hook_manager;
 
 class core_user_user_field_resolver_testcase extends advanced_testcase {
+
+    public function setUp(): void {
+        parent::setUp();
+
+        // Remove hook's watchers so that we can have more accurate tests.
+        hook_manager::phpunit_replace_watchers([]);
+        access_controller::clear_instance_cache();
+    }
+
     /**
      * @return void
      */

@@ -307,20 +307,20 @@
   padding: var(--gap-1);
   border: 2px solid transparent;
 
-  &:after {
-    position: absolute;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    left: 0;
-    content: '';
-  }
-
   &--fullWidth {
     width: 100%;
   }
 
   &--updateAble {
+    &:after {
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      content: '';
+    }
+
     &:hover,
     &:focus-within,
     &.tui-focusWithin {
@@ -673,8 +673,7 @@
         padding: var(--gap-2) var(--gap-8);
 
         + li {
-          border-top: var(--border-width-thin) solid
-            var(--color-neutral-5);
+          border-top: var(--border-width-thin) solid var(--color-neutral-5);
         }
 
         & > :first-child {

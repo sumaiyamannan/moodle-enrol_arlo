@@ -22,6 +22,10 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later.
  */
 
+use core_user\access_controller;
+use totara_core\advanced_feature;
+use totara_core\hook\manager as hook_manager;
+
 defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
@@ -62,6 +66,11 @@ class core_myprofilelib_testcase extends advanced_testcase {
         // Set the $PAGE->url value so core_myprofile_navigation() doesn't complain.
         global $PAGE;
         $PAGE->set_url('/admin/tool/phpunit/index.php');
+
+        // Engage allows several properties of users to become visible to all other users. To test that user
+        // properties are hidden when appropritate, we need to disable engage.
+        hook_manager::phpunit_replace_watchers([]);
+        access_controller::clear_instance_cache();
 
         $this->user = $this->getDataGenerator()->create_user();
         $this->user2 = $this->getDataGenerator()->create_user();

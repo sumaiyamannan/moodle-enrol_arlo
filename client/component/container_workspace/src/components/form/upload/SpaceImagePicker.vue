@@ -67,7 +67,7 @@
 import Upload from 'tui/components/form/Upload';
 import Button from 'tui/components/buttons/Button';
 import Loading from 'tui/components/icons/Loading';
-import PageLoader from 'tui/components/loader/Loader';
+import PageLoader from 'tui/components/loading/Loader';
 
 // GraphQL queries
 import getUploadMetadata from 'container_workspace/graphql/upload_metadata';
@@ -210,6 +210,7 @@ export default {
 .tui-spaceImagePicker {
   display: flex;
   flex-direction: column;
+  flex-grow: 1;
   width: 100%;
   height: 100%;
 
