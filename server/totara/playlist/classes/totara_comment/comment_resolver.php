@@ -36,7 +36,7 @@ final class comment_resolver extends resolver {
      * @return bool
      */
     private function is_valid_area(string $area): bool {
-        return in_array($area, ['comment']);
+        return in_array($area, [playlist::COMMENT_AREA]);
     }
 
     /**
@@ -86,5 +86,40 @@ final class comment_resolver extends resolver {
     public function get_context_id(int $playlistid, string $area): int {
         $playlist = playlist::from_id($playlistid);
         return $playlist->get_contextid();
+    }
+
+    /**
+     * @param int       $instance_id
+     * @param string    $area
+     * @param int       $actor_id
+     *
+     * @return bool
+     */
+    public function can_see_comments(int $instance_id, string $area, int $actor_id): bool {
+        if (!$this->is_valid_area($area)) {
+            throw new \coding_exception("Not supported area by component '{$this->component}'");
+        }
+
+        $playlist = playlist::from_id($instance_id);
+        return access_manager::can_access($playlist, $actor_id);
+    }
+
+    /**
+     * @param comment   $comment
+     * @param int       $actor_id
+     *
+     * @return bool
+     */
+    public function can_view_reactions_of_comment(comment $comment, int $actor_id): bool {
+        $area = $comment->get_area();
+
+        if (playlist::COMMENT_AREA === $area) {
+            $playlist_id = $comment->get_instanceid();
+            $playlist = playlist::from_id($playlist_id);
+
+            return access_manager::can_access($playlist, $actor_id);
+        }
+
+        throw new \coding_exception("Invalid area that is not supported yet");
     }
 }

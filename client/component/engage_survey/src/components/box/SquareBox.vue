@@ -20,7 +20,7 @@
   <FormRow
     v-slot="{ labelId }"
     :label="label"
-    class="tui-engageSurvey-squareBox"
+    class="tui-engageSurveySquareBox"
     hidden
   >
     <CheckboxGroup :aria-labelledby="labelId">
@@ -29,7 +29,7 @@
           :key="option.id"
           :name="'engagesurvey-checkbox'"
           :value="option.id"
-          class="tui-engageSurvey-squareBox__checkbox"
+          class="tui-engageSurveySquareBox__checkbox"
           @change="$_handleChange(option.id, $event)"
         >
           {{ option.value }}
@@ -119,12 +119,11 @@ export default {
 </script>
 
 <style lang="scss">
-.tui-engageSurvey-squareBox {
+.tui-engageSurveySquareBox {
   &__checkbox {
     font-size: var(--font-size-15);
   }
   .tui-checkbox {
-    height: 100%;
     min-height: var(--gap-4);
     overflow: auto;
     -ms-word-break: break-all;

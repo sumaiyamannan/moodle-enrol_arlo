@@ -23,6 +23,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 $string['actions'] = 'Actions';
+$string['actions_label'] = '{$a} actions';
 $string['active'] = 'Active';
 $string['add_members'] = 'Add members';
 $string['add_members_to_space'] = 'Add members to workspace';
@@ -87,7 +88,7 @@ $string['filter_users'] = 'Filter users';
 $string['find_contents'] = 'Find contents';
 $string['find_spaces'] = 'Find Workspaces';
 $string['format'] = 'Format';
-$string['hashtag_tip'] = 'Tip: Add a hash tag to make this more findable';
+$string['hashtag_tip'] = 'Tip: Add a hashtag to make this more findable';
 $string['hashtag_tip_help'] = 'Hashtags make it easier to find information on specific themes. For example, a workspace for Health and Safety Officers might include hashtags like #healthandsafety #staysafe #hazards';
 $string['hidden'] = 'Hidden';
 $string['hidden_workspace'] = 'Hidden workspace';
@@ -110,7 +111,7 @@ $string['member_added_message'] = 'You are now member of the {$a} workspace';
 $string['member_added_title'] = 'You have been added to a workspace';
 $string['member_tab_label'] = 'Members ({$a})';
 $string['membership'] = 'Membership';
-$string['member_and_owned'] = 'Member (including own)';
+$string['member_and_owned'] = 'Member (including owner)';
 $string['member_list'] = 'Members List';
 $string['member_request_message'] = '{$a->user} has requested to join your {$a->workspace_name} workspace';
 $string['member_request_title'] = 'Request to join your workspace';
@@ -126,10 +127,9 @@ $string['notification_deleted'] = 'The workspace "{$a}" was deleted successfully
 $string['no_file_found'] = 'No files have been uploaded in this workspace\'s discussions.';
 $string['no_member_found'] = 'No members match your search. Please try again.';
 $string['no_spaces'] = "You don't currently belong to any workspaces";
+$string['non_member'] = "Non-member";
 $string['one_member'] = '1 member';
 $string['or'] = 'Or';
-$string['other'] = 'Other';
-$string['owned'] = 'Owned';
 $string['owner'] = 'Owner';
 $string['pinned_post'] = 'Pinned post';
 $string['pluginname'] = 'Workspace';
@@ -207,7 +207,7 @@ $string['workspace_type'] = 'Workspace type';
 $string['workspace_type_help'] = '
 Anyone can join and participate in Public workspaces.
 
-Private workspaces require approval from the owner to join and content is only visible to members. They can also be hidden from search. To become a member of a hidden workspace, the owner must directly add them
+Private workspaces require approval from the owner to join and content is only visible to members. They can also be hidden from search. To become a member of a hidden workspace, the owner must directly add them.
 ';
 $string['workspace_updated'] = 'Workspace updated';
 $string['workspace_updated_notification'] = '{$a} workspace had been updated recently';

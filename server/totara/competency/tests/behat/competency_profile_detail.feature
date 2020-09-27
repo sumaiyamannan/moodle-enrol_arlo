@@ -44,7 +44,7 @@ Feature: Competency profile detail page - an overview of their progress (or lack
     And I click on "Typing slow" "link"
 
     Then I should see "Competency Details - Typing slow"
-    And I should see "Typing slow" in the ".tui-competencyDetail__title" "css_element"
+    And I should see "Typing slow" in the ".tui-pageHeading__title" "css_element"
     And I should see "The ability to type slow." in the ".tui-competencyDetail__description" "css_element"
 
   Scenario: I can navigate to the details page for a competency a user I am managing is assigned to
@@ -61,7 +61,7 @@ Feature: Competency profile detail page - an overview of their progress (or lack
     And I click on "Typing slow" "link"
 
     Then I should see "Competency Details - Typing slow"
-    And I should see "Typing slow" in the ".tui-competencyDetail__title" "css_element"
+    And I should see "Typing slow" in the ".tui-pageHeading__title" "css_element"
     And I should see "The ability to type slow." in the ".tui-competencyDetail__description" "css_element"
 
   Scenario: I can navigate to the details page for a competency a user I am appraising is assigned to
@@ -78,7 +78,7 @@ Feature: Competency profile detail page - an overview of their progress (or lack
     And I click on "Typing slow" "link"
 
     Then I should see "Competency Details - Typing slow"
-    And I should see "Typing slow" in the ".tui-competencyDetail__title" "css_element"
+    And I should see "Typing slow" in the ".tui-pageHeading__title" "css_element"
     And I should see "The ability to type slow." in the ".tui-competencyDetail__description" "css_element"
 
   Scenario: I can view the achievement progress for the competency on a per-assignment basis
@@ -102,10 +102,3 @@ Feature: Competency profile detail page - an overview of their progress (or lack
     Then I should see "Typing slow"
     And I should see "The ability to type slow."
     And I should see "There are no active assignments"
-
-  Scenario: I am shown a warning when I navigate directly to the details page of a competency that does not exist
-    When I log in as "admin"
-    And I navigate to the competency profile details page for competency id "9999"
-
-    Then I should see "Back to your competency profile"
-    And I should see "The requested competency does not exist." in the tui error notification banner

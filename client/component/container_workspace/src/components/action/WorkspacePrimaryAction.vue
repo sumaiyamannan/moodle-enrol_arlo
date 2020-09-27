@@ -82,7 +82,7 @@
       <Dropdown
         v-if="interactor.own || interactor.workspaces_admin"
         position="bottom-right"
-        class="tui-workspacePrimaryAction__dropDown"
+        class="tui-workspacePrimaryAction__dropdown"
       >
         <template v-slot:trigger="{ toggle, isOpen }">
           <Button
@@ -91,9 +91,18 @@
                 ? $str('owner', 'container_workspace')
                 : $str('admin', 'moodle')
             "
+            :aria-label="
+              $str(
+                'actions_label',
+                'container_workspace',
+                interactor.own
+                  ? $str('owner', 'container_workspace')
+                  : $str('admin', 'moodle')
+              )
+            "
             :aria-expanded="isOpen"
             :caret="true"
-            class="tui-workspacePrimaryAction__dropDown__button"
+            class="tui-workspacePrimaryAction__dropdown-button"
             @click.prevent="toggle"
           />
         </template>
@@ -187,14 +196,21 @@
         <Dropdown
           v-else
           position="bottom-right"
-          class="tui-workspacePrimaryAction__dropDown"
+          class="tui-workspacePrimaryAction__dropdown"
         >
           <template v-slot:trigger="{ toggle, isOpen }">
             <Button
               :text="$str('joined', 'container_workspace')"
+              :aria-label="
+                $str(
+                  'actions_label',
+                  'container_workspace',
+                  $str('member', 'container_workspace')
+                )
+              "
               :caret="true"
               :aria-expanded="isOpen"
-              class="tui-workspacePrimaryAction__dropDown__button"
+              class="tui-workspacePrimaryAction__dropdown-button"
               @click.prevent="toggle"
             />
           </template>
@@ -572,6 +588,9 @@ export default {
 <lang-strings>
 {
   "container_workspace": [
+    "actions",
+    "actions_label",
+    "member",
     "joined",
     "join_workspace",
     "join_space",
@@ -616,7 +635,7 @@ export default {
     padding: var(--gap-2);
   }
 
-  &__dropDown {
+  &__dropdown {
     width: 100%;
 
     @media (min-width: $tui-screen-sm) {
@@ -624,7 +643,7 @@ export default {
       width: auto;
     }
 
-    &__button {
+    &-button {
       width: 100%;
 
       @media (min-width: $tui-screen-sm) {

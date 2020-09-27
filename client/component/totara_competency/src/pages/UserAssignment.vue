@@ -17,10 +17,16 @@
 -->
 
 <template>
-  <div>
-    <a :href="goBackLink">{{ goBackText }}</a>
-
-    <h2>{{ pageHeading }}</h2>
+  <div class="tui-competencySelfAssignment">
+    <div class="tui-competencySelfAssignment__header">
+      <MiniProfileCard v-if="!isMine && user" :display="user.card_display" />
+      <div>
+        <a :href="goBackLink">
+          {{ goBackText }}
+        </a>
+      </div>
+      <PageHeading :title="pageHeading" />
+    </div>
 
     <Grid :stack-at="900" class="tui-competencySelfAssignment__actions">
       <GridItem :units="3">
@@ -63,10 +69,7 @@
       </GridItem>
     </Grid>
 
-    <Grid
-      :stack-at="900"
-      class="tui-competencySelfAssignment__filter-table-grid"
-    >
+    <Grid :stack-at="900">
       <GridItem v-if="!isViewingSelections" :units="3">
         <FilterSidePanel
           v-model="filters"
@@ -105,10 +108,11 @@
             v-model="selectedItems"
             :competencies="data.items"
             :total-competency-count="data.total"
-            class="tui-competencySelfAssignment__table"
           />
+          <p v-else />
           <Button
             v-if="shouldShowLoadMoreButton"
+            class="tui-competencySelfAssignment__loadMore"
             :text="$str('loadmore', 'totara_core')"
             @click="loadMore"
           />
@@ -145,12 +149,16 @@ import FilterSidePanel from 'tui/components/filters/FilterSidePanel';
 import Grid from 'tui/components/grid/Grid';
 import GridItem from 'tui/components/grid/GridItem';
 import Loader from 'tui/components/loading/Loader';
+import MiniProfileCard from 'tui/components/profile/MiniProfileCard';
 import MultiSelectFilter from 'tui/components/filters/MultiSelectFilter';
+import PageHeading from 'tui/components/layouts/PageHeading';
 import SearchFilter from 'tui/components/filters/SearchFilter';
 import SelectFilter from 'tui/components/filters/SelectFilter';
 import SelectionTable from 'totara_competency/components/user_assignment/SelectionTable';
-import UserAssignableCompetenciesQuery from 'totara_competency/graphql/user_assignable_competencies';
 import { notify } from 'tui/notifications';
+// Queries
+import UserAssignableCompetenciesQuery from 'totara_competency/graphql/user_assignable_competencies';
+import UserQuery from 'totara_competency/graphql/user';
 
 export default {
   components: {
@@ -163,7 +171,9 @@ export default {
     Grid,
     GridItem,
     Loader,
+    MiniProfileCard,
     MultiSelectFilter,
+    PageHeading,
     SearchFilter,
     SelectFilter,
     SelectionTable,
@@ -192,6 +202,10 @@ export default {
     userId: {
       required: true,
       type: Number,
+    },
+    isMine: {
+      required: true,
+      type: Boolean,
     },
   },
 
@@ -250,6 +264,7 @@ export default {
           action: this.showConfirmationModal,
         },
       ],
+      user: null,
     };
   },
   computed: {
@@ -451,6 +466,16 @@ export default {
         },
       };
     },
+    user: {
+      query: UserQuery,
+      variables() {
+        return { user_id: this.userId };
+      },
+      update: data => data.totara_competency_user,
+      skip() {
+        return this.isMine;
+      },
+    },
   },
 };
 </script>
@@ -490,38 +515,22 @@ export default {
 
 <style lang="scss">
 .tui-competencySelfAssignment {
-  &__table {
+  & > * + * {
+    margin-top: var(--gap-4);
+  }
+
+  &__actions {
+    justify-content: space-between;
+  }
+
+  &__header {
     & > * + * {
       margin-top: var(--gap-2);
     }
   }
 
-  &__tableExpand {
-    & > * + * {
-      margin: var(--gap-2) 0 0;
-    }
-
-    &-header {
-      @include tui-font-heading-small();
-    }
-
-    &-subHeader {
-      @include tui-font-heading-x-small();
-    }
-  }
-
-  &__actions {
-    justify-content: space-between;
-    margin-bottom: var(--gap-5);
-  }
-
-  &__header {
-    margin: 0;
-    @include tui-font-heading-small();
-  }
-
-  &__table {
-    margin-bottom: var(--gap-5);
+  &__loadMore {
+    margin-top: var(--gap-4);
   }
 }
 </style>

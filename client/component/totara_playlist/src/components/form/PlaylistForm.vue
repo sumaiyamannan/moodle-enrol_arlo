@@ -42,41 +42,23 @@
         :required="true"
         :hidden="true"
         :label="$str('playlistdescription', 'totara_playlist')"
-        class="tui-playlistForm__description__formRow"
+        class="tui-playlistForm__description-formRow"
       >
         <Weka
           :id="id"
+          v-model="summary"
           component="totara_playlist"
           area="summary"
-          :doc="summary.doc"
           :placeholder="$str('adddescription', 'totara_playlist')"
-          class="tui-playlistForm__description__formRow__textArea"
-          @update="handleUpdate"
+          class="tui-playlistForm__description-textArea"
         />
       </FormRow>
 
-      <div class="tui-playlistForm__description__tip">
+      <div class="tui-playlistForm__description-tip">
         <p>{{ $str('contributetip', 'totara_engage') }}</p>
-        <Popover position="right">
-          <template v-slot:trigger="{ isOpen }">
-            <ButtonIcon
-              :aria-expanded="isOpen.toString()"
-              :aria-label="$str('info', 'moodle')"
-              class="tui-playlistForm__description__iconButton"
-              :styleclass="{
-                primary: true,
-                small: true,
-                transparentNoPadding: true,
-              }"
-            >
-              <InfoIcon />
-            </ButtonIcon>
-          </template>
-
-          <p class="tui-playlistForm__description__tip__content">
-            {{ $str('contributetip_help', 'totara_engage') }}
-          </p>
-        </Popover>
+        <InfoIconButton :aria-label="$str('info', 'moodle')">
+          {{ $str('contributetip_help', 'totara_engage') }}
+        </InfoIconButton>
       </div>
     </div>
 
@@ -99,25 +81,21 @@
 import InputText from 'tui/components/form/InputText';
 import ButtonGroup from 'tui/components/buttons/ButtonGroup';
 import Button from 'tui/components/buttons/Button';
-import ButtonIcon from 'tui/components/buttons/ButtonIcon';
 import CancelButton from 'tui/components/buttons/Cancel';
-import Popover from 'tui/components/popover/Popover';
 import FormRow from 'tui/components/form/FormRow';
 import Form from 'tui/components/form/Form';
-import InfoIcon from 'tui/components/icons/Info';
+import InfoIconButton from 'tui/components/buttons/InfoIconButton';
 import Weka from 'editor_weka/components/Weka';
-import { debounce } from 'tui/util';
+import WekaValue from 'editor_weka/WekaValue';
 import { FORMAT_JSON_EDITOR } from 'tui/format';
 
 export default {
   components: {
     InputText,
     ButtonGroup,
-    ButtonIcon,
     Button,
     CancelButton,
-    Popover,
-    InfoIcon,
+    InfoIconButton,
     FormRow,
     Form,
     Weka,
@@ -139,11 +117,7 @@ export default {
     return {
       description: this.$id('engageContribute-description'),
       submitting: false,
-      summary: {
-        // Default state of editor
-        doc: null,
-        isEmpty: true,
-      },
+      summary: WekaValue.empty(),
     };
   },
 
@@ -157,33 +131,12 @@ export default {
     submit() {
       const params = {
         name: this.playlist.name,
-        summary: JSON.stringify(this.summary.doc),
+        summary: JSON.stringify(this.summary.getDoc()),
         summary_format: FORMAT_JSON_EDITOR,
       };
 
       this.$emit('next', params);
     },
-
-    /**
-     *
-     * @param {Object} opt
-     */
-    handleUpdate(opt) {
-      this.$_readJson(opt);
-    },
-
-    $_readJson: debounce(
-      /**
-       *
-       * @param {Object} opt
-       */
-      function(opt) {
-        this.summary.doc = opt.getJSON();
-        this.summary.isEmpty = opt.isEmpty();
-      },
-      250,
-      { perArgs: false }
-    ),
   },
 };
 </script>
@@ -216,7 +169,6 @@ export default {
   display: flex;
   flex: 1;
   flex-direction: column;
-  margin-top: var(--gap-8);
 
   &__title {
     // Reset margin of form row.
@@ -236,16 +188,13 @@ export default {
     flex-direction: column;
     margin-top: var(--gap-8);
 
-    &__tip {
+    &-tip {
       position: relative;
       display: flex;
-
-      &__content {
-        margin: 0;
-      }
+      margin-top: var(--gap-2);
     }
 
-    &__formRow {
+    &-formRow {
       // Making the form row to be expanded
       flex: 1;
 
@@ -261,10 +210,10 @@ export default {
           flex-direction: column;
         }
       }
+    }
 
-      &__textArea {
-        flex: 1;
-      }
+    &-textArea {
+      flex: 1;
     }
   }
 

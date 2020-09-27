@@ -112,7 +112,7 @@
   }
 }
 
-.tui-editorWeka-editImageAltTextModal {
+.tui-wekaEditImageAltTextModal {
   &__content {
     .tui-modalContent__title {
       padding-bottom: var(--gap-2);
@@ -124,7 +124,7 @@
     flex-direction: column;
     margin: 0;
 
-    &__helpText {
+    &-helpText {
       margin: 0;
       margin-top: var(--gap-1);
       color: var(--color-neutral-6);
@@ -139,7 +139,7 @@
   }
 }
 
-.tui-editorWeka-emojis {
+.tui-wekaEmojiSelector {
   display: flex;
   flex-wrap: wrap;
 
@@ -148,7 +148,7 @@
   }
 }
 
-.tui-editorWeka-attachment {
+.tui-wekaAttachment {
   @media (min-width: 491px) {
     flex-basis: 20%;
     min-width: 235px;
@@ -159,7 +159,7 @@
   }
 }
 
-.tui-editorWeka-attachments {
+.tui-wekaAttachments {
   margin: 0 0 10px;
 
   &__content {
@@ -170,7 +170,7 @@
     width: 100%;
     white-space: normal;
 
-    > .tui-editorWeka-attachment {
+    > .tui-wekaAttachment {
       /* Doing the margin for the single attachment.*/
       margin-top: var(--gap-1);
       margin-right: var(--gap-1);
@@ -183,7 +183,7 @@
   }
 }
 
-.tui-editorWeka-audioBlock {
+.tui-wekaAudioBlock {
   margin: var(--gap-8) 0;
   white-space: normal;
 
@@ -210,7 +210,7 @@
   }
 }
 
-.tui-editorWeka-imageBlock {
+.tui-wekaImageBlock {
   display: flex;
   min-width: 250px;
   margin: var(--gap-8) 0;
@@ -236,7 +236,7 @@
   }
 }
 
-.tui-editorWeka-linkBlock {
+.tui-wekaLinkBlock {
   max-width: 28.6rem;
   margin-bottom: var(--paragraph-gap);
   white-space: normal;
@@ -255,7 +255,7 @@
   }
 }
 
-.tui-editorWeka-linkMedia {
+.tui-wekaLinkMedia {
   display: flex;
   flex-direction: column;
   margin-bottom: var(--paragraph-gap);
@@ -275,18 +275,18 @@
   &__inner {
     max-width: 700px;
 
-    & > .tui-editorWeka-nodeBar {
+    & > .tui-wekaNodeBar {
       margin-top: var(--gap-2);
     }
   }
 }
 
-.tui-editorWeka-mention {
+.tui-wekaMention {
   display: inline-block;
   white-space: normal;
 }
 
-.tui-editorWeka-videoBlock {
+.tui-wekaVideoBlock {
   margin: var(--gap-8) 0;
   white-space: normal;
 
@@ -309,27 +309,27 @@
   }
 }
 
-.tui-editorWeka-suggestion__hashtag {
+.tui-wekaHashtagSuggestions {
   position: absolute;
 }
 
-.tui-editorWeka-user {
+.tui-wekaUserSuggestions {
   position: absolute;
   width: 32.6rem;
 }
 
-.tui-editorWeka-nodeBar {
+.tui-wekaNodeBar {
   display: flex;
   justify-content: flex-end;
   visibility: hidden;
 }
 
-.tui-weka:hover .tui-editorWeka-nodeBar,
-.ProseMirror-focused .tui-editorWeka-nodeBar {
+.tui-weka:hover .tui-wekaNodeBar,
+.ProseMirror-focused .tui-wekaNodeBar {
   visibility: visible;
 }
 
-.tui-editorWeka-toolbar {
+.tui-wekaToolbar {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -360,7 +360,7 @@
   }
 }
 
-.tui-editorWeka-toolbarButton {
+.tui-wekaToolbarButton {
   min-width: 0;
   height: var(--gap-8);
   min-height: var(--gap-6);
@@ -415,11 +415,11 @@
   }
 }
 
-.tui-editorWeka-toolbarButtonIcon {
-  @extend .tui-editorWeka-toolbarButton;
+.tui-wekaToolbarButtonIcon {
+  @extend .tui-wekaToolbarButton;
 
   &--selected {
-    @extend .tui-editorWeka-toolbarButton--selected;
+    @extend .tui-wekaToolbarButton--selected;
   }
 }
 
@@ -436,16 +436,16 @@
     display: flex;
     flex: 1;
     flex-direction: column;
+  }
 
-    &__row {
-      flex: 1;
-    }
+  &__row {
+    flex: 1;
+  }
 
-    &__buttonGroup {
-      display: flex;
-      justify-content: flex-end;
-      margin-top: var(--gap-2);
-    }
+  &__buttonGroup {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: var(--gap-2);
   }
 
   &__code {

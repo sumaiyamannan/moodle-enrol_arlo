@@ -23,19 +23,6 @@
   }
 }
 
-.tui-bulkManualRatingPageHeader {
-  display: flex;
-  align-items: center;
-
-  &__title {
-    margin: 0;
-
-    &-withPhoto {
-      padding-left: var(--gap-3);
-    }
-  }
-}
-
 .tui-bulkManualRatingRateUserCompetencies {
   & > * + * {
     margin-top: var(--gap-5);
@@ -185,6 +172,12 @@
 }
 
 .tui-rateCompetencies {
+  & > * + * {
+    margin-top: var(--gap-4);
+  }
+}
+
+.tui-rateUserCompetencies {
   & > * + * {
     margin-top: var(--gap-4);
   }

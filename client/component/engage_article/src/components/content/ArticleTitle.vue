@@ -16,15 +16,16 @@
   @module engage_article
 -->
 <template>
-  <div class="tui-articleTitle">
-    <div class="tui-articleTitle__head">
+  <div class="tui-engageArticleTitle">
+    <div class="tui-engageArticleTitle__head">
       <InlineEditing
         v-show="!editing"
+        :button-aria-label="$str('editarticletitle', 'engage_article', title)"
         :update-able="updateAble"
         :full-width="true"
         @click="editing = true"
       >
-        <h3 slot="content" class="tui-articleTitle__head__title">
+        <h3 slot="content" class="tui-engageArticleTitle__title">
           {{ title }}
         </h3>
       </InlineEditing>
@@ -176,28 +177,31 @@ export default {
   {
     "totara_engage": [
       "unsaved_changes_warning"
+    ],
+    "engage_article": [
+      "editarticletitle"
     ]
   }
 </lang-strings>
 
 <style lang="scss">
-.tui-articleTitle {
+.tui-engageArticleTitle {
   display: flex;
   flex-direction: column;
 
   &__head {
     display: flex;
     align-items: flex-start;
+  }
 
-    &__title {
-      @include tui-font-heading-large;
-      width: 93%;
-      margin: 0;
-      margin-top: calc(var(--gap-2) / -1);
-      -ms-word-break: break-all;
-      overflow-wrap: break-word;
-      hyphens: none;
-    }
+  &__title {
+    @include tui-font-heading-large;
+    width: 93%;
+    margin: 0;
+    margin-top: calc(var(--gap-2) / -1);
+    -ms-word-break: break-all;
+    overflow-wrap: break-word;
+    hyphens: none;
   }
 }
 </style>

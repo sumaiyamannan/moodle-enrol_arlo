@@ -19,9 +19,9 @@
   }
 }
 
-.tui-totaraPlaylist-addNewPlaylistCard {
+.tui-addNewPlaylistCard {
   width: 100%;
-  height: calc(var(--totaraEngage-card-height) + 11px);
+  height: calc(var(--totara-engage-card-height) + 11px);
 
   .tui-card {
     /* Overiding cards border*/
@@ -42,8 +42,8 @@
   }
 }
 
-.tui-totaraPlaylist-playlistCard {
-  min-height: var(--totaraEngage-card-height);
+.tui-playlistCard {
+  min-height: var(--totara-engage-card-height);
 
   &__imageHeader {
     position: relative;
@@ -129,7 +129,7 @@
     justify-content: flex-start;
     padding-bottom: 10px;
 
-    .tui-totaraEngage-star {
+    .tui-engageStarIcon {
       width: var(--font-size-14);
       height: var(--font-size-14);
 
@@ -148,11 +148,11 @@
     align-items: flex-end;
 
     & > * + * {
-      margin-left: var(--gap-2);
+      margin-left: var(--gap-3);
     }
 
     & > :last-child {
-      margin: 0 -5px 0 auto;
+      margin: 0 -3px 0 auto;
     }
   }
 }
@@ -221,7 +221,7 @@
       margin-top: auto;
       margin-bottom: 0;
 
-      .tui-totaraEngage-star {
+      .tui-engageStarIcon {
         width: var(--font-size-14);
         height: var(--font-size-14);
 
@@ -252,18 +252,8 @@
     display: flex;
     width: 100%;
 
-    &__title {
-      @include tui-font-link-small();
-      @include tui-font-heavy();
-      flex: 1;
-      margin: 0;
-      overflow: hidden;
-      white-space: nowrap;
-      text-overflow: ellipsis;
-    }
-
     /* Overriding the star rating*/
-    .tui-totaraEngage-star {
+    .tui-engageStarIcon {
       width: var(--font-size-15);
       height: var(--font-size-14);
 
@@ -275,6 +265,16 @@
         stop-color: var(--color-neutral-1);
       }
     }
+  }
+
+  &__title {
+    @include tui-font-link-small();
+    @include tui-font-heavy();
+    flex: 1;
+    margin: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
   }
 
   &__author {
@@ -330,7 +330,6 @@
   display: flex;
   flex: 1;
   flex-direction: column;
-  margin-top: var(--gap-8);
 
   &__title {
     /* Reset margin of form row.*/
@@ -350,16 +349,13 @@
     flex-direction: column;
     margin-top: var(--gap-8);
 
-    &__tip {
+    &-tip {
       position: relative;
       display: flex;
-
-      &__content {
-        margin: 0;
-      }
+      margin-top: var(--gap-2);
     }
 
-    &__formRow {
+    &-formRow {
       /* Making the form row to be expanded*/
       flex: 1;
 
@@ -375,10 +371,10 @@
           flex-direction: column;
         }
       }
+    }
 
-      &__textArea {
-        flex: 1;
-      }
+    &-textArea {
+      flex: 1;
     }
   }
 
@@ -439,14 +435,27 @@
   }
 }
 
+.tui-playlistContributeModal {
+  position: relative;
+
+  &__content {
+    position: relative;
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-height: 550px;
+    padding: var(--gap-8);
+  }
+}
+
 .tui-playlistPageHeaderBox {
   &__titleBox {
     width: 100%;
+  }
 
-    &__title {
-      @include tui-font-heading-medium;
-      margin: 0;
-    }
+  &__title {
+    @include tui-font-heading-medium;
+    margin: 0;
   }
 }
 
@@ -475,16 +484,16 @@
 .tui-playlistSidePanel {
   padding: var(--gap-8);
 
-  &__overview__timeDescription {
+  &__timeDescription {
     @include tui-font-body-small();
   }
 
-  &__overview__setting {
+  &__setting {
     display: flex;
     flex-direction: row;
   }
 
-  &__overview__media {
+  &__media {
     margin-top: 0;
     margin-left: var(--gap-6);
   }
@@ -498,7 +507,7 @@
     content: '';
   }
 
-  .tui-totaraEngage-star {
+  .tui-engageStarIcon {
     width: var(--font-size-15);
     height: var(--font-size-15);
 
@@ -576,7 +585,7 @@
     align-self: center;
   }
 
-  .tui-contributionBaseContent__counterContainer__counter {
+  .tui-contributionBaseContent__counter {
     position: relative;
     top: 0;
     padding-bottom: var(--gap-2);

@@ -28,6 +28,7 @@ defined('MOODLE_INTERNAL') || die;
 use moodle_url;
 use totara_msteams\check\checkable;
 use totara_msteams\check\status;
+use totara_msteams\manifest_helper;
 
 /**
  * Check manifest_app_fullname.
@@ -57,7 +58,7 @@ class mf_namefull implements checkable {
 
     public function check(): int {
         $name = (string)get_config('totara_msteams', 'manifest_app_fullname');
-        if (strlen($name) > self::MAX_LENGTH) {
+        if (manifest_helper::utf16_strlen($name) > self::MAX_LENGTH) {
             $this->result = get_string('check:mf_namefull_toolong', 'totara_msteams', self::MAX_LENGTH);
             return status::FAILED;
         }

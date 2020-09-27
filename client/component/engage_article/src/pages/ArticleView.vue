@@ -17,7 +17,7 @@
 -->
 
 <template>
-  <Layout class="tui-articleView">
+  <Layout class="tui-engageArticleView">
     <template v-if="backButton || navigationButtons" v-slot:header>
       <ResourceNavigationBar
         :back-button="backButton"
@@ -26,7 +26,7 @@
     </template>
     <template v-slot:column>
       <Loader :loading="$apollo.loading" :fullpage="true" />
-      <div v-if="!$apollo.loading" class="tui-articleView__layout">
+      <div v-if="!$apollo.loading" class="tui-engageArticleView__layout">
         <ArticleTitle
           :title="articleName"
           :resource-id="resourceId"
@@ -36,6 +36,7 @@
           @bookmark="updateBookmark"
         />
         <ArticleContent
+          :title="articleName"
           :update-able="article.updateable"
           :content="article.content"
           :resource-id="resourceId"
@@ -49,7 +50,7 @@
 </template>
 
 <script>
-import Layout from 'tui/components/layouts/LayoutOneColumnContentWithSidePanel';
+import Layout from 'totara_engage/components/page/LayoutOneColumnContentWithSidePanel';
 import Loader from 'tui/components/loading/Loader';
 
 import ArticleSidePanel from 'engage_article/components/sidepanel/ArticleSidePanel';
@@ -130,6 +131,23 @@ export default {
           component: 'engage_article',
           bookmarked: this.bookmarked,
         },
+        update: proxy => {
+          let { article } = proxy.readQuery({
+            query: getArticle,
+            variables: {
+              id: this.resourceId,
+            },
+          });
+
+          article = Object.assign({}, article);
+          article.bookmarked = this.bookmarked;
+
+          proxy.writeQuery({
+            query: getArticle,
+            variables: { id: this.resourceId },
+            data: { article: article },
+          });
+        },
       });
     },
   },
@@ -150,7 +168,7 @@ export default {
   --engageArticle-min-height: 78vh;
 }
 
-.tui-articleView {
+.tui-engageArticleView {
   .tui-grid-item {
     min-height: var(--engageArticle-min-height);
   }

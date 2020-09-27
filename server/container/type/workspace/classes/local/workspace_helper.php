@@ -31,7 +31,10 @@ use container_workspace\query\member\query;
 use container_workspace\task\notify_new_workspace_owner_task;
 use container_workspace\tracker\tracker;
 use container_workspace\workspace;
+use core\orm\query\builder;
 use core\task\manager;
+use totara_core\content\processor\hashtag_processor;
+use totara_core\content\content;
 
 /**
  * Class workspace_helper
@@ -133,6 +136,9 @@ final class workspace_helper {
             $workspace->save_image($draft_id, $actor_id);
         }
 
+        // Process hashtags.
+        self::workspace_summary_hashtags($workspace);
+
         return $workspace;
     }
 
@@ -154,6 +160,8 @@ final class workspace_helper {
             throw new \coding_exception("The actor cannot delete the workspace");
         }
 
+        $transaction = builder::get_db()->start_delegated_transaction();
+
         $query = new query($workspace->get_id());
         $cursor = $query->get_cursor();
 
@@ -172,12 +180,18 @@ final class workspace_helper {
             }
         }
 
+        // Clear the tracker for navigating the right page.
+        tracker::clear_all_for_workspace($workspace->get_id());
+
         // After deleting the member, we now need to delete all the instances.
         $manager = $workspace->get_enrolment_manager();
         $manager->delete_enrol_instances($actor_id);
 
         // Then finally, deleted the workspace itself.
         $workspace->delete();
+
+        // Make all the changes permanent.
+        $transaction->allow_commit();
     }
 
     /**
@@ -317,5 +331,47 @@ final class workspace_helper {
 
         $task = notify_new_workspace_owner_task::from_workspace($workspace_id, $actor_id);
         manager::queue_adhoc_task($task);
+    }
+
+    /**
+     * Process any hashtags that have been included in workspace summary.
+     *
+     * @param workspace $workspace
+     */
+    public static function workspace_summary_hashtags(workspace $workspace): void {
+        // Leave if nothing to process.
+        if ($workspace->summary === null) {
+            return;
+        }
+
+        // Create a content object to enable hashtag processing.
+        $content = new content(
+            $workspace->get_name(),
+            $workspace->summary,
+            $workspace->summaryformat,
+            $workspace->get_id(),
+            $workspace->containertype,
+            ' '
+        );
+
+        $processor = new hashtag_processor();
+        switch ($workspace->summaryformat) {
+            case FORMAT_PLAIN:
+                $processor->process_format_text($content);
+                break;
+
+            case FORMAT_HTML:
+                $processor->process_format_html($content);
+                break;
+
+            case FORMAT_JSON_EDITOR:
+                $processor->process_format_json_editor($content);
+                break;
+
+            case FORMAT_MOODLE:
+            default:
+                $processor->process_format_moodle($content);
+                break;
+        }
     }
 }

@@ -8,22 +8,25 @@ exports[`totara_comment/components/form/CommentForm.vue Checks snapshot 1`] = `
     class="tui-commentForm__form"
     inputwidth="limited"
   >
+    <!---->
+     
     <weka-stub
       area="comment"
-      class="tui-commentForm__form__editor"
+      class="tui-commentForm__editor"
       component="totara_comment"
       data-file-item-id="500"
       data-key="totara_comment_editor_weka_1"
       fileitemid="500"
       placeholder="entercomment-totara_comment"
+      value="[object Object]"
     />
      
     <buttongroup-stub
-      class="tui-commentForm__form__buttonGroup"
+      class="tui-commentForm__buttonGroup"
     >
       <button-stub
         aria-label="post-totara_comment"
-        class="tui-commentForm__form__buttonGroup__button"
+        class="tui-commentForm__button"
         disabled="true"
         styleclass="[object Object]"
         text="post-totara_comment"

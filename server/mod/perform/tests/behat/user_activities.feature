@@ -57,7 +57,7 @@ Feature: Viewing and responding to perform activities
       | David is subject | Appraisal | David Two | Not yet started  | Not yet started |
 
     When I click on "David is subject" "link"
-    Then I should see "David is subject" in the ".tui-participantContent__header" "css_element"
+    Then I should see "David is subject" in the ".tui-pageHeading__title" "css_element"
     And I should see that show others responses is toggled "off"
     And I should see perform "short text" question "Question one" is unanswered
     And I should see perform "short text" question "Question two" is unanswered
@@ -84,7 +84,7 @@ Feature: Viewing and responding to perform activities
       | Activity title                | Type      | User     | Relationship to user | Overall progress | Your progress   |
       | single user manager-appraiser | Appraisal | John One | Manager, Appraiser   | Not yet started  | Not yet started |
 
-    When I click on "single user manager-appraiser" "button"
+    When I click on "single user manager-appraiser" "button_exact"
     Then I should see "Select relationship to continue" in the ".tui-modalContent" "css_element"
     And the "Manager (Not yet started)" radio button is selected
     And the "Appraiser (Not yet started)" radio button is not selected
@@ -101,7 +101,7 @@ Feature: Viewing and responding to perform activities
     Then I should see "Performance activities"
     And I should see "Section submitted." in the tui success notification toast
 
-    When I click on "single user manager-appraiser" "button"
+    When I click on "single user manager-appraiser" "button_exact"
     Then I should see "Select relationship to continue" in the ".tui-modalContent" "css_element"
     And the "Manager (Complete)" radio button is selected
     And the "Appraiser (Not yet started)" radio button is not selected
@@ -119,7 +119,7 @@ Feature: Viewing and responding to perform activities
     Then I should see "Performance activities"
     And I should see "Section submitted." in the tui success notification toast
 
-    When I click on "single user manager-appraiser" "button"
+    When I click on "single user manager-appraiser" "button_exact"
     Then I should see "Select relationship to continue" in the ".tui-modalContent" "css_element"
     And the "Manager (Complete)" radio button is selected
     And the "Appraiser (Complete)" radio button is not selected
@@ -140,7 +140,7 @@ Feature: Viewing and responding to perform activities
       | John is participating subject | Appraisal | Not yet started  | Not yet started |
 
     When I click on "John is participating subject" "link"
-    Then I should see "John is participating subject" in the ".tui-participantContent__header" "css_element"
+    Then I should see "John is participating subject" in the ".tui-pageHeading__title" "css_element"
 
     When I navigate to the outstanding perform activities list page
     Then I should see the tui datatable contains:

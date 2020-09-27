@@ -72,14 +72,10 @@
         </div>
       </div>
 
-      <h2
-        id="tui-participantContentHeader"
-        class="tui-participantContent__header"
-      >
-        {{ activity.name }}
-      </h2>
+      <PageHeading :title="activity.name" />
 
       <Responsive
+        class="tui-participantContent__body"
         :breakpoints="[
           { name: 'small', boundaries: [0, 764] },
           { name: 'medium', boundaries: [765, 1192] },
@@ -228,6 +224,8 @@
                             participantCanAnswer &&
                             !viewOnlyReportMode
                         "
+                        :accessible-label="sectionElement.element.title"
+                        :required="sectionElement.element.is_required"
                       >
                         <template v-slot:content>
                           <component
@@ -347,6 +345,7 @@ import Grid from 'tui/components/grid/Grid';
 import GridItem from 'tui/components/grid/GridItem';
 import Loader from 'tui/components/loading/Loader';
 import OtherParticipantResponses from 'mod_perform/components/user_activities/participant/OtherParticipantResponses';
+import PageHeading from 'tui/components/layouts/PageHeading';
 import ParticipantUserHeader from 'mod_perform/components/user_activities/participant/ParticipantUserHeader';
 import RequiredOptionalIndicator from 'mod_perform/components/user_activities/RequiredOptionalIndicator';
 import ResponsesAreVisibleToDescription from 'mod_perform/components/user_activities/participant/ResponsesAreVisibleToDescription';
@@ -387,6 +386,7 @@ export default {
     GridItem,
     Loader,
     OtherParticipantResponses,
+    PageHeading,
     ParticipantUserHeader,
     ResponsesAreVisibleToDescription,
     ResponseRelationshipSelector,
@@ -1316,13 +1316,16 @@ export default {
 .tui-participantContent {
   @include tui-font-body();
 
-  &__layout.tui-grid {
+  & > * + * {
     margin-top: var(--gap-6);
   }
 
-  &__header {
-    margin: var(--gap-6) 0 0;
-    @include tui-font-heading-medium();
+  &__body {
+    margin-top: 0;
+  }
+
+  &__layout.tui-grid {
+    margin-top: var(--gap-6);
   }
 
   &__buttons {

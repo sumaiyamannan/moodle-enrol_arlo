@@ -17,17 +17,21 @@
 -->
 
 <template>
-  <div class="tui-rateCompetencies">
-    <PageHeader :user="user" :is-for-another-user="isForAnotherUser" />
+  <Loader class="tui-rateCompetencies" :loading="$apollo.loading">
+    <MiniProfileCard
+      v-if="isForAnotherUser && user"
+      :display="user.card_display"
+    />
+    <PageHeading :title="$str('rate_competencies', 'pathway_manual')" />
     <RoleSelector
       v-if="isForAnotherUser"
-      :user-id="user.id"
+      :user-id="userId"
       :specified-role="specifiedRole"
       :show-warning="hasUnsavedRatings"
       @role-selected="roleSelected"
     />
     <RateUserCompetencies
-      v-if="role"
+      v-if="role && user"
       :user="user"
       :role="role"
       :current-user-id="currentUserId"
@@ -36,25 +40,30 @@
       @go-back="goBack(0)"
       @saved="goBack($event)"
     />
-  </div>
+  </Loader>
 </template>
 
 <script>
-import PageHeader from 'pathway_manual/components/PageHeader';
+import Loader from 'tui/components/loading/Loader';
+import MiniProfileCard from 'tui/components/profile/MiniProfileCard';
+import PageHeading from 'tui/components/layouts/PageHeading';
 import RateUserCompetencies from 'pathway_manual/components/RateUserCompetencies';
 import RoleSelector from 'pathway_manual/components/RoleSelector';
+import UserQuery from 'totara_competency/graphql/user';
 
 export default {
   components: {
-    PageHeader,
+    Loader,
+    MiniProfileCard,
+    PageHeading,
     RateUserCompetencies,
     RoleSelector,
   },
 
   props: {
-    user: {
+    userId: {
       required: true,
-      type: Object,
+      type: Number,
     },
     specifiedRole: {
       type: String,
@@ -75,8 +84,19 @@ export default {
   data() {
     return {
       role: this.specifiedRole,
+      user: null,
       hasUnsavedRatings: false,
     };
+  },
+
+  apollo: {
+    user: {
+      query: UserQuery,
+      variables() {
+        return { user_id: this.userId };
+      },
+      update: data => data.totara_competency_user,
+    },
   },
 
   computed: {
@@ -85,7 +105,7 @@ export default {
     },
 
     isForAnotherUser() {
-      return this.user.id !== this.currentUserId;
+      return this.userId !== this.currentUserId;
     },
 
     assignmentId() {
@@ -114,6 +134,14 @@ export default {
   },
 };
 </script>
+
+<lang-strings>
+  {
+    "pathway_manual": [
+      "rate_competencies"
+    ]
+  }
+</lang-strings>
 
 <style lang="scss">
 .tui-rateCompetencies {

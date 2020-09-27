@@ -19,15 +19,9 @@
 <template>
   <Loader :loading="$apollo.loading">
     <div class="tui-competencyProfile">
-      <UserHeader
-        v-if="!isMine"
-        :user-name="userName"
-        :profile-picture="profilePicture"
-      />
-      <div class="tui-competencyProfile__heading">
-        <h2 class="tui-competencyProfile__heading-title">
-          {{ $str('competency_profile', 'totara_competency') }}
-        </h2>
+      <div class="tui-competencyProfile__header">
+        <MiniProfileCard v-if="user && !isMine" :display="user.card_display" />
+        <PageHeading :title="$str('competency_profile', 'totara_competency')" />
       </div>
 
       <NoCompetencyAssignments
@@ -132,48 +126,47 @@
   </Loader>
 </template>
 <script>
-import BarChartIcon from 'tui/components/icons/BarChart';
-import ListIcon from 'tui/components/icons/List';
-import Responsive from 'tui/components/responsive/Responsive';
-import Loader from 'tui/components/loading/Loader';
 import ActionLink from 'tui/components/links/ActionLink';
-import ProgressAssignmentFilters from 'totara_competency/components/ProgressAssignmentFilters';
-import CompetencyList from 'totara_competency/components/profile/competency_list/List';
+import BarChartIcon from 'tui/components/icons/BarChart';
 import CompetencyCharts from 'totara_competency/components/profile/CompetencyCharts';
+import CompetencyList from 'totara_competency/components/profile/competency_list/List';
+import CurrentProgress from 'totara_competency/components/profile/CurrentProgress';
+import ListIcon from 'tui/components/icons/List';
+import Loader from 'tui/components/loading/Loader';
+import MiniProfileCard from 'tui/components/profile/MiniProfileCard';
 import NoCompetencyAssignments from 'totara_competency/components/profile/NoCompetencyAssignments';
+import PageHeading from 'tui/components/layouts/PageHeading';
+import ProgressAssignmentFilters from 'totara_competency/components/ProgressAssignmentFilters';
+import Responsive from 'tui/components/responsive/Responsive';
 import ToggleButton from 'tui/components/toggle/ToggleButton';
 import ToggleSet from 'tui/components/toggle/ToggleSet';
-import CurrentProgress from 'totara_competency/components/profile/CurrentProgress';
-import UserHeader from 'totara_competency/components/UserHeader';
-import ProgressQuery from 'totara_competency/graphql/progress_for_user';
 import { notify } from 'tui/notifications';
 import { pick, groupBy } from 'tui/util';
+// Query
+import ProgressQuery from 'totara_competency/graphql/progress_for_user';
+import UserQuery from 'totara_competency/graphql/user';
 
 const ACTIVE_ASSIGNMENT = 1;
-// const ARCHIVED_ASSIGNMENT = 2;
 
 export default {
   components: {
-    ToggleSet,
-    ToggleButton,
-    BarChartIcon,
-    ListIcon,
-    Responsive,
-    Loader,
     ActionLink,
-    CurrentProgress,
-    UserHeader,
-    NoCompetencyAssignments,
+    BarChartIcon,
     CompetencyCharts,
     CompetencyList,
+    CurrentProgress,
+    ListIcon,
+    Loader,
+    MiniProfileCard,
+    NoCompetencyAssignments,
+    PageHeading,
     ProgressAssignmentFilters,
+    Responsive,
+    ToggleButton,
+    ToggleSet,
   },
 
   props: {
-    profilePicture: {
-      required: true,
-      type: String,
-    },
     selfAssignmentUrl: {
       required: true,
       type: String,
@@ -181,10 +174,6 @@ export default {
     userId: {
       required: true,
       type: Number,
-    },
-    userName: {
-      required: true,
-      type: String,
     },
     baseUrl: {
       required: true,
@@ -206,6 +195,7 @@ export default {
   data() {
     return {
       data: {},
+      user: null,
       activeTab: 'charts',
       selectedFilters: this.$_addFilterKey({
         status: ACTIVE_ASSIGNMENT,
@@ -269,6 +259,16 @@ export default {
             );
           }
         }
+      },
+    },
+    user: {
+      query: UserQuery,
+      variables() {
+        return { user_id: this.userId };
+      },
+      update: data => data.totara_competency_user,
+      skip() {
+        return this.isMine;
       },
     },
   },
@@ -400,12 +400,9 @@ export default {
     margin-top: var(--gap-8);
   }
 
-  &__heading {
-    display: flex;
-
-    &-title {
-      margin: 0;
-      @include tui-font-heading-medium();
+  &__header {
+    & > * + * {
+      margin-top: var(--gap-2);
     }
   }
 

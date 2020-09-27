@@ -23,68 +23,71 @@
     :dismissable="dismissable"
   >
     <ModalContent
-      class="tui-contributeModal"
+      class="tui-engageContributeModal"
       :close-button="false"
       :title="getTitle"
+      :content-padding="false"
     >
-      <div
-        v-if="adder && !hideTabs"
-        class="tui-contributeModal__adderContainer"
-      >
-        <span>
-          {{ $str('or', 'totara_engage') }}
-          <Button
-            :text="adder.text"
-            :disabled="false"
-            :styleclass="{
-              transparent: true,
-            }"
-            @click="$emit('adder-open')"
+      <div class="tui-engageContributeModal__content">
+        <div
+          v-if="adder && !hideTabs"
+          class="tui-engageContributeModal__adderContainer"
+        >
+          <span>
+            {{ $str('or', 'totara_engage') }}
+            <Button
+              :text="adder.text"
+              :disabled="false"
+              :styleclass="{
+                transparent: true,
+              }"
+              @click="$emit('adder-open')"
+            />
+            {{ adder.destination }}
+          </span>
+        </div>
+        <Tabs
+          v-if="!$apollo.loading"
+          v-show="!hideTabs"
+          v-model="selectedTab"
+          :small-tabs="true"
+          class="tui-engageContributeModal__tabs"
+        >
+          <Tab
+            v-for="modal in modals"
+            :id="modal.id"
+            :key="modal.id"
+            :name="modal.label"
+            :disabled="disabledId === modal.id"
           />
-          {{ adder.destination }}
-        </span>
-      </div>
-      <Tabs
-        v-if="!$apollo.loading"
-        v-show="!hideTabs"
-        v-model="selectedTab"
-        :small-tabs="true"
-        class="tui-contributeModal__tabs"
-      >
-        <Tab
-          v-for="modal in modals"
-          :id="modal.id"
-          :key="modal.id"
-          :name="modal.label"
-          :disabled="disabledId === modal.id"
-        />
-      </Tabs>
+        </Tabs>
 
-      <div
-        v-if="!$apollo.loading"
-        class="tui-contributeModal__componentContent"
-      >
-        <!-- This is where the content of selectedTab is -->
-        <component
-          :is="selectedTab"
-          :container="container"
-          @change-title="stage = $event"
-          @done="$emit('done', $event)"
-          @cancel="$emit('request-close')"
-        />
-      </div>
+        <div
+          v-if="!$apollo.loading"
+          class="tui-engageContributeModal__componentContent"
+        >
+          <!-- This is where the content of selectedTab is -->
+          <component
+            :is="selectedTab"
+            :container="container"
+            @change-title="stage = $event"
+            @done="$emit('done', $event)"
+            @cancel="$emit('request-close')"
+          />
+        </div>
 
-      <ButtonIcon
-        v-if="expandable"
-        v-show="!hideTabs"
-        class="tui-contributeModal__resize"
-        :aria-label="resizeAriaLabel"
-        :styleclass="{ transparentNoPadding: true }"
-        @click="resize"
-      >
-        <SizeContractIcon v-if="expanded" />
-        <SizeExpandIcon v-else />
-      </ButtonIcon>
+        <ButtonIcon
+          v-if="expandable"
+          v-show="!hideTabs"
+          class="tui-engageContributeModal__resize"
+          :aria-label="resizeAriaLabel"
+          :styleclass="{ transparentNoPadding: true }"
+          @click="resize"
+        >
+          <SizeContractIcon v-if="expanded" />
+          <SizeExpandIcon v-else />
+        </ButtonIcon>
+      </div>
     </ModalContent>
   </Modal>
 </template>
@@ -270,13 +273,15 @@ export default {
 </lang-strings>
 
 <style lang="scss">
-:root {
-  --contributionModal-min-height: 744px;
-  --contributionContent-min-height: 574px;
-}
-.tui-contributeModal {
+.tui-engageContributeModal {
   position: relative;
-  min-height: var(--contributionModal-min-height);
+
+  &__content {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-height: 600px;
+  }
 
   &__adderContainer {
     margin-bottom: var(--gap-2);
@@ -316,26 +321,7 @@ export default {
     display: flex;
     flex: 1;
     flex-direction: column;
-    width: 100%;
-    height: 100%;
-    min-height: var(--contributionContent-min-height);
     padding: var(--gap-8);
-  }
-
-  .tui-modalContent__title {
-    display: none;
-  }
-
-  .tui-modalContent__content {
-    display: flex;
-    flex-direction: column;
-    min-height: var(--contributionContent-min-height);
-    margin-top: 0;
-    padding: 0;
-  }
-
-  .tui-modalContent__header-title {
-    margin-bottom: var(--gap-2);
   }
 }
 </style>

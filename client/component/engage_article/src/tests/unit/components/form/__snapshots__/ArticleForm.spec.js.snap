@@ -2,12 +2,12 @@
 
 exports[`engage_article/components/form/ArticleForm.vue Checks snapshot 1`] = `
 <form-stub
-  class="tui-articleForm"
+  class="tui-engageArticleForm"
   inputwidth="full"
   vertical="true"
 >
   <formrow-stub
-    class="tui-articleForm__title"
+    class="tui-engageArticleForm__title"
     hidden="true"
     isstacked="true"
     label="articletitle, engage_article"
@@ -15,40 +15,34 @@ exports[`engage_article/components/form/ArticleForm.vue Checks snapshot 1`] = `
   />
    
   <div
-    class="tui-articleForm__description"
+    class="tui-engageArticleForm__description"
   >
     <formrow-stub
-      class="tui-articleForm__description__formRow"
+      class="tui-engageArticleForm__description-formRow"
       hidden="true"
       label="content, engage_article"
       required="true"
     />
      
     <div
-      class="tui-articleForm__description__tip"
+      class="tui-engageArticleForm__description-tip"
     >
       <p>
         contributetip, totara_engage
       </p>
        
-      <popover-stub
-        position="right"
-        triggers="click"
+      <infoiconbutton-stub
+        arialabel="info, moodle"
       >
-         
-        <p
-          class="tui-articleForm__description__tip__content"
-        >
-          
-          contributetip_help, totara_engage
         
-        </p>
-      </popover-stub>
+        contributetip_help, totara_engage
+      
+      </infoiconbutton-stub>
     </div>
   </div>
    
   <buttongroup-stub
-    class="tui-articleForm__buttons"
+    class="tui-engageArticleForm__buttons"
   >
     <button-stub
       aria-label="createarticleshort, engage_article"

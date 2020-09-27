@@ -17,26 +17,22 @@
 -->
 
 <template>
-  <div class="tui-competencyDetail">
-    <!-- Back Link -->
-    <div class="tui-competencyDetail__backLink">
-      <a :href="goBackLink">
-        {{ goBackText }}
-      </a>
-    </div>
-
-    <Loader :loading="$apollo.loading">
-      <NotificationBanner
-        v-if="!data.competency && !$apollo.loading"
-        :dismissable="false"
-        :message="$str('competency_does_not_exist', 'totara_competency')"
-        type="error"
-      />
-      <template v-else-if="data.competency">
-        <!-- Title -->
-        <h2 class="tui-competencyDetail__title">
-          {{ data.competency.fullname }}
-        </h2>
+  <Loader :loading="$apollo.loading">
+    <div class="tui-competencyDetail">
+      <template v-if="data.competency">
+        <!-- User details, back link and page title -->
+        <div class="tui-competencyDetail__header">
+          <MiniProfileCard
+            v-if="user && !isMine"
+            :display="user.card_display"
+          />
+          <div>
+            <a :href="goBackLink">
+              {{ goBackText }}
+            </a>
+          </div>
+          <PageHeading :title="data.competency.fullname" />
+        </div>
 
         <!-- Competency description & archived / activity log button -->
         <Grid :stack-at="700">
@@ -98,28 +94,31 @@
           </div>
         </div>
       </template>
-    </Loader>
 
-    <!-- Activity log modal -->
-    <ModalPresenter
-      :open="activityLogModalOpen"
-      @request-close="closeActivityLogModal"
-    >
-      <Modal size="sheet">
-        <ActivityLog :competency-id="competencyId" :user-id="userId" />
-      </Modal>
-    </ModalPresenter>
+      <!-- Activity log modal -->
+      <ModalPresenter
+        :open="activityLogModalOpen"
+        @request-close="closeActivityLogModal"
+      >
+        <Modal size="sheet">
+          <ActivityLog :competency-id="competencyId" :user-id="userId" />
+        </Modal>
+      </ModalPresenter>
 
-    <!-- Archived assignments modal -->
-    <ModalPresenter
-      :open="archivedAssignmentModalOpen"
-      @request-close="closeArchivedAssignmentModal"
-    >
-      <Modal size="sheet">
-        <ArchivedAssignments :competency-id="competencyId" :user-id="userId" />
-      </Modal>
-    </ModalPresenter>
-  </div>
+      <!-- Archived assignments modal -->
+      <ModalPresenter
+        :open="archivedAssignmentModalOpen"
+        @request-close="closeArchivedAssignmentModal"
+      >
+        <Modal size="sheet">
+          <ArchivedAssignments
+            :competency-id="competencyId"
+            :user-id="userId"
+          />
+        </Modal>
+      </ModalPresenter>
+    </div>
+  </Loader>
 </template>
 
 <script>
@@ -132,13 +131,15 @@ import Button from 'tui/components/buttons/Button';
 import Grid from 'tui/components/grid/Grid';
 import GridItem from 'tui/components/grid/GridItem';
 import Loader from 'tui/components/loading/Loader';
+import MiniProfileCard from 'tui/components/profile/MiniProfileCard';
 import Modal from 'tui/components/modal/Modal';
 import ModalPresenter from 'tui/components/modal/ModalPresenter';
-import NotificationBanner from 'tui/components/notifications/NotificationBanner';
+import PageHeading from 'tui/components/layouts/PageHeading';
 import Progress from 'totara_competency/components/details/Progress';
 import { notify } from 'tui/notifications';
 // GraphQL
 import CompetencyProfileDetailsQuery from 'totara_competency/graphql/profile_competency_details';
+import UserQuery from 'totara_competency/graphql/user';
 
 export default {
   components: {
@@ -150,9 +151,10 @@ export default {
     Grid,
     GridItem,
     Loader,
+    MiniProfileCard,
     Modal,
     ModalPresenter,
-    NotificationBanner,
+    PageHeading,
     Progress,
   },
 
@@ -173,6 +175,10 @@ export default {
       required: true,
       type: Number,
     },
+    isMine: {
+      required: true,
+      type: Boolean,
+    },
     showActivityLogByDefault: {
       default: false,
       type: Boolean,
@@ -191,6 +197,7 @@ export default {
         competency: null,
         items: [],
       },
+      user: null,
     };
   },
 
@@ -211,6 +218,16 @@ export default {
         }
 
         return { competency: details.competency, items: details.items };
+      },
+    },
+    user: {
+      query: UserQuery,
+      variables() {
+        return { user_id: this.userId };
+      },
+      update: data => data.totara_competency_user,
+      skip() {
+        return this.isMine;
       },
     },
   },
@@ -241,7 +258,7 @@ export default {
     },
 
     /**
-     * Return selected assignment proficeny value data
+     * Return selected assignment proficiency value data
      *
      * @return {Object}
      */
@@ -253,7 +270,7 @@ export default {
     },
 
     /**
-     * Return selected assignment proficeny value ID
+     * Return selected assignment proficiency value ID
      *
      * @return {Int}
      */
@@ -399,8 +416,14 @@ export default {
 
 <style lang="scss">
 .tui-competencyDetail {
-  &__backLink {
-    padding-bottom: var(--gap-2);
+  & > * + * {
+    margin-top: var(--gap-2);
+  }
+
+  &__header {
+    & > * + * {
+      margin-top: var(--gap-2);
+    }
   }
 
   &__body {
@@ -419,23 +442,10 @@ export default {
   &__buttons {
     text-align: right;
 
-    .dir-rtl & {
-      text-align: left;
-    }
-
     & > * + * {
       margin-top: var(--gap-4);
       margin-left: var(--gap-2);
-
-      .dir-rtl & {
-        margin: 0 var(--gap-2) 0 0;
-      }
     }
-  }
-
-  &__title {
-    margin-top: 0;
-    @include tui-font-heading-medium();
   }
 
   &__description {

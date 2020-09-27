@@ -113,7 +113,7 @@ import PlaylistSidePanel from 'totara_playlist/components/sidepanel/PlaylistSide
 import BookmarkButton from 'totara_engage/components/buttons/BookmarkButton';
 import ContributionBaseContent from 'totara_engage/components/contribution/BaseContent';
 import HeaderBox from 'totara_playlist/components/page/HeaderBox';
-import Layout from 'tui/components/layouts/LayoutOneColumnWithSidePanel';
+import Layout from 'totara_engage/components/page/LayoutOneColumnWithSidePanel';
 import ResourceNavigationBar from 'totara_engage/components/header/ResourceNavigationBar';
 import apolloClient from 'tui/apollo_client';
 
@@ -353,7 +353,7 @@ export default {
     align-self: center;
   }
 
-  .tui-contributionBaseContent__counterContainer__counter {
+  .tui-contributionBaseContent__counter {
     position: relative;
     top: 0;
     padding-bottom: var(--gap-2);

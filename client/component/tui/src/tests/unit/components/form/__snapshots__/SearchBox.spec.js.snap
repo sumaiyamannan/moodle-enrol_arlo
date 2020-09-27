@@ -8,7 +8,9 @@ exports[`presentation/form/SearchBox.vue matches snapshot 1`] = `
     class="tui-formLabel tui-formLabel--hidden"
     for="tempid"
   >
+    <!---->
     
+
   label
   
     <!---->
@@ -38,7 +40,9 @@ exports[`presentation/form/SearchBox.vue matches snapshot 1`] = `
           aria-hidden="true"
           class="tui-iconBtn__icon"
         >
-          <searchicon-stub />
+          <searchicon-stub
+            size="200"
+          />
         </span>
          
         <!---->

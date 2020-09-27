@@ -17,13 +17,16 @@
 -->
 
 <template>
-  <div class="tui-accessDisplay">
-    <div class="tui-accessDisplay__accessIcon">
-      <div class="tui-accessDisplay__accessIcon__icons">
+  <div class="tui-engageAccessDisplay">
+    <div class="tui-engageAccessDisplay__accessIcon">
+      <div class="tui-engageAccessDisplay__accessIcon-icons">
         <AccessIcon :access="accessValue" size="300" />
         <span>{{ viewLabel }}</span>
       </div>
-      <div v-if="showButton" class="tui-accessDisplay__accessIcon__shareButton">
+      <div
+        v-if="showButton"
+        class="tui-engageAccessDisplay__accessIcon-shareButton"
+      >
         <Button
           :text="$str('share', 'totara_engage')"
           :styleclass="{ primary: true, small: true }"
@@ -32,7 +35,7 @@
       </div>
     </div>
 
-    <div v-if="timeView" class="tui-accessDisplay__timeView">
+    <div v-if="timeView" class="tui-engageAccessDisplay__timeView">
       <TimeIcon
         size="300"
         :alt="$str('time', 'totara_engage')"
@@ -41,9 +44,9 @@
       {{ getTimeView }}
     </div>
 
-    <div v-if="topics.length" class="tui-accessDisplay__topics">
+    <div v-if="topics.length" class="tui-engageAccessDisplay__topics">
       <TagIcon
-        size="200"
+        size="300"
         :alt="$str('tags', 'totara_engage')"
         custom-class="tui-icon--dimmed"
       />
@@ -53,18 +56,17 @@
           :key="index"
           :text="topic.value"
           :href="$url('/totara/catalog/index.php')"
-          class="tui-accessDisplay__topics__topic"
+          class="tui-engageAccessDisplay__topic"
         />
       </template>
     </div>
 
-    <div v-if="showButton" class="tui-accessDisplay__editSettings">
-      <span
-        class="tui-accessDisplay__editSettings__text"
-        @click.prevent="$emit('request-open')"
-      >
-        {{ $str('editsettings', 'totara_engage') }}
-      </span>
+    <div v-if="showButton" class="tui-engageAccessDisplay__editSettings">
+      <Button
+        :text="$str('editsettings', 'totara_engage')"
+        :styleclass="{ transparent: true, small: true }"
+        @click="$emit('request-open')"
+      />
     </div>
   </div>
 </template>
@@ -172,17 +174,17 @@ export default {
 </lang-strings>
 
 <style lang="scss">
-.tui-accessDisplay {
+.tui-engageAccessDisplay {
   &__accessIcon {
     display: flex;
-    &__icons {
+    &-icons {
       display: flex;
       align-items: center;
       > :first-child {
         margin-right: var(--gap-2);
       }
     }
-    &__shareButton {
+    &-shareButton {
       margin-left: var(--gap-4);
 
       @media (max-width: $tui-screen-md) {
@@ -205,34 +207,23 @@ export default {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    margin-top: var(--gap-1);
+    margin-top: var(--gap-2);
     line-height: normal;
 
-    &__topic {
-      @include tui-font-body-small();
-      margin-top: var(--gap-1);
-      margin-right: var(--gap-1);
-    }
-
     > :first-child {
-      margin-right: var(--gap-1);
+      margin-right: var(--gap-2);
       color: var(--color-neutral-6);
     }
   }
 
+  &__topic {
+    @include tui-font-body-small();
+    margin-top: var(--gap-1);
+    margin-right: var(--gap-1);
+  }
+
   &__editSettings {
     margin-top: var(--gap-2);
-
-    &__text {
-      @include tui-font-body-small();
-      color: var(--color-state);
-
-      &:focus,
-      &:hover {
-        text-decoration: underline;
-        cursor: pointer;
-      }
-    }
   }
 }
 </style>

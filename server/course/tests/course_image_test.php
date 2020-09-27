@@ -24,9 +24,45 @@
 defined('MOODLE_INTERNAL') || die();
 
 class totara_core_get_course_image_testcase extends advanced_testcase {
-    /**
-     * @return void
-     */
+
+    public function test_course_image() {
+        $generator = $this->getDataGenerator();
+        $user_one = $generator->create_user();
+        $this->setUser($user_one);
+        $user_context = \context_user::instance($user_one->id);
+        $theme_config = theme_config::load('ventura');
+        $theme_settings = new \core\theme\settings($theme_config, 0);
+
+        // Get current default image.
+        $course_image = new \core_course\theme\file\course_image($theme_config);
+        $this->assertEquals(true, $course_image->is_available());
+        $url = $course_image->get_current_or_default_url();
+        $this->assertInstanceOf(moodle_url::class, $url);
+        $url = $url->out();
+        $this->assertEquals(
+            "https://www.example.com/moodle/theme/image.php/_s/ventura/core/1/course_defaultimage",
+            $url
+        );
+
+        // Update default image.
+        $files = [
+            [
+                'ui_key' => 'learncourse',
+                'draft_id' => $this->create_image('new_course_image', $user_context),
+            ]
+        ];
+        $theme_settings->update_files($files, $user_one->id);
+
+        // Confirm that new default image is fetched.
+        $url = $course_image->get_current_or_default_url();
+        $this->assertInstanceOf(moodle_url::class, $url);
+        $url = $url->out();
+        $this->assertEquals(
+            "https://www.example.com/moodle/pluginfile.php/1/course/defaultimage/{$course_image->get_item_id()}/new_course_image.png",
+            $url
+        );
+    }
+
     public function test_course_get_image() {
         global $CFG, $OUTPUT;
         $this->resetAfterTest(true);
@@ -60,4 +96,29 @@ class totara_core_get_course_image_testcase extends advanced_testcase {
         $expected = "{$CFG->wwwroot}/pluginfile.php/{$context->id}/course/images/{$course->cacherev}/image";
         $this->assertEquals($expected, $url->out());
     }
+
+    /**
+     * @param string $name
+     * @param context $context
+     *
+     * @return int
+     */
+    private function create_image(string $name, context $context): int {
+        $draft_id = file_get_unused_draft_itemid();
+        $fs = get_file_storage();
+        $time = time();
+        $file_record = new stdClass();
+        $file_record->filename = "{$name}.png";
+        $file_record->contextid = $context->id;
+        $file_record->component = 'user';
+        $file_record->filearea = 'draft';
+        $file_record->filepath = '/';
+        $file_record->itemid = $draft_id;
+        $file_record->timecreated = $time;
+        $file_record->timemodified = $time;
+        $fs->create_file_from_string($file_record, $name);
+
+        return $draft_id;
+    }
+
 }

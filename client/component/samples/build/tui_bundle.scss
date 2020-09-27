@@ -36,12 +36,6 @@
   }
 }
 
-.tui-sample-wekaValue {
-  &__json {
-    white-space: pre;
-  }
-}
-
 .tui-samples-miniProfileCard {
   display: flex;
   flex-direction: column;
@@ -303,48 +297,6 @@
   .tui-popoverFrame {
     width: 500px;
     max-width: 500px;
-  }
-}
-
-.tui-sampleLayoutOneColumnContentWithSidePanel {
-  &__content {
-    min-height: 61vh;
-  }
-
-  &__sidepanel {
-    padding: var(--gap-8);
-  }
-}
-
-.tui-sampleLayoutOneColumnWithMultiSidePanel {
-  margin-bottom: var(--gap-8);
-
-  .tui-layoutOneColumnWithMultiSidePanel {
-    border: var(--border-width-thin) solid var(--color-neutral-4);
-    .tui-sidePanel__inner {
-      width: 100%;
-    }
-
-    .tui-layoutOneColumnWithMultiSidePanel__column {
-      min-height: 100px;
-    }
-
-    .tui-sidePanel {
-      &--ltr {
-        .tui-sidePanel__inner {
-          border-top: none;
-          border-bottom: none;
-          border-left: none;
-        }
-      }
-      &--rtl {
-        .tui-sidePanel__inner {
-          border-top: none;
-          border-right: none;
-          border-bottom: none;
-        }
-      }
-    }
   }
 }
 

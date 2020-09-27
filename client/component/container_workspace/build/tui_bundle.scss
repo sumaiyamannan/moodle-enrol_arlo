@@ -11,7 +11,7 @@
     padding: var(--gap-2);
   }
 
-  &__dropDown {
+  &__dropdown {
     width: 100%;
 
     @media (min-width: $tui-screen-sm) {
@@ -19,7 +19,7 @@
       width: auto;
     }
 
-    &__button {
+    &-button {
       width: 100%;
 
       @media (min-width: $tui-screen-sm) {
@@ -40,23 +40,21 @@
 }
 
 .tui-workspaceUserAdder {
-  &__table {
-    &__name {
-      display: flex;
-      /* IE support*/
-      flex-grow: 1;
-      align-items: center;
+  &__name {
+    display: flex;
+    /* IE support*/
+    flex-grow: 1;
+    align-items: center;
 
-      &__text {
-        @include tui-font-body();
-        margin: 0;
-        margin-left: var(--gap-2);
-      }
+    &-text {
+      @include tui-font-body();
+      margin: 0;
+      margin-left: var(--gap-2);
     }
   }
 }
 
-.tui-discussionCard {
+.tui-workspaceDiscussionCard {
   display: flex;
   flex-direction: column;
   padding-top: var(--gap-4);
@@ -78,56 +76,56 @@
     display: flex;
     padding: var(--gap-4);
     padding-top: 0;
+  }
 
-    &__avatar {
-      margin-right: var(--gap-2);
+  &__avatar {
+    margin-right: var(--gap-2);
+  }
+
+  &__content {
+    flex-grow: 1;
+    width: 100%;
+  }
+
+  &__head {
+    display: flex;
+    flex: 1;
+    align-items: flex-end;
+    margin-bottom: var(--gap-4);
+    padding-top: 2px;
+
+    a {
+      @include tui-font-body();
+      color: var(--color-state);
+      font-weight: bold;
     }
 
-    &__content {
-      flex-grow: 1;
-      width: 100%;
+    p {
+      @include tui-font-body-x-small();
+      margin: 0;
+      margin-left: var(--gap-2);
+      color: var(--color-neutral-7);
+    }
+  }
 
-      &__head {
-        display: flex;
-        flex: 1;
-        align-items: flex-end;
-        margin-bottom: var(--gap-4);
-        padding-top: 2px;
+  &__body {
+    &--deleted {
+      @include tui-font-body-small();
+      font-style: italic;
+    }
+  }
 
-        a {
-          @include tui-font-body();
-          color: var(--color-state);
-          font-weight: bold;
-        }
+  &__buttons {
+    display: flex;
 
-        p {
-          @include tui-font-body-x-small();
-          margin: 0;
-          margin-left: var(--gap-2);
-          color: var(--color-neutral-7);
-        }
-      }
-
-      &__body {
-        &--deleted {
-          @include tui-font-body-small();
-          font-style: italic;
-        }
-      }
-
-      &__buttons {
-        display: flex;
-
-        &__comment {
-          display: flex;
-          margin-left: var(--gap-4);
-        }
-      }
+    &-comment {
+      display: flex;
+      margin-left: var(--gap-4);
     }
   }
 }
 
-.tui-discussionWithCommentCard {
+.tui-workspaceDiscussionWithCommentCard {
   display: flex;
   flex-direction: column;
   width: 100%;
@@ -143,7 +141,7 @@
   }
 }
 
-.tui-memberRequestCard {
+.tui-workspaceMemberRequestCard {
   display: flex;
   align-items: center;
 
@@ -152,7 +150,7 @@
     flex: 1;
     align-items: center;
 
-    &__userProfile {
+    &-userProfile {
       @include tui-font-link-small();
       @include tui-font-heavy();
 
@@ -213,11 +211,11 @@
 
     border-top-left-radius: var(--border-radius-normal);
     border-top-right-radius: var(--border-radius-normal);
+  }
 
-    &__title {
-      @include tui-font-heading-x-small();
-      margin: 0;
-    }
+  &__title {
+    @include tui-font-heading-x-small();
+    margin: 0;
   }
 
   &__link {
@@ -230,7 +228,7 @@
     }
   }
 
-  &__actionBox {
+  &__actions {
     display: flex;
     flex-basis: 50%;
     flex-direction: column;
@@ -238,8 +236,8 @@
     justify-content: flex-end;
     width: 100%;
 
-    &__button,
-    &__dropDown {
+    &-button,
+    &-dropDown {
       margin-bottom: var(--gap-4);
     }
   }
@@ -247,7 +245,7 @@
 
 .tui-workspaceContributeCard {
   width: 100%;
-  height: calc(var(--totaraEngage-card-height) + 11px);
+  height: calc(var(--totara-engage-card-height) + 11px);
 
   .tui-card {
     /* Overiding cards border*/
@@ -274,7 +272,7 @@
       width: 100%;
     }
 
-    &__tag {
+    &-tag {
       margin-left: var(--gap-1);
     }
   }
@@ -294,12 +292,12 @@
   &__cards {
     display: flex;
     flex-direction: column;
+  }
 
-    &__card {
-      padding: var(--gap-2) 0;
-      &:not(:last-child) {
-        border-bottom: var(--border-width-thin) solid var(--color-neutral-5);
-      }
+  &__card {
+    padding: var(--gap-2) 0;
+    &:not(:last-child) {
+      border-bottom: var(--border-width-thin) solid var(--color-neutral-5);
     }
   }
 }
@@ -377,60 +375,58 @@
     @media (min-width: $tui-screen-sm) {
       padding-left: 0;
     }
+  }
 
-    &__head {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: var(--gap-4);
+  &__head {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: var(--gap-4);
+  }
 
-      &__title {
-        @include tui-font-heading-x-small();
-        margin: 0;
-      }
-    }
+  &__title {
+    @include tui-font-heading-x-small();
+    margin: 0;
+  }
 
-    &__members {
-      &__member {
-        margin-bottom: var(--gap-2);
-      }
+  &__message {
+    @include tui-font-body();
+  }
 
-      &__message {
-        @include tui-font-body();
-      }
+  &__member {
+    margin-bottom: var(--gap-2);
+  }
 
-      &__loadMoreContainer {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        padding-top: var(--gap-6);
-        padding-bottom: var(--gap-8);
-      }
+  &__loadMoreContainer {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding-top: var(--gap-6);
+    padding-bottom: var(--gap-8);
+  }
 
-      &__viewedMembers {
-        display: flex;
-        align-self: center;
-        margin-bottom: var(--gap-1);
-      }
+  &__viewedMembers {
+    display: flex;
+    align-self: center;
+    margin-bottom: var(--gap-1);
+  }
 
-      &__loadMore {
-        display: flex;
-        align-self: center;
-      }
-    }
+  &__loadMore {
+    display: flex;
+    align-self: center;
   }
 }
 
-.tui-discussionFilter {
+.tui-workspaceDiscussionFilter {
   &__search {
     display: flex;
     align-items: center;
     margin-bottom: var(--gap-8);
 
-    &__searchBox {
+    &-box {
       flex-basis: 40%;
     }
 
-    &__link {
+    &-filesLink {
       margin-left: var(--gap-8);
     }
   }
@@ -472,7 +468,7 @@
   }
 }
 
-.tui-postDiscussionForm {
+.tui-workspacePostDiscussionForm {
   display: flex;
   &__form {
     flex-grow: 1;
@@ -499,81 +495,81 @@
   &__container {
     display: flex;
     align-items: stretch;
+  }
 
-    &__inputs {
+  &__inputs {
+    display: flex;
+    flex-direction: column;
+    width: 66%;
+  }
+
+  &__unhiddenRow {
+    margin-top: var(--gap-8);
+    &-box {
       display: flex;
       flex-direction: column;
-      width: 66%;
+      flex-grow: 1;
+      width: 100%;
+    }
 
-      &__formRow {
-        /* Overriding the margin*/
-        &.tui-formRow {
-          margin-bottom: 0;
+    &-helpText {
+      @include tui-font-body-small();
+      margin: 0;
+      margin-top: var(--gap-2);
+    }
+  }
 
-          &:not(:first-child) {
-            margin-top: var(--gap-8);
-          }
-        }
+  &__formRow {
+    /* Overriding the margin*/
+    &.tui-formRow {
+      margin-bottom: 0;
 
-        .tui-formRow__desc {
-          margin-bottom: var(--gap-2);
-        }
-
-        &__editor {
-          display: flex;
-          flex-direction: column;
-          flex-grow: 1;
-          width: 100%;
-
-          &__tip {
-            display: flex;
-            margin-top: var(--gap-2);
-
-            &__text {
-              @include tui-font-body-small();
-            }
-          }
-        }
-      }
-
-      &__unhiddenRow {
+      &:not(:first-child) {
         margin-top: var(--gap-8);
-        &__box {
-          display: flex;
-          flex-direction: column;
-          flex-grow: 1;
-          width: 100%;
-
-          &__helpText {
-            @include tui-font-body-small();
-            margin: 0;
-            margin-top: var(--gap-2);
-          }
-        }
       }
     }
 
-    &__imagePicker {
-      /* This will let us to have our custom FORM input :)*/
-      width: calc(100% - (66% + var(--gap-4)));
+    .tui-formRow__desc {
+      margin-bottom: var(--gap-2);
+    }
+  }
 
-      &.tui-formRow {
-        /* Reset margin*/
-        margin: 0;
-        margin-left: var(--gap-4);
+  &__editor {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    width: 100%;
 
-        .tui-formRow {
-          &__desc {
-            /* Hiding description part.*/
-            display: none;
-          }
+    &-tip {
+      display: flex;
+      margin-top: var(--gap-2);
 
-          &__action {
-            display: flex;
-            flex-direction: column;
-            flex-grow: 1;
-            height: 100%;
-          }
+      &-text {
+        @include tui-font-body-small();
+      }
+    }
+  }
+
+  &__imagePicker {
+    /* This will let us to have our custom FORM input :)*/
+    width: calc(100% - (66% + var(--gap-4)));
+
+    &.tui-formRow {
+      /* Reset margin*/
+      margin: 0;
+      margin-left: var(--gap-4);
+
+      .tui-formRow {
+        &__desc {
+          /* Hiding description part.*/
+          display: none;
+        }
+
+        &__action {
+          display: flex;
+          flex-direction: column;
+          flex-grow: 1;
+          height: 100%;
         }
       }
     }
@@ -603,16 +599,12 @@
 
   &__content {
     flex-grow: 1;
+  }
 
-    &__formRow {
-      margin-bottom: var(--gap-4);
-    }
-
-    &__helpText {
-      @include tui-font-body-small();
-      margin: 0;
-      margin-bottom: var(--gap-4);
-    }
+  &__helpText {
+    @include tui-font-body-small();
+    margin: 0;
+    margin-bottom: var(--gap-4);
   }
 
   &__buttonGroup {
@@ -652,18 +644,17 @@
     &--progressing {
       align-items: stretch;
     }
+  }
 
-    &__loader {
-      display: flex;
-      flex: 1;
-      flex-direction: column;
-      justify-content: center;
-    }
+  &__loader {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    justify-content: center;
+  }
 
-    &__button,
-    &__progress {
-      margin-bottom: var(--gap-4);
-    }
+  &__editButton {
+    margin-bottom: var(--gap-4);
   }
 }
 
@@ -673,10 +664,10 @@
     &.tui-grid {
       margin-bottom: var(--gap-4);
     }
+  }
 
-    &__card {
-      height: var(--totaraEngage-card-height);
-    }
+  &__card {
+    height: var(--totara-engage-card-height);
   }
 }
 
@@ -696,10 +687,6 @@
     flex-direction: column;
     align-items: center;
 
-    &__actionLink {
-      margin-bottom: var(--gap-4);
-    }
-
     p {
       @include tui-font-body();
       margin: 0;
@@ -709,6 +696,10 @@
         @include tui-font-link();
       }
     }
+  }
+
+  &__actionLink {
+    margin-bottom: var(--gap-4);
   }
 }
 
@@ -721,14 +712,16 @@
   }
 
   &__back {
+    margin-top: var(--gap-4);
+
     .tui-iconBtn {
       padding: 0;
     }
   }
 
   &__title {
-    @include tui-font-heading-large();
-    margin-top: var(--gap-10);
+    @include tui-font-heading-page-title;
+    margin-top: var(--gap-2);
     margin-bottom: var(--gap-12);
   }
 }
@@ -778,61 +771,57 @@
     display: flex;
     flex-direction: column;
     width: 100%;
+  }
 
-    &__head {
+  &__head {
+    padding: 0;
+    padding-left: var(--gap-4);
+
+    @media (min-width: $tui-screen-sm) {
       padding: 0;
-      padding-left: var(--gap-4);
+    }
+  }
 
-      @media (min-width: $tui-screen-sm) {
-        padding: 0;
-      }
+  &__title {
+    display: flex;
+    align-items: center;
 
-      &__title {
-        display: flex;
-        align-items: center;
+    &-text {
+      width: 100%;
+      margin: 0;
+      -ms-word-break: break-all;
+      word-break: break-word;
+      -webkit-hyphens: none;
+          -ms-hyphens: none;
+              hyphens: none;
 
-        &__text {
-          width: 100%;
-          margin: 0;
-          -ms-word-break: break-all;
-          word-break: break-word;
-          -webkit-hyphens: none;
-              -ms-hyphens: none;
-                  hyphens: none;
-
-          @include tui-font-heading-small();
-
-          @media (min-width: $tui-screen-lg) {
-            @include tui-font-heading-medium();
-          }
-        }
-
-        &__buttonIcon {
-          margin-left: var(--gap-2);
-        }
-      }
-
-      &__subTitle {
-        display: flex;
-        align-items: center;
-
-        &__text {
-          @include tui-font-body();
-          margin-top: var(--gap-2);
-          color: var(--color-neutral-6);
-        }
-
-        &__button {
-          margin-left: var(--gap-4);
-        }
-      }
+      @include tui-font-heading-page-title;
     }
 
-    &__menu {
-      padding: var(--gap-8) 0;
-      background-color: var(--color-neutral-3);
-      border: var(--border-width-thin) solid var(--color-neutral-5);
+    &-buttonIcon {
+      margin-left: var(--gap-2);
     }
+  }
+
+  &__subTitle {
+    display: flex;
+    align-items: center;
+
+    &-text {
+      @include tui-font-body();
+      margin-top: var(--gap-2);
+      color: var(--color-neutral-6);
+    }
+
+    &-button {
+      margin-left: var(--gap-4);
+    }
+  }
+
+  &__menu {
+    padding: var(--gap-8) 0;
+    background-color: var(--color-neutral-3);
+    border: var(--border-width-thin) solid var(--color-neutral-5);
   }
 }
 
@@ -843,11 +832,11 @@
   &__content {
     display: flex;
     flex-direction: column;
+  }
 
-    &__form {
-      flex: 1;
-      height: 100%;
-    }
+  &__form {
+    flex: 1;
+    height: 100%;
   }
 }
 
@@ -893,7 +882,7 @@
     height: var(--workspaceFileViewModal-minHeight);
     border: 1px solid var(--filter-bar-border-color);
 
-    &__icon {
+    &-icon {
       margin-bottom: var(--gap-8);
       color: var(--color-neutral-6);
       font-size: 60px;
@@ -923,11 +912,9 @@
 }
 
 .tui-workspaceModal {
-  &__content {
-    &__form {
-      flex-grow: 1;
-      height: 100%;
-    }
+  &__form {
+    flex-grow: 1;
+    height: 100%;
   }
 }
 
@@ -936,10 +923,10 @@
     display: flex;
     flex-direction: column;
     flex-grow: 1;
+  }
 
-    &__form {
-      flex-grow: 1;
-    }
+  &__form {
+    flex-grow: 1;
   }
 }
 
@@ -951,20 +938,20 @@
 
   &__container {
     display: flex;
+  }
 
-    &__box {
-      margin-left: var(--gap-4);
+  &__box {
+    margin-left: var(--gap-4);
+  }
 
-      &__title {
-        @include tui-font-heading-x-small();
-        margin-top: 0;
-        margin-bottom: var(--gap-2);
-      }
+  &__title {
+    @include tui-font-heading-x-small();
+    margin-top: 0;
+    margin-bottom: var(--gap-2);
+  }
 
-      &__content {
-        @include tui-font-body();
-      }
-    }
+  &__content {
+    @include tui-font-body();
   }
 }
 
@@ -973,21 +960,15 @@
     display: flex;
     justify-content: space-between;
     margin-bottom: var(--gap-4);
-
-    &__title {
-      @include tui-font-heading-small();
-      margin: 0;
-    }
-
-    &__link {
-      @include tui-font-link();
-    }
   }
 
-  &__grid {
-    &__card {
-      height: var(--totaraEngage-card-height);
-    }
+  &__title {
+    @include tui-font-heading-small();
+    margin: 0;
+  }
+
+  &__link {
+    @include tui-font-link();
   }
 }
 
@@ -999,36 +980,34 @@
     display: flex;
     flex-direction: column;
     width: 100%;
+  }
 
-    &__control {
-      display: flex;
-      align-items: center;
-      padding: var(--gap-4) var(--gap-4) 0 var(--gap-4);
+  &__control {
+    display: flex;
+    align-items: center;
+    padding: var(--gap-4) var(--gap-4) 0 var(--gap-4);
+  }
 
-      &__title {
-        @include tui-font-heading-small();
-        margin: 0;
-      }
+  &__title {
+    @include tui-font-heading-small();
+    margin: 0;
+  }
 
-      &__buttonIcon {
-        margin-left: var(--gap-2);
-      }
-    }
+  &__menuButton {
+    margin-left: var(--gap-2);
+  }
 
-    &__menu {
-      padding: var(--gap-8) 0;
-      background-color: var(--color-neutral-3);
-      border: var(--border-width-thin) solid var(--color-neutral-5);
-    }
+  &__menu {
+    padding: var(--gap-8) 0;
+    background-color: var(--color-neutral-3);
+    border: var(--border-width-thin) solid var(--color-neutral-5);
   }
 }
 
 .tui-workspaceDescription {
-  &__body {
-    &__time {
-      @include tui-font-body-small();
-      margin-bottom: var(--gap-4);
-    }
+  &__time {
+    @include tui-font-body-small();
+    margin-bottom: var(--gap-4);
   }
 }
 
@@ -1086,61 +1065,60 @@
 
   &__content {
     padding-right: var(--gap-8);
+  }
 
-    &__header {
-      margin-top: calc(var(--gap-12) * 2);
-      margin-bottom: var(--gap-12);
-    }
+  &__header {
+    margin-top: calc(var(--gap-12) * 2);
+    margin-bottom: var(--gap-12);
+  }
 
-    &__horizontalLine {
-      margin: 0;
-    }
+  &__horizontalLine {
+    margin: 0;
+  }
 
-    &__recommendedSpaces {
-      margin-top: var(--gap-8);
-    }
+  &__recommendedSpaces {
+    margin-top: var(--gap-8);
   }
 }
 
 .tui-spacesPage {
+  margin-top: var(--gap-12);
   padding: 0 var(--gap-8);
 
-  &__header {
-    @include tui-font-heading-large();
-    margin: calc(var(--gap-8) * 2) 0;
+  &__filter {
+    margin-top: var(--gap-8);
   }
 
-  &__filter {
-    margin-bottom: var(--gap-4);
+  &__grid {
+    margin-top: var(--gap-4);
   }
 }
 
 .tui-workspaceDiscussionPage {
   &__column {
     margin-top: var(--gap-4);
-    &__content {
-      &__backButton {
-        @include tui-font-link();
-        &:hover,
-        &:focus {
-          text-decoration: none;
-        }
-      }
+  }
 
-      &__discussion {
-        margin: var(--gap-8) 0;
-      }
-
-      &__title {
-        @include tui-font-heading-x-small();
-        margin: 0;
-        margin-bottom: var(--gap-4);
-      }
-
-      &__commentBox {
-        position: relative;
-      }
+  &__backButton {
+    @include tui-font-link();
+    &:hover,
+    &:focus {
+      text-decoration: none;
     }
+  }
+
+  &__discussion {
+    margin: var(--gap-8) 0;
+  }
+
+  &__title {
+    @include tui-font-heading-x-small();
+    margin: 0;
+    margin-bottom: var(--gap-4);
+  }
+
+  &__commentBox {
+    position: relative;
   }
 }
 
@@ -1183,11 +1161,11 @@
     @media (min-width: $tui-screen-sm) {
       padding: var(--gap-8);
     }
+  }
 
-    &__message {
-      @include tui-font-body();
-      margin: var(--gap-8) 0;
-    }
+  &__message {
+    @include tui-font-body();
+    margin: var(--gap-8) 0;
   }
 }
 
@@ -1204,41 +1182,41 @@
     @media (min-width: $tui-screen-sm) {
       margin-top: var(--gap-8);
     }
+  }
 
-    &__primaryAction {
-      display: flex;
+  &__primaryAction {
+    display: flex;
+    width: 100%;
+    margin-top: var(--gap-4);
+
+    @media (min-width: $tui-screen-sm) {
+      justify-content: flex-end;
+    }
+
+    &-action {
       width: 100%;
-      margin-top: var(--gap-4);
 
       @media (min-width: $tui-screen-sm) {
-        justify-content: flex-end;
+        width: inherit;
       }
+    }
+  }
 
-      &__action {
-        width: 100%;
-
-        @media (min-width: $tui-screen-sm) {
-          width: inherit;
-        }
+  &__tabs {
+    margin-top: var(--gap-4);
+    .tui-tabs__tabs {
+      padding-left: var(--gap-4);
+      @media (min-width: $tui-screen-sm) {
+        padding: 0;
       }
     }
 
-    &__tabs {
+    &-text {
+      @include tui-font-body();
+    }
+
+    &-discussionTab {
       margin-top: var(--gap-4);
-      .tui-tabs__tabs {
-        padding-left: var(--gap-4);
-        @media (min-width: $tui-screen-sm) {
-          padding: 0;
-        }
-      }
-
-      &__text {
-        @include tui-font-body();
-      }
-
-      &__discussionTab {
-        margin-top: var(--gap-4);
-      }
     }
   }
 }

@@ -21,10 +21,10 @@
     :data-attrs="attributes"
     class="tui-attachmentNode"
     :class="{
-      'tui-attachmentNode--withDownloadUrl': !!downloadUrl,
+      'tui-attachmentNode--downloadable': !!downloadUrl,
     }"
     :tabindex="downloadUrl ? 0 : -1"
-    :role="downloadUrl ? 'link' : false"
+    :role="downloadUrl ? 'link' : null"
     @click="downloadFile"
     @keydown.enter="downloadFile"
   >
@@ -37,14 +37,14 @@
 
     <div class="tui-attachmentNode__info">
       <div
-        class="tui-attachmentNode__info__filename"
+        class="tui-attachmentNode__filename"
         :data-file-extension="fileExtension"
-        :class="[truncate && `tui-attachmentNode__info__filename--truncate`]"
+        :class="[truncate && `tui-attachmentNode__filename--truncate`]"
       >
         <p ref="filenameText">{{ filename }}</p>
       </div>
 
-      <p class="tui-attachmentNode__info__fileSize">
+      <p class="tui-attachmentNode__fileSize">
         <FileSize :size="fileSize" />
       </p>
     </div>
@@ -170,51 +170,44 @@ export default {
   border-radius: var(--card-border-radius);
 
   &__info {
-    width: 72%;
+    width: calc(100% - 3.2rem - var(--gap-2) - 2.2em);
+  }
 
-    @media (max-width: 490px) {
-      width: 65%;
-    }
+  &__fileSize {
+    margin: 0;
+    font-size: var(--font-size-3);
+    white-space: nowrap;
+  }
 
-    @media (max-width: 350px) {
-      width: 50%;
-    }
+  &__filename {
+    position: relative;
 
-    &__fileSize {
+    > p {
       margin: 0;
-      font-size: var(--font-size-3);
+      overflow: hidden;
       white-space: nowrap;
+      text-overflow: ellipsis;
     }
 
-    &__filename {
-      position: relative;
-
-      p {
-        margin: 0;
-        overflow: hidden;
-        white-space: nowrap;
-        text-overflow: ellipsis;
-      }
-
-      &--truncate {
-        &:after {
-          position: absolute;
-          top: 0;
-          left: 100%;
-          width: 100%;
-          content: attr(data-file-extension);
-        }
+    &--truncate {
+      &:after {
+        position: absolute;
+        top: 0;
+        left: 100%;
+        width: 2.2em;
+        content: attr(data-file-extension);
       }
     }
   }
 
   &__icon {
-    flex-basis: 9%;
+    flex-shrink: 0;
+    width: 3.2rem;
     margin-right: var(--gap-2);
     color: var(--color-state);
   }
 
-  &--withDownloadUrl {
+  &--downloadable {
     cursor: pointer;
   }
 }

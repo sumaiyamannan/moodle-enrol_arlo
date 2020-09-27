@@ -22,38 +22,36 @@
 <template>
   <Form class="tui-workspaceForm" :vertical="true" input-width="full">
     <div class="tui-workspaceForm__container">
-      <div class="tui-workspaceForm__container__inputs">
+      <div class="tui-workspaceForm__inputs">
         <FormRow
-          v-slot="{ id, label }"
+          v-slot="{ id }"
           :label="$str('space_name_label', 'container_workspace')"
-          class="tui-workspaceForm__container__inputs__formRow"
+          class="tui-workspaceForm__formRow"
         >
           <InputText :id="id" v-model="name" :disabled="submitting" />
         </FormRow>
 
         <FormRow
           :label="$str('description_label', 'container_workspace')"
-          class="tui-workspaceForm__container__inputs__formRow"
+          class="tui-workspaceForm__formRow"
         >
           <template v-slot:default="{ id }">
-            <div class="tui-workspaceForm__container__inputs__formRow__editor">
+            <div class="tui-workspaceForm__editor">
+              <UnsavedChangesWarning
+                v-if="!description.isEmpty && !submitting"
+                :value="description"
+              />
               <Weka
                 :id="id"
+                v-model="description"
                 :aria-disabled="submitting"
-                :doc="description.doc"
-                class="tui-workspaceForm__container__inputs__formRow__editor__weka"
                 component="container_workspace"
                 area="description"
-                @update="updateDescription"
-                @editor-mounted="editorReady = true"
+                @ready="editorReady = true"
               />
 
-              <div
-                class="tui-workspaceForm__container__inputs__formRow__editor__tip"
-              >
-                <span
-                  class="tui-workspaceForm__container__inputs__formRow__editor__text"
-                >
+              <div class="tui-workspaceForm__editor-tip">
+                <span class="tui-workspaceForm__editor-tip-text">
                   {{ $str('hashtag_tip', 'container_workspace') }}
                 </span>
                 <InfoIconButton :aria-label="$str('info', 'moodle')">
@@ -69,7 +67,7 @@
           v-slot="{ id }"
           :label="$str('workspace_type', 'container_workspace')"
           :helpmsg="$str('workspace_type_help', 'container_workspace')"
-          class="tui-workspaceForm__container__inputs__formRow"
+          class="tui-workspaceForm__formRow"
         >
           <RadioGroup
             :id="id"
@@ -97,7 +95,6 @@
           v-slot="{ id }"
           :label="$str('hidden_workspace_text', 'container_workspace')"
           :hidden="true"
-          class="tui-workspaceForm__container__inputs__checkBoxRow"
         >
           <Checkbox
             :id="id"
@@ -113,14 +110,14 @@
         <FormRow
           v-if="showUnhiddenCheckBox"
           :label="$str('unhidden_workspace_label', 'container_workspace')"
-          class="tui-workspaceForm__container__inputs__unhiddenRow"
+          class="tui-workspaceForm__unhiddenRow"
         >
           <template v-slot:default="{ id }">
             <!--
               This checkbox works completely reverse of the hidden workspace checkbox.
               Meaning that when this checkbox is ticked, the otherbox should go to untick and vice versa.
              -->
-            <div class="tui-workspaceForm__container__inputs__unhiddenRow__box">
+            <div class="tui-workspaceForm__unhiddenRow-box">
               <Checkbox
                 :id="id"
                 v-model="unhideWorkspaceValue"
@@ -129,9 +126,7 @@
                 {{ $str('unhide_workspace', 'container_workspace') }}
               </Checkbox>
 
-              <p
-                class="tui-workspaceForm__container__inputs__unhiddenRow__box__helpText"
-              >
+              <p class="tui-workspaceForm__unhiddenRow-helpText">
                 {{ $str('unhidden_workspace_help', 'container_workspace') }}
               </p>
             </div>
@@ -139,7 +134,7 @@
         </FormRow>
       </div>
 
-      <FormRow class="tui-workspaceForm__container__imagePicker">
+      <FormRow class="tui-workspaceForm__imagePicker">
         <template v-slot="{ id }">
           <SpaceImagePicker
             :id="id"
@@ -150,10 +145,7 @@
             @clear-error="error.upload = null"
           />
 
-          <FieldError
-            class="tui-workspaceForm__container__imagePicker__error"
-            :error="error.upload"
-          />
+          <FieldError :error="error.upload" />
         </template>
       </FormRow>
     </div>
@@ -185,8 +177,9 @@ import InputText from 'tui/components/form/InputText';
 import ButtonGroup from 'tui/components/buttons/ButtonGroup';
 import Button from 'tui/components/buttons/Button';
 import LoadingButton from 'totara_engage/components/buttons/LoadingButton';
+import UnsavedChangesWarning from 'totara_engage/components/form/UnsavedChangesWarning';
 import Weka from 'editor_weka/components/Weka';
-import { debounce } from 'tui/util';
+import WekaValue from 'editor_weka/WekaValue';
 import SpaceImagePicker from 'container_workspace/components/form/upload/SpaceImagePicker';
 import FieldError from 'tui/components/form/FieldError';
 import { FORMAT_JSON_EDITOR } from 'tui/format';
@@ -210,6 +203,7 @@ export default {
     Radio,
     Checkbox,
     InfoIconButton,
+    UnsavedChangesWarning,
   },
 
   props: {
@@ -261,10 +255,7 @@ export default {
   data() {
     return {
       name: this.workspaceName,
-      description: {
-        doc: null,
-        empty: true,
-      },
+      description: WekaValue.empty(),
       descriptionFormat: this.workspaceDescriptionFormat,
       draftId: null,
       innerWorkspacePrivate: this.workspacePrivate || !this.canSetPublic,
@@ -332,18 +323,10 @@ export default {
           return;
         }
 
-        let description = null;
         try {
-          description = JSON.parse(value);
+          this.description = WekaValue.fromDoc(JSON.parse(value));
         } catch (e) {
-          // Make the description as null when occurring error
-          description = null;
-        }
-
-        if (description) {
-          // There is document - so we will skip it.
-          this.description.doc = description;
-          this.description.empty = false;
+          this.description = WekaValue.empty();
         }
       },
 
@@ -364,8 +347,8 @@ export default {
   methods: {
     submit() {
       let description = null;
-      if (!this.description.empty) {
-        description = JSON.stringify(this.description.doc);
+      if (!this.description.isEmpty) {
+        description = JSON.stringify(this.description.getDoc());
       }
 
       const params = {
@@ -378,31 +361,6 @@ export default {
       };
 
       this.$emit('submit', params);
-    },
-
-    $_readJSON: debounce(
-      /**
-       *
-       * @param {{
-       *   getJSON: Function,
-       *   isEmpty: Function
-       * }} option
-       */
-      function(option) {
-        this.description.doc = option.getJSON();
-        this.description.empty = option.isEmpty();
-      },
-      250
-    ),
-
-    /**
-     *
-     * @param {{
-     *   getJSON: Function
-     * }} option
-     */
-    updateDescription(option) {
-      this.$_readJSON(option);
     },
   },
 };
@@ -444,81 +402,81 @@ export default {
   &__container {
     display: flex;
     align-items: stretch;
+  }
 
-    &__inputs {
+  &__inputs {
+    display: flex;
+    flex-direction: column;
+    width: 66%;
+  }
+
+  &__unhiddenRow {
+    margin-top: var(--gap-8);
+    &-box {
       display: flex;
       flex-direction: column;
-      width: 66%;
+      flex-grow: 1;
+      width: 100%;
+    }
 
-      &__formRow {
-        // Overriding the margin
-        &.tui-formRow {
-          margin-bottom: 0;
+    &-helpText {
+      @include tui-font-body-small();
+      margin: 0;
+      margin-top: var(--gap-2);
+    }
+  }
 
-          &:not(:first-child) {
-            margin-top: var(--gap-8);
-          }
-        }
+  &__formRow {
+    // Overriding the margin
+    &.tui-formRow {
+      margin-bottom: 0;
 
-        .tui-formRow__desc {
-          margin-bottom: var(--gap-2);
-        }
-
-        &__editor {
-          display: flex;
-          flex-direction: column;
-          flex-grow: 1;
-          width: 100%;
-
-          &__tip {
-            display: flex;
-            margin-top: var(--gap-2);
-
-            &__text {
-              @include tui-font-body-small();
-            }
-          }
-        }
-      }
-
-      &__unhiddenRow {
+      &:not(:first-child) {
         margin-top: var(--gap-8);
-        &__box {
-          display: flex;
-          flex-direction: column;
-          flex-grow: 1;
-          width: 100%;
-
-          &__helpText {
-            @include tui-font-body-small();
-            margin: 0;
-            margin-top: var(--gap-2);
-          }
-        }
       }
     }
 
-    &__imagePicker {
-      // This will let us to have our custom FORM input :)
-      width: calc(100% - (66% + var(--gap-4)));
+    .tui-formRow__desc {
+      margin-bottom: var(--gap-2);
+    }
+  }
 
-      &.tui-formRow {
-        // Reset margin
-        margin: 0;
-        margin-left: var(--gap-4);
+  &__editor {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    width: 100%;
 
-        .tui-formRow {
-          &__desc {
-            // Hiding description part.
-            display: none;
-          }
+    &-tip {
+      display: flex;
+      margin-top: var(--gap-2);
 
-          &__action {
-            display: flex;
-            flex-direction: column;
-            flex-grow: 1;
-            height: 100%;
-          }
+      &-text {
+        @include tui-font-body-small();
+      }
+    }
+  }
+
+  &__imagePicker {
+    // This will let us to have our custom FORM input :)
+    width: calc(100% - (66% + var(--gap-4)));
+
+    &.tui-formRow {
+      // Reset margin
+      margin: 0;
+      margin-left: var(--gap-4);
+
+      .tui-formRow {
+        &__desc {
+          // Hiding description part.
+          display: none;
+        }
+
+        &__action {
+          display: flex;
+          flex-direction: column;
+          flex-grow: 1;
+          height: 100%;
         }
       }
     }

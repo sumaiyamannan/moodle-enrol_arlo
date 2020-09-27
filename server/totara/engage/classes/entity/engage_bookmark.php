@@ -32,6 +32,8 @@ use totara_engage\repository\bookmark_repository;
  * @property int        $itemid
  * @property string     $component
  * @property int        $timecreated
+ *
+ * @method static bookmark_repository repository()
  */
 class engage_bookmark extends entity {
     /**

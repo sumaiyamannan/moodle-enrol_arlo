@@ -35,16 +35,15 @@
       <FormRow
         v-slot="{ id }"
         :label="$str('pluginname', 'editor_weka')"
-        class="tui-wekaWithLearn__form__row"
+        class="tui-wekaWithLearn__formRow"
       >
         <Weka
           :id="id"
+          v-model="content"
           component="editor_weka"
           area="learn"
-          :doc="doc"
           :instance-id="instanceId"
           :file-item-id="instanceId"
-          @update="updateContent"
         />
       </FormRow>
 
@@ -52,7 +51,7 @@
         v-show="false"
         v-slot="{ id }"
         :hidden="true"
-        class="tui-wekaWithLearn__form__row"
+        class="tui-wekaWithLearn__formRow"
       >
         <InputText
           :id="id"
@@ -66,12 +65,12 @@
         v-show="false"
         v-slot="{ id }"
         :hidden="true"
-        class="tui-wekaWithLearn__form__row"
+        class="tui-wekaWithLearn__formRow"
       >
         <InputText :id="id" name="item_id" :value="itemId" :hidden="true" />
       </FormRow>
 
-      <ButtonGroup class="tui-wekaWithLearn__form__buttonGroup">
+      <ButtonGroup class="tui-wekaWithLearn__buttonGroup">
         <Submit />
         <Button
           type="submit"
@@ -92,9 +91,9 @@
 import Form from 'tui/components/form/Form';
 import FormRow from 'tui/components/form/FormRow';
 import Weka from 'editor_weka/components/Weka';
+import WekaValue from 'editor_weka/WekaValue';
 import ButtonGroup from 'tui/components/buttons/ButtonGroup';
 import InputText from 'tui/components/form/InputText';
-import { debounce } from 'tui/util';
 import Submit from 'tui/components/buttons/Submit';
 import Button from 'tui/components/buttons/Button';
 
@@ -124,22 +123,20 @@ export default {
 
   data() {
     return {
-      doc: null,
+      content: null,
       itemId: this.instanceId,
     };
   },
 
   computed: {
     documentValue() {
-      if (this.doc === null) {
-        return '';
-      }
-
-      return JSON.stringify(this.doc);
+      return this.content ? JSON.stringify(this.content.getDoc()) : '';
     },
 
     jsonPretty() {
-      return JSON.stringify(this.doc, undefined, 2);
+      return this.content
+        ? JSON.stringify(this.content.getDoc(), undefined, 2)
+        : '';
     },
   },
 
@@ -148,20 +145,15 @@ export default {
       immediate: true,
       handler(value) {
         if (value) {
-          this.doc = JSON.parse(value);
+          this.content = WekaValue.fromDoc(JSON.parse(value));
         }
       },
     },
-  },
 
-  methods: {
-    $_readJSON: debounce(function(option) {
-      this.doc = option.getJSON();
-      this.itemId = option.getFileStorageItemId();
-    }, 250),
-
-    updateContent(option) {
-      this.$_readJSON(option);
+    content(value) {
+      if (value) {
+        this.itemId = value.fileStorageItemId;
+      }
     },
   },
 };
@@ -192,16 +184,16 @@ export default {
     display: flex;
     flex: 1;
     flex-direction: column;
+  }
 
-    &__row {
-      flex: 1;
-    }
+  &__row {
+    flex: 1;
+  }
 
-    &__buttonGroup {
-      display: flex;
-      justify-content: flex-end;
-      margin-top: var(--gap-2);
-    }
+  &__buttonGroup {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: var(--gap-2);
   }
 
   &__code {

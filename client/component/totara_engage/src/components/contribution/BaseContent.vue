@@ -28,7 +28,7 @@
     </section>
 
     <section v-if="showHeading" class="tui-contributionBaseContent__header">
-      <div class="tui-contributionBaseContent__header__title">
+      <div class="tui-contributionBaseContent__title">
         <slot name="heading" />
       </div>
       <slot name="bookmark" />
@@ -38,7 +38,7 @@
 
     <section v-show="!loading || loadingMore">
       <div class="tui-contributionBaseContent__counterContainer">
-        <div class="tui-contributionBaseContent__counterContainer__counter">
+        <div class="tui-contributionBaseContent__counter">
           <template v-if="customTitle">
             {{ customTitle }}
           </template>
@@ -208,17 +208,22 @@ export default {
   &__header {
     display: flex;
     justify-content: space-between;
-    margin-top: var(--gap-8);
-    margin-bottom: calc(var(--gap-8) * 2);
-
-    &__title {
-      @include tui-font-heading-large;
-      flex: 1;
-    }
+    margin: var(--gap-4) 0 var(--gap-12);
 
     :not(:first-child) {
       margin-left: var(--gap-8);
     }
+
+    :last-child {
+      align-self: center;
+    }
+  }
+
+  &__title {
+    @include tui-font-heading-page-title();
+    flex-basis: auto;
+    flex-grow: 0;
+    flex-shrink: 1;
   }
 
   &__filter {
@@ -255,14 +260,14 @@ export default {
 
   &__counterContainer {
     position: relative;
+  }
 
-    &__counter {
-      @include tui-font-heading-x-small;
-      position: absolute;
-      top: calc(var(--gap-6) * -2);
-      padding: var(--gap-2);
-      padding-bottom: 0;
-    }
+  &__counter {
+    @include tui-font-heading-x-small;
+    position: absolute;
+    top: calc(var(--gap-6) * -2);
+    padding: var(--gap-2);
+    padding-bottom: 0;
   }
 
   &__emptyText {

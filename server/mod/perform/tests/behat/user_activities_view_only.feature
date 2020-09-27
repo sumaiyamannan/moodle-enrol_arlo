@@ -109,7 +109,7 @@ Feature: Viewing user activities list with view-only access
       | Manager              | combined Three | Not yet started  |
     # Make sure we can follow the section link even if it's a view-only section.
     When I click on "Section 1" "link_or_button" in the ".tui-performUserActivityListSection:nth-child(1) .tui-performUserActivityListSection__header" "css_element"
-    Then I should see "Multi section activity" in the ".tui-participantContent__header" "css_element"
+    Then I should see "Multi section activity" in the ".tui-pageHeading__title" "css_element"
 
   Scenario: View-only access is indicated differently for single and multi section activities
     Given I log in as "appraiser"
@@ -148,7 +148,7 @@ Feature: Viewing user activities list with view-only access
       | Relationship to user | User     | Section progress |
       | Subject              | John One | Not yet started  |
       | Manager              | You      | Not yet started  |
-    When I click on "Single section activity" "link_or_button"
+    When I click on "Single section activity" "link_or_button_exact"
     Then I should see "Select relationship to continue" in the ".tui-modalContent" "css_element"
     And I should see "Manager (Not yet started)"
     And I should see "Appraiser (View only)"

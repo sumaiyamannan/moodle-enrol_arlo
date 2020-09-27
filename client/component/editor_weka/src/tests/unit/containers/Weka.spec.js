@@ -73,6 +73,7 @@ const factory = (option, instanceId) => {
     propsData: {
       options: option,
       instanceId,
+      ariaLabel: 'Weka label',
     },
     mocks: {
       $apollo: {
@@ -96,7 +97,7 @@ describe('editor_weka/components/Weka.vue', () => {
     // Since the editor would have to be mounted once all the elements within the component rendered, therefore,
     // this test should be waiting for that mounting event to be finished to run the assertion.
     await new Promise(resolve => {
-      wrapper.vm.$on('editor-mounted', () => {
+      wrapper.vm.$on('ready', () => {
         resolve('mounted');
       });
     });

@@ -44,8 +44,7 @@
     }
   }
   &__content {
-    display: flex;
-    flex-direction: row;
+    max-width: 300px;
   }
 
   &__info {
@@ -654,13 +653,16 @@
 .tui-participantContent {
   @include tui-font-body();
 
-  &__layout.tui-grid {
+  & > * + * {
     margin-top: var(--gap-6);
   }
 
-  &__header {
-    margin: var(--gap-6) 0 0;
-    @include tui-font-heading-medium();
+  &__body {
+    margin-top: 0;
+  }
+
+  &__layout.tui-grid {
+    margin-top: var(--gap-6);
   }
 
   &__buttons {
@@ -827,6 +829,9 @@
       padding: var(--gap-6) var(--gap-4) 0;
       color: var(--color-neutral-6);
     }
+  }
+  &__element {
+    pointer-events: none;
   }
 }
 
@@ -1051,132 +1056,100 @@
 }
 
 .tui-performActivityParticipantSelector {
-  margin-top: var(--gap-4);
   padding: var(--gap-4);
   border: var(--border-width-thin) solid var(--card-border-color);
 
-  &-title {
+  &__title {
     @include tui-font-heading-small;
     margin: 0;
   }
 
-  &-meta {
+  &__meta {
     margin-top: var(--gap-2);
   }
 
-  &-form {
+  &__form {
     margin-top: var(--gap-4);
   }
 }
 
 .tui-performManageActivityList {
-  &__add {
-    text-align: right;
+  & > * + * {
+    margin-top: var(--gap-4);
   }
 
-  &__table {
-    padding-top: var(--gap-4);
+  &__add {
+    text-align: right;
   }
 }
 
 @media (min-width: $tui-screen-sm) {
   .tui-performManageActivityList {
-    &__table {
-      padding-top: var(--gap-2);
+    & > * + * {
+      margin-top: var(--gap-2);
     }
   }
 }
 
 .tui-performAddParticipants {
-  &__title {
-    @include tui-font-heading-medium;
-    padding-top: var(--gap-2);
+  & > * + * {
+    margin-top: var(--gap-2);
+  }
+
+  &__content {
+    & > * + * {
+      margin-top: var(--gap-4);
+    }
   }
 }
 
 .tui-performUserActivityInvalid {
   @include tui-font-body();
 
-  margin: var(--gap-8) 0 0;
-
   & > * + * {
     margin-top: var(--gap-6);
-  }
-
-  &__header {
-    @include tui-font-heading-medium();
   }
 }
 
 .tui-performUserActivitySuccess {
   @include tui-font-body();
 
-  margin: var(--gap-8) 0 0;
-
   & > * + * {
     margin-top: var(--gap-6);
-  }
-
-  &__header {
-    @include tui-font-heading-medium();
   }
 }
 
 .tui-performManageActivity {
   @include tui-font-body();
 
+  & > * + * {
+    margin-top: var(--gap-2);
+  }
+
   &__content {
     & > * + * {
       margin-top: var(--gap-8);
     }
   }
-
-  &__title {
-    @include tui-font-heading-medium;
-    margin: var(--gap-2) 0 0;
-  }
 }
 
 .tui-performUserActivities {
-  &__header-row {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: flex-end;
-    justify-content: space-between;
-  }
-
-  &__heading {
-    margin: 0;
-    padding-right: var(--gap-8);
-  }
-
-  &__action-buttons {
-    margin-top: var(--gap-4);
-  }
-
-  &__content {
-    margin-top: var(--gap-4);
-  }
-
   @include tui-font-body();
-}
 
-@media (min-width: $tui-screen-xs) {
-  .tui-performUserActivities {
-    &__action-buttons {
-      margin-top: var(--gap-4);
-    }
-
-    &__content {
-      margin-top: var(--gap-4);
-    }
+  & > * + * {
+    margin-top: var(--gap-4);
   }
 }
 
 .tui-performUserActivitiesSelectParticipants {
-  &__title {
-    @include tui-font-heading-medium;
-    padding-top: var(--gap-2);
+  & > * + * {
+    margin-top: var(--gap-2);
+  }
+
+  &__content {
+    & > * + * {
+      margin-top: var(--gap-4);
+    }
   }
 }
 

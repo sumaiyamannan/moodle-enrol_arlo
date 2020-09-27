@@ -24,6 +24,7 @@ namespace core_tag\repository;
 
 use core\orm\entity\repository;
 use core\orm\query\builder;
+use core_tag\entity\tag_collection;
 use core_tag\entity\tag_instance;
 
 /**
@@ -40,5 +41,22 @@ final class tag_instance_repository extends repository {
 
         $builder->where('tagid', $tagid);
         return $builder->fetch();
+    }
+
+    /**
+     * Returns the count of the number of tag instances for a specified collection.
+     *
+     * @param string $name
+     * @param string $component
+     * @return int
+     */
+    public function count_instances_for_collection(string $name, string $component): int {
+        $builder = builder::table(static::get_table());
+        return $builder
+            ->join(['tag', 't'], 'tagid', '=', 'id')
+            ->join([tag_collection::TABLE, 'tc'], 'tc.id', '=', 't.tagcollid')
+            ->where('tc.name', '=', $name)
+            ->where('tc.component', '=', $component)
+            ->count();
     }
 }

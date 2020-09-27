@@ -655,6 +655,7 @@ html {
   &--circle {
     width: 3.6rem;
     min-height: 3.6rem;
+    padding: 0;
     border-radius: 50%;
 
     &.tui-iconBtn--small {
@@ -699,11 +700,11 @@ html {
   padding: 0 var(--gap-1);
 }
 
-.tui-InfoIconButton {
+.tui-infoIconButton {
   &.tui-iconBtn {
     width: auto;
     height: auto;
-    padding: 0;
+    vertical-align: -0.125em;
   }
 }
 
@@ -1544,6 +1545,11 @@ html {
     background-clip: padding-box;
     border: var(--border-width-thin) solid var(--dropdown-menu-border-color);
     box-shadow: var(--shadow-2);
+  }
+
+  &--flexibleWidth &__menu {
+    min-width: 0;
+    max-width: none;
   }
 
   &__content {
@@ -2979,15 +2985,22 @@ input[type].tui-formInput {
   }
 }
 
+:root {
+  /* rem does not work correctly in IE*/
+  --form-range-height: 20px;
+  --form-range-track-height: 10px;
+  --form-range-thumb-size: 18px;
+}
+
 @mixin tui-range-track() {
-  height: 10px;
+  height: var(--form-range-track-height);
   background: var(--color-neutral-4);
-  border-radius: 4px;
+  border-radius: var(--border-radius-small);
   cursor: pointer;
 }
 @mixin tui-range-thumb() {
-  width: 18px;
-  height: 18px;
+  width: var(--form-range-thumb-size);
+  height: var(--form-range-thumb-size);
   background: var(--color-neutral-5);
   border: none;
   border-radius: 50%;
@@ -3004,101 +3017,91 @@ input[type].tui-formInput {
     align-items: flex-end;
     justify-content: space-between;
     margin-bottom: var(--gap-1);
+  }
 
-    > * {
-      @include tui-font-body-small;
-      color: var(--color-neutral-6);
-    }
+  &__lowLabel,
+  &__highLabel {
+    @include tui-font-body-small();
+    flex-basis: 40%;
+    color: var(--color-neutral-6);
   }
 
   &__lowLabel {
-    flex-basis: 40%;
     text-align: left;
   }
 
   &__highLabel {
-    flex-basis: 40%;
     text-align: right;
   }
 
   &__input {
-    height: 20px;
+    height: var(--form-range-height);
     padding: 0;
     outline: none;
-  }
-
-  input[type='range'] {
     -webkit-appearance: none;
-  }
 
-  input[type='range']:disabled {
-    background-color: transparent;
-  }
+    &:disabled {
+      background-color: transparent;
+    }
 
-  /* Hide outline border */
-  input[type='range']:focus {
-    outline: none;
-  }
-  input[type='range']::-moz-focus-outer {
-    border: 0;
-  }
+    &:focus {
+      @include tui-focus();
+    }
+    &::-moz-focus-outer {
+      border: 0;
+    }
 
-  /* Track styles */
-  input[type='range']::-webkit-slider-runnable-track {
-    @include tui-range-track;
-  }
-  input[type='range']:focus::-webkit-slider-runnable-track {
-    background: var(--color-neutral-4);
-  }
-  input[type='range']::-moz-range-track {
-    @include tui-range-track;
-  }
-  input[type='range']::-ms-track {
-    @include tui-range-track;
-    color: transparent; /* Remove default tick marks */
-    background: transparent; /* Replace bg colour from the track with ms-fill-lower and ms-fill-upper */
-    border-color: transparent; /* Thumb can not overlay track so we add invisible border */
-    border-top-width: 4px;
-    border-bottom-width: 6px;
-  }
-  input[type='range']::-ms-fill-upper {
-    background: rgb(230, 228, 228);
-    border-radius: 4px;
-  }
-  input[type='range']::-ms-fill-lower {
-    background: rgb(230, 228, 228);
-    border-radius: 4px;
-  }
-  input[type='range']:focus::-ms-fill-upper {
-    background: rgb(230, 228, 228);
-  }
-  input[type='range']:focus::-ms-fill-lower {
-    background: rgb(230, 228, 228);
-  }
+    /* Track styles */
+    &::-webkit-slider-runnable-track {
+      @include tui-range-track();
+    }
+    &:focus::-webkit-slider-runnable-track {
+      background: var(--color-neutral-4);
+    }
+    &::-moz-range-track {
+      @include tui-range-track();
+    }
+    &::-ms-track {
+      @include tui-range-track();
+      color: transparent; /* Remove default tick marks */
+      background: transparent; /* Replace bg colour from the track with ms-fill-lower and ms-fill-upper */
+      border-color: transparent; /* Thumb can not overlay track so we add invisible border */
+    }
+    &::-ms-fill-upper,
+    &::-ms-fill-lower {
+      background: var(--color-neutral-4);
+      border-radius: var(--border-radius-small);
+    }
+    &:focus::-ms-fill-upper,
+    &:focus::-ms-fill-lower {
+      background: var(--color-neutral-4);
+    }
 
-  /* Thumb styles */
-  input[type='range']::-webkit-slider-thumb {
-    @include tui-range-thumb;
-    margin-top: -5px;
-    -webkit-appearance: none;
-  }
-  input[type='range']::-moz-range-thumb {
-    @include tui-range-thumb;
-  }
-  input[type='range']::-ms-thumb {
-    @include tui-range-thumb;
-    margin-top: 2px;
-    background: rgb(199, 199, 199);
-  }
+    /* Thumb styles */
+    &::-webkit-slider-thumb {
+      @include tui-range-thumb();
+      /* prettier-ignore*/
+      margin-top: calc((var(--form-range-track-height) / 2) - (var(--form-range-thumb-size) / 2));
+      -webkit-appearance: none;
+    }
+    &::-moz-range-thumb {
+      @include tui-range-thumb();
+    }
+    &::-ms-thumb {
+      @include tui-range-thumb();
+    }
 
-  input[type='range'].tui-range__input--selected::-webkit-slider-thumb {
-    background: var(--color-state);
-  }
-  input[type='range'].tui-range__input--selected::-moz-range-thumb {
-    background: var(--color-state);
-  }
-  input[type='range'].tui-range__input--selected::-ms-thumb {
-    background: rgb(75, 126, 43);
+    &.tui-range__input--selected {
+      &::-webkit-slider-thumb {
+        background: var(--color-state);
+      }
+      &::-moz-range-thumb {
+        background: var(--color-state);
+      }
+      &::-ms-thumb {
+        background: var(--color-state);
+      }
+    }
   }
 }
 
@@ -3478,6 +3481,12 @@ input[type].tui-formInput {
     &-gap {
       @include grid-item-generate-gutters(top, var(--grid-gutter));
     }
+
+    /* IE11 doesn't distribute vertical space without an explicit height set*/
+    /* on the container, so the safest thing to do is revert to block layout*/
+    .ie & {
+      display: block;
+    }
   }
 
   &--wrapped-gap .tui-grid-item--wrapped {
@@ -3523,6 +3532,10 @@ input[type].tui-formInput {
 }
 
 .tui-svgIcon {
+  /* same as the bootstrap icons default css*/
+  /* better alignment in most cases than vertical-align: middle*/
+  vertical-align: text-bottom;
+
   &--size {
     &-100 {
       font-size: 1.4rem;
@@ -3601,51 +3614,44 @@ input[type].tui-formInput {
   border-radius: var(--card-border-radius);
 
   &__info {
-    width: 72%;
+    width: calc(100% - 3.2rem - var(--gap-2) - 2.2em);
+  }
 
-    @media (max-width: 490px) {
-      width: 65%;
-    }
+  &__fileSize {
+    margin: 0;
+    font-size: var(--font-size-3);
+    white-space: nowrap;
+  }
 
-    @media (max-width: 350px) {
-      width: 50%;
-    }
+  &__filename {
+    position: relative;
 
-    &__fileSize {
+    > p {
       margin: 0;
-      font-size: var(--font-size-3);
+      overflow: hidden;
       white-space: nowrap;
+      text-overflow: ellipsis;
     }
 
-    &__filename {
-      position: relative;
-
-      p {
-        margin: 0;
-        overflow: hidden;
-        white-space: nowrap;
-        text-overflow: ellipsis;
-      }
-
-      &--truncate {
-        &:after {
-          position: absolute;
-          top: 0;
-          left: 100%;
-          width: 100%;
-          content: attr(data-file-extension);
-        }
+    &--truncate {
+      &:after {
+        position: absolute;
+        top: 0;
+        left: 100%;
+        width: 2.2em;
+        content: attr(data-file-extension);
       }
     }
   }
 
   &__icon {
-    flex-basis: 9%;
+    flex-shrink: 0;
+    width: 3.2rem;
     margin-right: var(--gap-2);
     color: var(--color-state);
   }
 
-  &--withDownloadUrl {
+  &--downloadable {
     cursor: pointer;
   }
 }
@@ -3808,71 +3814,41 @@ input[type].tui-formInput {
   margin: var(--gap-8) 0;
 }
 
-.tui-layoutOneColumnContentWithSidepanel
-  > .tui-responsive
-  > .tui-grid
-  > .tui-grid-item {
-  transition: flex-basis var(--transition-sidepanel-content-function)
-    var(--transition-sidepanel-content-duration);
-
-  .tui-sidePanel {
-    overflow: visible;
-  }
-}
-
-.tui-layoutOneColumnContentWithSidepanel {
-  &-fullSidePanel {
-    > .tui-responsive > .tui-grid > .tui-grid-item {
-      border-left: none;
-    }
-  }
-}
-
-.tui-layoutOneColumnWithMultiSidePanel,
-> .tui-responsive,
-> .tui-grid,
-> .tui-grid-item {
-  transition: flex-basis ease-in 0.3s;
-}
-
-.tui-layoutOneColumnWithMultiSidePanel {
-  &__outerRight {
-    position: relative;
-  }
-
-  &__rightSidePanelContainer {
-    height: 100%;
-  }
-}
-
-.tui-layoutOneColumnContentWithSidepanel {
-  &--fullSidePanel {
-    > .tui-responsive > .tui-grid > .tui-grid-item {
-      border-left: none;
-    }
-  }
-
-  /* Prevents the button edges from being hidden which would prevent the user from selecting the button again*/
-  &--onSmallScreen {
-    > .tui-responsive > .tui-grid > .tui-grid-item {
-      .tui-sidepanel {
-        overflow: visible;
-        &--closed {
-          .tui-sidepanel__inner {
-            overflow: hidden;
-          }
-        }
-      }
-    }
-  }
-}
-
 .tui-layoutThreeColumn__heading {
   @include tui-font-heading-medium();
 }
 
 .tui-layoutTwoColumn__heading {
   @include tui-font-heading-medium();
+}
+
+.tui-pageHeading {
+  display: flex;
+  flex-direction: column;
+  flex-wrap: wrap;
+
+  &__title {
+    @include tui-font-heading-page-title;
+  }
+
+  &__buttons {
+    & > * {
+      margin: var(--gap-3) 0 0 var(--gap-2);
+    }
+  }
+}
+
+@media (min-width: $tui-screen-sm) {
+  .tui-pageHeading {
+    flex-direction: row;
+
+    &__buttons {
+      margin-left: auto;
+      & > * {
+        margin-top: 0;
+      }
+    }
+  }
 }
 
 .tui-actionLink {
@@ -4240,6 +4216,10 @@ $tui-modal-sheetBreakpoint: 768px !default;
   min-height: 0;
   padding: var(--modal-content-outer-padding) 0;
 
+  &--noContentPadding {
+    padding-bottom: 0;
+  }
+
   &__header {
     display: flex;
     flex-shrink: 0;
@@ -4264,11 +4244,17 @@ $tui-modal-sheetBreakpoint: 768px !default;
   }
 
   &__content {
+    display: flex;
+    flex-direction: column;
     flex-grow: 1;
     min-height: 0;
     margin-top: var(--modal-content-separation);
     padding: 0 var(--modal-content-outer-padding) 2px;
     overflow-y: auto;
+  }
+
+  &--noContentPadding &__content {
+    padding: 0;
   }
 
   &__footer {
@@ -4573,7 +4559,7 @@ $tui-modal-sheetBreakpoint: 768px !default;
     padding-left: var(--gap-4);
   }
 
-  &--no-dropDown {
+  &--no-dropdown {
     padding-right: var(--gap-4);
   }
 
@@ -4605,7 +4591,7 @@ $tui-modal-sheetBreakpoint: 768px !default;
       display: flex;
       align-items: center;
 
-      &__text {
+      &-text {
         @include tui-font-body-small();
         margin: 0;
         overflow: hidden;
@@ -4617,7 +4603,7 @@ $tui-modal-sheetBreakpoint: 768px !default;
         }
       }
 
-      &__link {
+      &-link {
         @include tui-font-link-small();
         margin: 0;
         overflow: hidden;
@@ -5574,6 +5560,10 @@ $progress-tracker-half-circle: 14px !default;
   &__input {
     margin: -2px 0;
   }
+
+  &__expandArrow {
+    height: calc(var(--tag-height) + (2 * var(--border-width-thin)));
+  }
 }
 
 .tui-toggleBtn {
@@ -5902,5 +5892,11 @@ $progress-tracker-half-circle: 14px !default;
   min-width: 0;
 
   @include tui-char-length-classes();
+}
+
+.tui-themesettings {
+  & > * + * {
+    margin-top: var(--gap-2);
+  }
 }
 

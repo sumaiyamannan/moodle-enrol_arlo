@@ -2,58 +2,64 @@
 
 exports[`engage_article/components/card/ArticleCard.vue Checks snapshot 1`] = `
 <basecard-stub
-  class="tui-engageArticle-articleCard"
+  class="tui-engageArticleCard"
   data-card-unique="1"
   href=""
 >
   <imageheader-stub
-    class="tui-engageArticle-articleCard__imageheader"
+    class="tui-engageArticleCard__imageheader"
   >
     <img
       alt="Hello world resource"
-      class="tui-engageArticle-articleCard__image"
+      class="tui-engageArticleCard__image"
       src="/"
     />
      
     <div
-      class="tui-engageArticle-articleCard__icons"
+      class="tui-engageArticleCard__icons"
     >
       <buttonicon-stub
         arialabel="[addtoplaylist, engage_article - undefined]"
         styleclass="[object Object]"
         type="button"
       >
-        <addtolisticon-stub />
+        <addtolisticon-stub
+          size="200"
+        />
       </buttonicon-stub>
       <buttonicon-stub
         arialabel="[share, totara_engage - undefined]"
         styleclass="[object Object]"
         type="button"
       >
-        <shareicon-stub />
+        <shareicon-stub
+          size="200"
+        />
       </buttonicon-stub>
       <buttonicon-stub
         arialabel="[more, totara_engage - undefined]"
         styleclass="[object Object]"
         type="button"
       >
-        <moreicon-stub />
+        <moreicon-stub
+          size="200"
+        />
       </buttonicon-stub>
     </div>
   </imageheader-stub>
    
   <cardheader-stub
-    class="tui-engageArticle-articleCard__header"
+    class="tui-engageArticleCard__header"
   >
     <bookmarkbutton-stub
-      class="tui-engageArticle-articleCard__bookmark"
+      class="tui-engageArticleCard__bookmark"
       size="300"
       small="true"
       transparent="true"
     />
      
     <h3
-      class="tui-engageArticle-articleCard__title"
+      class="tui-engageArticleCard__title"
       id="article-1"
     >
       
@@ -65,13 +71,14 @@ exports[`engage_article/components/card/ArticleCard.vue Checks snapshot 1`] = `
   </cardheader-stub>
    
   <div
-    class="tui-engageArticle-articleCard__footer"
+    class="tui-engageArticleCard__footer"
   >
     <staticon-stub
       statnumber="15"
       title="[numberoflikes, totara_engage - 15]"
     >
       <svgicongenerated-stub
+        size="200"
         title="[numberoflikes, totara_engage - 15]"
       />
     </staticon-stub>
@@ -80,6 +87,7 @@ exports[`engage_article/components/card/ArticleCard.vue Checks snapshot 1`] = `
       title="[numberofcomments, totara_engage - 1]"
     >
       <svgicongenerated-stub
+        size="200"
         title="[numberofcomments, totara_engage - 1]"
       />
     </staticon-stub>
@@ -88,6 +96,7 @@ exports[`engage_article/components/card/ArticleCard.vue Checks snapshot 1`] = `
       title="[numberofshares, totara_engage - 10]"
     >
       <svgicongenerated-stub
+        size="200"
         title="[numberofshares, totara_engage - 10]"
       />
     </staticon-stub>
@@ -96,6 +105,7 @@ exports[`engage_article/components/card/ArticleCard.vue Checks snapshot 1`] = `
       title="[numberwithinplaylist, engage_article - 5]"
     >
       <svgicongenerated-stub
+        size="200"
         title="[numberwithinplaylist, engage_article - 5]"
       />
     </staticon-stub>
@@ -103,7 +113,7 @@ exports[`engage_article/components/card/ArticleCard.vue Checks snapshot 1`] = `
     <accessicon-stub
       access="PUBLIC"
       coloring="true"
-      customclass="tui-engageArticle-articleCard__visibilityIcon"
+      customclass="tui-engageArticleCard__visibilityIcon"
       size="300"
     />
   </div>

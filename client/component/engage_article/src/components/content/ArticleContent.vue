@@ -16,9 +16,10 @@
   @module engage_article
 -->
 <template>
-  <div class="tui-articleContent">
+  <div class="tui-engageArticleContent">
     <InlineEditing
       v-show="!editing"
+      :button-aria-label="$str('editarticlecontent', 'engage_article', title)"
       :full-width="true"
       :restricted-mode="true"
       :update-able="updateAble"
@@ -27,7 +28,7 @@
       <div
         slot="content"
         ref="content"
-        class="tui-articleContent__content"
+        class="tui-engageArticleContent__content"
         v-html="content"
       />
     </InlineEditing>
@@ -65,6 +66,11 @@ export default {
       required: true,
     },
 
+    title: {
+      type: String,
+      required: true,
+    },
+
     content: {
       type: String,
       required: true,
@@ -82,19 +88,6 @@ export default {
       submitting: false,
     };
   },
-
-  watch: {
-    editing: {
-      handler() {
-        if (this.editing) {
-          window.addEventListener('beforeunload', this.$_unloadHandler);
-        } else {
-          window.removeEventListener('beforeunload', this.$_unloadHandler);
-        }
-      },
-    },
-  },
-
   mounted() {
     this.$_scan();
   },
@@ -104,21 +97,6 @@ export default {
   },
 
   methods: {
-    $_unloadHandler(event) {
-      // Cancel the event as stated by the standard.
-      event.preventDefault();
-
-      // For older browsers that still show custom message.
-      const discardUnsavedChanges = this.$str(
-        'unsaved_changes_warning',
-        'totara_engage'
-      );
-
-      // Chrome requires returnValue to be set.
-      event.returnValue = discardUnsavedChanges;
-
-      return discardUnsavedChanges;
-    },
     $_scan() {
       this.$nextTick().then(() => {
         let content = this.$refs.content;
@@ -175,14 +153,14 @@ export default {
 
 <lang-strings>
   {
-    "totara_engage": [
-      "unsaved_changes_warning"
+    "engage_article": [
+      "editarticlecontent"
     ]
   }
 </lang-strings>
 
 <style lang="scss">
-.tui-articleContent {
+.tui-engageArticleContent {
   &__content {
     flex-grow: 1;
   }

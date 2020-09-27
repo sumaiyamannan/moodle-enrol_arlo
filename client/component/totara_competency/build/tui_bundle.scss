@@ -58,29 +58,6 @@
   }
 }
 
-.tui-competencyUserHeader {
-  position: relative;
-  display: flex;
-  align-items: center;
-
-  &::after {
-    position: absolute;
-    right: 0;
-    bottom: 0;
-    left: 19px; /* half of xsmall avatar (which is specified in px)*/
-    border-bottom: var(--border-width-normal) solid var(--color-primary);
-    content: '';
-  }
-
-  &__name {
-    @include tui-font-body();
-    /* offset name by the border width so it doesn't look weird*/
-    margin-bottom: var(--border-width-normal);
-    margin-left: var(--gap-2);
-    font-weight: bold;
-  }
-}
-
 .tui-achievementLayout {
   &__left {
     display: flex;
@@ -175,7 +152,20 @@
     @include tui-font-heading-small();
     padding-top: var(--gap-2);
   }
+}
 
+@media screen and (min-width: $tui-screen-xs) {
+  .tui-competencyDetailActivityLog {
+    &__proficient {
+      font-weight: bold;
+      &-srOnly {
+        @include sr-only();
+      }
+    }
+  }
+}
+
+.tui-competencyDetailActivityLogTable {
   &__date {
     word-wrap: break-word;
   }
@@ -206,17 +196,6 @@
   }
 }
 
-@media screen and (min-width: $tui-screen-xs) {
-  .tui-competencyDetailActivityLog {
-    &__proficient {
-      font-weight: bold;
-      &-srOnly {
-        @include sr-only();
-      }
-    }
-  }
-}
-
 .tui-competencyDetailArchivedAssignments {
   margin: var(--gap-2) var(--gap-4);
 
@@ -224,7 +203,9 @@
     @include tui-font-heading-small();
     padding-top: var(--gap-2);
   }
+}
 
+.tui-competencyDetailArchivedAssignmentsTable {
   &__achievement {
     display: flex;
   }
@@ -469,15 +450,46 @@
   }
 }
 
-.tui-competencySelfAssignment__table-reasons {
-  margin-left: 0;
-  padding-left: 0;
-  list-style: none;
+.tui-competencySelfAssignmentTable {
+  & > * + * {
+    margin-top: var(--gap-2);
+  }
+
+  &__header {
+    margin: 0;
+    @include tui-font-heading-small();
+  }
+
+  &__reasons {
+    margin: 0;
+    padding-left: 0;
+    list-style: none;
+  }
+
+  &__expand {
+    & > * + * {
+      margin: var(--gap-2) 0 0;
+    }
+
+    &-header {
+      @include tui-font-heading-small();
+    }
+
+    &-subHeader {
+      @include tui-font-heading-x-small();
+    }
+  }
 }
 
 .tui-competencyDetail {
-  &__backLink {
-    padding-bottom: var(--gap-2);
+  & > * + * {
+    margin-top: var(--gap-2);
+  }
+
+  &__header {
+    & > * + * {
+      margin-top: var(--gap-2);
+    }
   }
 
   &__body {
@@ -496,23 +508,10 @@
   &__buttons {
     text-align: right;
 
-    .dir-rtl & {
-      text-align: left;
-    }
-
     & > * + * {
       margin-top: var(--gap-4);
       margin-left: var(--gap-2);
-
-      .dir-rtl & {
-        margin: 0 var(--gap-2) 0 0;
-      }
     }
-  }
-
-  &__title {
-    margin-top: 0;
-    @include tui-font-heading-medium();
   }
 
   &__description {
@@ -538,12 +537,9 @@
     margin-top: var(--gap-8);
   }
 
-  &__heading {
-    display: flex;
-
-    &-title {
-      margin: 0;
-      @include tui-font-heading-medium();
+  &__header {
+    & > * + * {
+      margin-top: var(--gap-2);
     }
   }
 
@@ -608,13 +604,12 @@
   @include tui-font-body();
 
   & > * + * {
-    margin-top: var(--gap-4);
+    margin-top: var(--gap-2);
   }
 
-  &__header {
-    &-title {
-      @include tui-font-heading-medium();
-      margin: var(--gap-2) 0 0;
+  &__content {
+    & > * + * {
+      margin-top: var(--gap-4);
     }
   }
 
@@ -637,38 +632,22 @@
 }
 
 .tui-competencySelfAssignment {
-  &__table {
+  & > * + * {
+    margin-top: var(--gap-4);
+  }
+
+  &__actions {
+    justify-content: space-between;
+  }
+
+  &__header {
     & > * + * {
       margin-top: var(--gap-2);
     }
   }
 
-  &__tableExpand {
-    & > * + * {
-      margin: var(--gap-2) 0 0;
-    }
-
-    &-header {
-      @include tui-font-heading-small();
-    }
-
-    &-subHeader {
-      @include tui-font-heading-x-small();
-    }
-  }
-
-  &__actions {
-    justify-content: space-between;
-    margin-bottom: var(--gap-5);
-  }
-
-  &__header {
-    margin: 0;
-    @include tui-font-heading-small();
-  }
-
-  &__table {
-    margin-bottom: var(--gap-5);
+  &__loadMore {
+    margin-top: var(--gap-4);
   }
 }
 

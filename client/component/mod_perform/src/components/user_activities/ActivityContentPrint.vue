@@ -104,13 +104,14 @@
                   <ElementParticipantForm
                     v-if="
                       sectionElement.is_respondable &&
-                        participantCanAnswer &&
+                        sectionElement.can_answer &&
                         !viewOnlyReportMode
                     "
                   >
                     <template v-slot:content>
                       <component
                         :is="sectionElement.component"
+                        class="tui-participantContentPrint__element"
                         v-bind="loadUserSectionElementProps(sectionElement)"
                       />
                     </template>
@@ -457,6 +458,7 @@ export default {
                 responseData: null,
               },
               sort_order: item.sort_order,
+              can_answer: this.participantCanAnswer,
               is_respondable: item.element.is_respondable,
               response_data: item.response_data,
               other_responder_groups: item.other_responder_groups,
@@ -466,7 +468,6 @@ export default {
 
         if (this.viewOnlyReportMode || !this.participantCanAnswer) {
           this.showOtherResponse = true;
-          return;
         }
 
         result.section_element_responses
@@ -573,6 +574,9 @@ export default {
       padding: var(--gap-6) var(--gap-4) 0;
       color: var(--color-neutral-6);
     }
+  }
+  &__element {
+    pointer-events: none;
   }
 }
 </style>

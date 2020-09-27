@@ -17,13 +17,13 @@
 -->
 
 <template>
-  <Form :vertical="true" input-width="full" class="tui-articleForm">
+  <Form :vertical="true" input-width="full" class="tui-engageArticleForm">
     <FormRow
       v-slot="{ id }"
       :hidden="true"
       :label="$str('articletitle', 'engage_article')"
       :required="true"
-      class="tui-articleForm__title"
+      class="tui-engageArticleForm__title"
     >
       <InputText
         :id="id"
@@ -36,53 +36,39 @@
       />
     </FormRow>
 
-    <div class="tui-articleForm__description">
+    <div class="tui-engageArticleForm__description">
       <FormRow
         v-slot="{ id }"
         :hidden="true"
         :label="$str('content', 'engage_article')"
         :required="true"
-        class="tui-articleForm__description__formRow"
+        class="tui-engageArticleForm__description-formRow"
         :is-stacked="false"
       >
+        <UnsavedChangesWarning
+          v-if="!content.isEmpty && !submitting"
+          :value="content"
+        />
         <Weka
           v-if="draftId"
           :id="id"
+          v-model="content"
           component="engage_article"
           area="content"
-          :doc="content.doc"
           :file-item-id="draftId"
           :placeholder="$str('entercontent', 'engage_article')"
-          @update="handleUpdate"
         />
       </FormRow>
 
-      <div class="tui-articleForm__description__tip">
+      <div class="tui-engageArticleForm__description-tip">
         <p>{{ $str('contributetip', 'totara_engage') }}</p>
-        <Popover position="right">
-          <template v-slot:trigger="{ isOpen }">
-            <ButtonIcon
-              :aria-expanded="isOpen.toString()"
-              :aria-label="$str('info', 'moodle')"
-              class="tui-articleForm__description__iconButton"
-              :styleclass="{
-                primary: true,
-                small: true,
-                transparentNoPadding: true,
-              }"
-            >
-              <InfoIcon />
-            </ButtonIcon>
-          </template>
-
-          <p class="tui-articleForm__description__tip__content">
-            {{ $str('contributetip_help', 'totara_engage') }}
-          </p>
-        </Popover>
+        <InfoIconButton :aria-label="$str('info', 'moodle')">
+          {{ $str('contributetip_help', 'totara_engage') }}
+        </InfoIconButton>
       </div>
     </div>
 
-    <ButtonGroup class="tui-articleForm__buttons">
+    <ButtonGroup class="tui-engageArticleForm__buttons">
       <Button
         :loading="submitting"
         :styleclass="{ primary: 'true' }"
@@ -100,31 +86,30 @@
 <script>
 import InputText from 'tui/components/form/InputText';
 import ButtonGroup from 'tui/components/buttons/ButtonGroup';
-import ButtonIcon from 'tui/components/buttons/ButtonIcon';
 import CancelButton from 'tui/components/buttons/Cancel';
 import Button from 'tui/components/buttons/Button';
-import Popover from 'tui/components/popover/Popover';
-import { debounce } from 'tui/util';
 import Weka from 'editor_weka/components/Weka';
+import WekaValue from 'editor_weka/WekaValue';
 import Form from 'tui/components/form/Form';
 import FormRow from 'tui/components/form/FormRow';
-import InfoIcon from 'tui/components/icons/Info';
+import InfoIconButton from 'tui/components/buttons/InfoIconButton';
+
+import UnsavedChangesWarning from 'totara_engage/components/form/UnsavedChangesWarning';
 
 // GraphQL queries
 import fileDraftId from 'core/graphql/file_unused_draft_item_id';
 
 export default {
   components: {
-    ButtonIcon,
     InputText,
     ButtonGroup,
     Button,
     CancelButton,
-    Popover,
     Weka,
     Form,
     FormRow,
-    InfoIcon,
+    InfoIconButton,
+    UnsavedChangesWarning,
   },
 
   props: {
@@ -143,12 +128,7 @@ export default {
     return {
       // Caching the name separately
       name: this.articleName,
-      content: {
-        // Default state of editor
-        doc: null,
-        isEmpty: true,
-      },
-
+      content: WekaValue.empty(),
       draftId: null,
       submitting: false,
     };
@@ -173,10 +153,10 @@ export default {
         }
 
         try {
-          this.content.doc = JSON.parse(value);
+          this.content = WekaValue.fromDoc(JSON.parse(value));
         } catch (e) {
           // Silenced any invalid json string.
-          this.content.doc = null;
+          this.content = WekaValue.empty();
         }
       },
     },
@@ -187,14 +167,6 @@ export default {
   },
 
   methods: {
-    /**
-     *
-     * @param {Object} opt
-     */
-    handleUpdate(opt) {
-      this.$_readJson(opt);
-    },
-
     async $_loadDraftId() {
       const {
         data: { item_id },
@@ -202,23 +174,10 @@ export default {
       this.draftId = item_id;
     },
 
-    $_readJson: debounce(
-      /**
-       *
-       * @param {Object} opt
-       */
-      function(opt) {
-        this.content.doc = opt.getJSON();
-        this.content.isEmpty = opt.isEmpty();
-      },
-      250,
-      { perArgs: false }
-    ),
-
     submit() {
       const params = {
         name: this.name,
-        content: JSON.stringify(this.content.doc),
+        content: JSON.stringify(this.content.getDoc()),
         itemId: this.draftId,
       };
 
@@ -253,11 +212,10 @@ export default {
 </lang-strings>
 
 <style lang="scss">
-.tui-articleForm {
+.tui-engageArticleForm {
   display: flex;
   flex: 1;
   flex-direction: column;
-  margin-top: var(--gap-4);
 
   &__title {
     &.tui-formRow {
@@ -278,7 +236,7 @@ export default {
     flex-grow: 1;
     margin-top: var(--gap-8);
 
-    &__formRow {
+    &-formRow {
       flex-grow: 1;
       // Reset margin of itself.
       &.tui-formRow {
@@ -303,14 +261,10 @@ export default {
       }
     }
 
-    &__tip {
+    &-tip {
       position: relative;
       display: flex;
       margin-top: var(--gap-2);
-
-      &__content {
-        margin: 0;
-      }
     }
   }
 
