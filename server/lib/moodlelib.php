@@ -6202,7 +6202,7 @@ function generate_email_messageid($localpart = null) {
  * @return bool Returns true if mail was sent OK and false if there was an error.
  */
 function email_to_user($user, $from, $subject, $messagetext, $messagehtml = '', $attachment = '', $attachname = '',
-                       $usetrueaddress = true, $replyto = '', $replytoname = '', $wordwrapwidth = 79) {
+                       $usetrueaddress = true, $replyto = '', $replytoname = '', $wordwrapwidth = 79, $queueapproved=false) {
 
     global $CFG, $PAGE, $SITE, $DB;
 
@@ -6254,6 +6254,7 @@ function email_to_user($user, $from, $subject, $messagetext, $messagehtml = '', 
 
     if (!empty($user->deleted)) {
         debugging('Can not send email to deleted user: '.$user->id, DEBUG_DEVELOPER);
+        \local_maillog\helper::log_mail(false, 'User is deleted', $user, $from, $subject, $messagetext, $messagehtml, $attachment, $attachname, $usetrueaddress, $replyto, $replytoname, $wordwrapwidth);  // ird mod
         return false;
     }
 
@@ -6267,6 +6268,7 @@ function email_to_user($user, $from, $subject, $messagetext, $messagehtml = '', 
     if (!empty($CFG->noemailever)) {
         // Hidden setting for development sites, set in config.php if needed.
         debugging('Not sending email due to $CFG->noemailever config setting', DEBUG_NORMAL);
+        \local_maillog\helper::log_mail(false, 'noemailever config set', $user, $from, $subject, $messagetext, $messagehtml, $attachment, $attachname, $usetrueaddress, $replyto, $replytoname, $wordwrapwidth);  // ird mod
         return true;
     }
 
@@ -6279,6 +6281,7 @@ function email_to_user($user, $from, $subject, $messagetext, $messagehtml = '', 
     // Skip mail to suspended users.
     if ((isset($user->auth) && $user->auth=='nologin') or (isset($user->suspended) && $user->suspended)) {
         // Totara: this does not work properly without the hack above because devs keep forgetting to add these fields.
+        \local_maillog\helper::log_mail(false, 'Suspended user', $user, $from, $subject, $messagetext, $messagehtml, $attachment, $attachname, $usetrueaddress, $replyto, $replytoname, $wordwrapwidth);  // ird mod
         return true;
     }
 
@@ -6292,11 +6295,13 @@ function email_to_user($user, $from, $subject, $messagetext, $messagehtml = '', 
     if (!validate_email($user->email)) {
         // We can not send emails to invalid addresses - it might create security issue or confuse the mailer.
         debugging("email_to_user: User $user->id (".fullname($user).") email ($user->email) is invalid! Not sending.");
+        \local_maillog\helper::log_mail(false, 'Invalid email', $user, $from, $subject, $messagetext, $messagehtml, $attachment, $attachname, $usetrueaddress, $replyto, $replytoname, $wordwrapwidth);  // ird mod
         return false;
     }
 
     if (over_bounce_threshold($user)) {
         debugging("email_to_user: User $user->id (".fullname($user).") is over bounce threshold! Not sending.");
+        \local_maillog\helper::log_mail(false, 'Over bounce threshold', $user, $from, $subject, $messagetext, $messagehtml, $attachment, $attachname, $usetrueaddress, $replyto, $replytoname, $wordwrapwidth);  // ird mod
         return false;
     }
 
@@ -6304,7 +6309,14 @@ function email_to_user($user, $from, $subject, $messagetext, $messagehtml = '', 
     // For More information, see {@link http://tools.ietf.org/html/rfc2606#section-2}.
     if (substr($user->email, -8) == '.invalid') {
         debugging("email_to_user: User $user->id (".fullname($user).") email domain ($user->email) is invalid! Not sending.");
+        \local_maillog\helper::log_mail(false, 'Invalid domain for email', $user, $from, $subject, $messagetext, $messagehtml, $attachment, $attachname, $usetrueaddress, $replyto, $replytoname, $wordwrapwidth);  // ird mod
         return true; // This is not an error.
+    }
+
+    if (get_config('local_maillog', 'queuemails') && !$queueapproved) {
+        // Queue email for sending later and return
+        \local_maillog\helper::log_mail(true, 'Email queued', $user, $from, $subject, $messagetext, $messagehtml, $attachment, $attachname, $usetrueaddress, $replyto, $replytoname, $wordwrapwidth, LOCAL_MAILLOG_STATUS_QUEUED);  // ird mod
+        return true;
     }
 
     // If the user is a remote mnet user, parse the email text for URL to the
@@ -6594,7 +6606,9 @@ function email_to_user($user, $from, $subject, $messagetext, $messagehtml = '', 
         }
         if (!empty($mail->SMTPDebug)) {
             echo '</pre>';
+            \local_maillog\helper::log_mail(true, '', $user, $mail->From, $subject, $messagetext, $messagehtml, $attachment, $attachname, $usetrueaddress, $replyto, $replytoname, $wordwrapwidth);  // ird mod
         }
+        \local_maillog\helper::log_mail(false, 'mail->Send() returned false', $user, $mail->From, $subject, $messagetext, $messagehtml, $attachment, $attachname, $usetrueaddress, $replyto, $replytoname, $wordwrapwidth);  // ird mod
         return false;
     }
 }
