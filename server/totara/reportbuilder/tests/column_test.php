@@ -584,6 +584,12 @@ class totara_reportbuilder_column_testcase extends reportcache_advanced_testcase
         'time_created' =>  1332153671, 'time_status' => 1332153671,
     );
 
+    // local/maillog data
+    protected $mail_log = array(
+        'id' => 1, 'userid' => 1, 'fromobj' => '"noreply@eugeneisdiebaas.com"', 'toaddress' => 'eugene@catalyst.net.nz', 'fromaddress' => 'noreply@eugeneisdiebaas.com',
+        'subject' => 'this is a test', 'messagetext' => 'this is a test for realz', 'timesent' => '1416859984'
+    );
+
 
     // NOTE: Do not add more data above - you can now avoid core changes by defining the
     // {@link phpunit_column_test_add_data()} method in your source instead.
@@ -836,6 +842,7 @@ class totara_reportbuilder_column_testcase extends reportcache_advanced_testcase
             'tool_customlang_components' => array($this->tool_customlang_components_data),
             'totara_competency_assignments' => array($this->totara_competency_assignments_data),
             'totara_competency_achievement' => array($this->totara_competency_achievement_data),
+            'mail_log' => array($this->mail_log),
         )));
     }
 
