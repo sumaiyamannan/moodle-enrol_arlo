@@ -21,6 +21,7 @@
     <Dropdown
       :separator="true"
       :open="$apollo.loading || users.length > 0"
+      :inline-menu="true"
       @dismiss="$emit('dismiss')"
     >
       <span class="sr-only">
@@ -29,7 +30,7 @@
 
       <template v-if="$apollo.loading">
         <DropdownItem :disabled="true">
-          {{ $str('loadinghelp', 'moodle') }}
+          <Loader :loading="true" />
         </DropdownItem>
       </template>
 
@@ -50,12 +51,14 @@ import Dropdown from 'tui/components/dropdown/Dropdown';
 import DropdownItem from 'tui/components/dropdown/DropdownItem';
 import findUsers from 'editor_weka/graphql/find_users_by_pattern';
 import MiniProfileCard from 'tui/components/profile/MiniProfileCard';
+import Loader from 'tui/components/loading/Loader';
 
 export default {
   components: {
     Dropdown,
     DropdownItem,
     MiniProfileCard,
+    Loader,
   },
 
   props: {
@@ -71,16 +74,9 @@ export default {
       type: String,
     },
 
-    x: {
-      // This is offset from left
+    location: {
       required: true,
-      type: [Number, String],
-    },
-
-    y: {
-      // This is offset from top.
-      required: true,
-      type: [Number, String],
+      type: Object,
     },
 
     pattern: {
@@ -113,8 +109,8 @@ export default {
   computed: {
     positionStyle() {
       return {
-        left: `${this.x}px`,
-        top: `${this.y}px`,
+        left: `${this.location.x}px`,
+        top: `${this.location.y}px`,
       };
     },
   },
@@ -136,9 +132,6 @@ export default {
   {
     "editor_weka": [
       "matching_users"
-    ],
-    "moodle": [
-      "loadinghelp"
     ]
   }
 </lang-strings>
@@ -146,6 +139,7 @@ export default {
 <style lang="scss">
 .tui-wekaUserSuggestions {
   position: absolute;
+  z-index: var(--zindex-popover);
   width: 32.6rem;
 }
 </style>

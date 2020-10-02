@@ -145,11 +145,11 @@
     justify-content: space-between;
     margin: var(--gap-4) 0 var(--gap-12);
 
-    :not(:first-child) {
+    > :not(:first-child) {
       margin-left: var(--gap-8);
     }
 
-    :last-child {
+    > :last-child {
       align-self: center;
     }
   }
@@ -157,8 +157,7 @@
   &__title {
     @include tui-font-heading-page-title();
     flex-basis: auto;
-    flex-grow: 0;
-    flex-shrink: 1;
+    flex-grow: 1;
   }
 
   &__filter {
@@ -295,6 +294,7 @@
 
   &__buttons {
     display: flex;
+    justify-content: space-between;
     margin-top: var(--gap-2);
   }
 
@@ -317,6 +317,8 @@
   }
 
   &--updateAble {
+    padding-right: 2rem;
+
     &:after {
       position: absolute;
       top: 0;
@@ -332,6 +334,9 @@
       border: 2px solid var(--color-secondary);
       cursor: pointer;
       & .tui-inlineEditing__btn {
+        flex-grow: 0;
+        flex-shrink: 0;
+        width: 1.5rem;
         outline: none;
       }
     }
@@ -562,9 +567,9 @@
 
   &__content {
     display: flex;
-    flex: 1;
     flex-direction: column;
-    min-height: 600px;
+    flex-grow: 1;
+    min-height: 60rem;
   }
 
   &__adderContainer {
@@ -603,9 +608,26 @@
   &__componentContent {
     position: relative;
     display: flex;
-    flex: 1;
+    flex-basis: 0;
     flex-direction: column;
+    flex-grow: 1;
+    min-height: 0;
     padding: var(--gap-8);
+  }
+}
+
+.tui-engageWarningModal {
+  &__container {
+    display: flex;
+  }
+
+  &__title {
+    @include tui-font-heading-x-small();
+    margin-bottom: var(--gap-2);
+  }
+
+  &__box {
+    padding-left: var(--gap-4);
   }
 }
 
@@ -670,18 +692,6 @@
   }
 }
 
-.tui-engagelayoutOneColumnContentWithSidepanel
-  > .tui-responsive
-  > .tui-grid
-  > .tui-grid-item {
-  transition: flex-basis var(--transition-sidepanel-content-function)
-    var(--transition-sidepanel-content-duration);
-
-  .tui-sidePanel {
-    overflow: visible;
-  }
-}
-
 .tui-engagelayoutOneColumnContentWithSidepanel {
   &-fullSidePanel {
     > .tui-responsive > .tui-grid > .tui-grid-item {
@@ -690,24 +700,16 @@
   }
 }
 
-.tui-engagelayoutOneColumnWithMultiSidePanel,
-> .tui-responsive,
-> .tui-grid,
-> .tui-grid-item {
-  transition: flex-basis ease-in 0.3s;
-}
-
 .tui-engagelayoutOneColumnWithMultiSidePanel {
   &__outerRight {
     position: relative;
   }
-
   &__rightSidePanelContainer {
     height: 100%;
   }
 }
 
-.tui-engagelayoutOneColumnContentWithSidepanel {
+.tui-engagelayoutOneColumnWithSidepanel {
   &--fullSidePanel {
     > .tui-responsive > .tui-grid > .tui-grid-item {
       border-left: none;
@@ -718,10 +720,10 @@
   /* from selecting the button again*/
   &--onSmallScreen {
     > .tui-responsive > .tui-grid > .tui-grid-item {
-      .tui-sidepanel {
+      .tui-sidePanel {
         overflow: visible;
         &--closed {
-          .tui-sidepanel__inner {
+          .tui-sidePanel__inner {
             overflow: hidden;
           }
         }
@@ -731,10 +733,36 @@
 }
 
 .tui-engageSidePanel {
-  padding: var(--gap-8);
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  padding: var(--gap-4);
+
+  @media (min-width: $tui-screen-sm) {
+    padding: var(--gap-8);
+  }
 
   &__tabs {
-    padding-top: var(--gap-8);
+    display: flex;
+    flex: 1 0 1px;
+    flex-direction: column;
+    padding-top: var(--gap-6);
+
+    @media (min-width: $tui-screen-sm) {
+      padding-top: var(--gap-8);
+      overflow: auto;
+    }
+
+    .tui-tabs__panels {
+      flex-basis: 0;
+      flex-grow: 1;
+      flex-shrink: 0;
+
+      @media (min-width: $tui-screen-sm) {
+        min-height: 0;
+      }
+    }
+
     /* Overriding the fallback select list when there isn't enough space*/
     .tui-formRow__action {
       width: 200px;
@@ -742,9 +770,14 @@
   }
 
   &__commentBox {
-    /* Since the tab is already having a padding which it is '--gap-4'.*/
-    /* Therefore we just need another '--gap-4'.*/
-    margin-top: var(--gap-4);
+    height: 100%;
+
+    @media (min-width: $tui-screen-sm) {
+      /* Since the tab is already having a padding which it is '--gap-4'.*/
+      /* Therefore we just need another '--gap-4'.*/
+      height: calc(100% - var(--gap-4));
+      margin-top: var(--gap-4);
+    }
   }
 
   &__overviewBox {
@@ -1009,27 +1042,6 @@
 
   &__text {
     @include tui-font-body();
-  }
-}
-
-.tui-libraryView {
-  .tui-sidePanel__inner {
-    width: 100%;
-    padding: 0;
-    border-top: none;
-  }
-
-  /* Vertical grid styles */
-  .tui-grid--vertical {
-    .tui-Layout__leftSidePanel {
-      .tui-sidePanel__inner {
-        background-color: unset;
-        border: unset;
-      }
-    }
-    .tui-grid-item--wrapped {
-      margin: 0;
-    }
   }
 }
 

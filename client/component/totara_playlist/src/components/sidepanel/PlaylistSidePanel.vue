@@ -21,11 +21,12 @@
       <MiniProfileCard
         :display="user.card_display"
         :no-border="true"
+        :no-padding="true"
         class="tui-playlistSidePanel__profile"
       >
         <template v-if="canManage" v-slot:drop-down-items>
           <DropdownItem @click="modal.confirm = true">
-            {{ $str('delete', 'moodle') }}
+            {{ $str('delete', 'core') }}
           </DropdownItem>
         </template>
       </MiniProfileCard>
@@ -54,11 +55,12 @@
         <AccessSetting
           v-if="canManage"
           :item-id="playlistId"
+          :has-non-public-resources="playlist.hasnonpublicresources"
           component="totara_playlist"
           :access-value="playlist.access"
           :topics="playlist.topics"
           :submitting="submitting"
-          :open-modal="openModalFromButtonLabel"
+          :open-access-modal="openModalFromButtonLabel"
           @access-update="updateAccess"
           @close-modal="openModalFromButtonLabel = false"
         />
@@ -338,7 +340,7 @@ export default {
       "deletewarningtitle"
     ],
 
-    "moodle": [
+    "core": [
       "delete"
     ]
   }
@@ -346,6 +348,10 @@ export default {
 
 <style lang="scss">
 .tui-playlistSidePanel {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  height: 100%;
   padding: var(--gap-8);
 
   &__timeDescription {

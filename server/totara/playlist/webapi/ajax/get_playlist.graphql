@@ -25,6 +25,7 @@ query totara_playlist_get_playlist($id: param_integer!) {
       __typename
       id
       value(format: PLAIN)
+      catalog
     }
     name(format: PLAIN)
     access
@@ -42,5 +43,6 @@ query totara_playlist_get_playlist($id: param_integer!) {
     owned
     bookmarked
     manageable
+    hasnonpublicresources
   }
 }

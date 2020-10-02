@@ -37,6 +37,7 @@
           :desc-id="ariaDescribedbyId"
           :helpmsg="helpmsg"
           :hidden="hidden"
+          :label="label || null"
           :title="helpTitle"
         />
       </div>
@@ -141,7 +142,7 @@ export default {
       display: block;
       flex-direction: column;
 
-      @include tui-stack-vertical(var(--gap-1));
+      @include tui-stack-vertical(var(--gap-2));
     }
   }
 }

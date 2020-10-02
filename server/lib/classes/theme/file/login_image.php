@@ -37,8 +37,8 @@ use theme_config;
  *
  * This file handler is also used by theme settings to generate a dynamic list
  * of files that can be customised by a user.
- * @see core\theme\settings
- * @see core\theme\file\theme_file
+ * @see settings
+ * @see theme_file
  *
  * @package core\theme\file
  */
@@ -60,6 +60,14 @@ class login_image extends theme_file {
      */
     public static function get_id(): string {
         return 'totara_core/default_login';
+    }
+
+    /**
+     * @return bool
+     */
+    public function is_enabled(): bool {
+        // Only available for site theme.
+        return $this->tenant_id === 0;
     }
 
     /**

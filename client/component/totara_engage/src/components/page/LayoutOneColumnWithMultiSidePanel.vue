@@ -50,8 +50,6 @@ This layout is capable of the following:
             direction="ltr"
             :animated="leftAnimated"
             :sticky="leftSticky"
-            :limit-height="leftSidePanelLimitHeight"
-            :grow-height-on-scroll="leftGrowHeightOnScroll"
             :initially-open="leftSidePanelInitiallyOpen"
             :overflows="leftSidePanelOverflows"
             :show-button-control="showLeftSidePanelControl"
@@ -79,7 +77,7 @@ This layout is capable of the following:
             <GridItem
               class="tui-engagelayoutOneColumnWithMultiSidePanel__column"
               :units="gridUnitsInnerLeft"
-              :grows="true"
+              :grows="false"
             >
               <div
                 class="tui-engagelayoutOneColumnWithMultiSidePanel__columnContainer"
@@ -98,7 +96,7 @@ This layout is capable of the following:
             <GridItem
               v-if="showRightSidePanel"
               :units="unitsInnerRight"
-              :grows="true"
+              :grows="false"
             >
               <div
                 ref="sidePanelRightContainer"
@@ -111,8 +109,6 @@ This layout is capable of the following:
                   direction="rtl"
                   :animated="rightAnimated"
                   :sticky="rightSticky"
-                  :limit-height="rightSidePanelLimitHeight"
-                  :grow-height-on-scroll="rightGrowHeightOnScroll"
                   :initially-open="rightSidePanelInitiallyOpen"
                   :overflows="rightSidePanelOverflows"
                   :show-button-control="showRightSidePanelControl"
@@ -141,6 +137,8 @@ import Grid from 'tui/components/grid/Grid';
 import GridItem from 'tui/components/grid/GridItem';
 import Responsive from 'tui/components/responsive/Responsive';
 import SidePanel from 'tui/components/sidepanel/SidePanel';
+import { WebStorageStore } from 'tui/storage';
+const storage = new WebStorageStore('engage', window.localStorage);
 
 export default {
   components: {
@@ -451,8 +449,18 @@ export default {
         }
       },
     },
+    rightSidePanelIsOpen(val) {
+      storage.set('sidepanel', { isOpen: val });
+    },
   },
-
+  mounted() {
+    let state = this.rightSidePanelInitiallyOpen;
+    const sidePanelState = storage.get('sidepanel');
+    if (sidePanelState) {
+      state = sidePanelState.isOpen;
+    }
+    this.rightSidePanelIsOpen = state;
+  },
   methods: {
     /**
      * Handles responsive resizing which wraps the grid layout for this page
@@ -484,18 +492,10 @@ export default {
 </script>
 
 <style lang="scss">
-.tui-engagelayoutOneColumnWithMultiSidePanel,
-> .tui-responsive,
-> .tui-grid,
-> .tui-grid-item {
-  transition: flex-basis ease-in 0.3s;
-}
-
 .tui-engagelayoutOneColumnWithMultiSidePanel {
   &__outerRight {
     position: relative;
   }
-
   &__rightSidePanelContainer {
     height: 100%;
   }

@@ -303,12 +303,8 @@
 .tui-sidePanelExample {
   height: 100%;
 
-  & .tui-sidePanelExample__content {
+  .tui-sidePanel__content {
     padding: var(--gap-8);
-  }
-
-  .tui-grid--animated > .tui-grid-item {
-    transition: flex-basis ease-in 0.3s;
   }
 }
 

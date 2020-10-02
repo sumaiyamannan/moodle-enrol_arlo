@@ -43,15 +43,17 @@
           :id="id"
           :tags="selectedUsers"
           :items="users"
-          @filter="searchPattern = $event"
-          @select="selectedUser = $event"
-          @remove="selectedUser = null"
+          :filter="searchPattern"
+          @filter="filterUsers"
+          @select="selectUser"
+          @remove="removeUser"
         >
           <template
             v-if="!$apollo.loading"
             v-slot:item="{ item: { card_display } }"
           >
             <MiniProfileCard
+              :no-padding="true"
               :no-border="true"
               :display="card_display"
               :read-only="true"
@@ -75,7 +77,7 @@
 
     <ButtonGroup class="tui-workspaceTransferOwnerForm__buttonGroup">
       <LoadingButton
-        :text="$str('confirm', 'moodle')"
+        :text="$str('confirm', 'core')"
         :primary="true"
         :small="true"
         :loading="submitting"
@@ -84,7 +86,7 @@
       />
       <!-- Separator -->
       <Button
-        :text="$str('cancel', 'moodle')"
+        :text="$str('cancel', 'core')"
         :styleclass="{ small: true }"
         @click="$emit('cancel', $event)"
       />
@@ -186,6 +188,19 @@ export default {
   },
 
   methods: {
+    filterUsers(query) {
+      this.searchPattern = query;
+    },
+
+    selectUser(item) {
+      this.selectedUser = item;
+      this.searchPattern = '';
+    },
+
+    removeUser() {
+      this.selectedUser = null;
+    },
+
     submitForm() {
       if (!this.selectedUser) {
         return;
@@ -205,7 +220,7 @@ export default {
       "transfer_ownership_help_text_one",
       "transfer_ownership_help_text_two"
     ],
-    "moodle": [
+    "core": [
       "cancel",
       "confirm"
     ]

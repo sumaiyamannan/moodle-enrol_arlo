@@ -16,18 +16,13 @@
  * @module tui
  */
 
-import { totaraUrl } from '../../util';
 import { onError } from 'apollo-link-error';
+import { handleDefinedCategoryErrors } from '../error_handlers/handler';
 
 export const createErrorLink = () => {
-  return onError(({ graphQLErrors }) => {
-    if (graphQLErrors) {
-      const loginCategory = graphQLErrors.find(
-        x => x.extensions && x.extensions.category === 'require_login'
-      );
-      if (loginCategory) {
-        window.location = totaraUrl('/login/index.php');
-      }
+  return onError(payload => {
+    if (payload.graphQLErrors) {
+      handleDefinedCategoryErrors(payload);
     }
   });
 };

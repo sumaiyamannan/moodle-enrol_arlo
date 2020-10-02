@@ -34,8 +34,6 @@
 }
 
 .tui-commentBox {
-  display: flex;
-  flex-direction: column;
   height: 100%;
 
   /* The parent that using this box should be able to override its padding.*/
@@ -52,8 +50,13 @@
     }
   }
 
+  &__comments {
+    flex-grow: 1;
+  }
+
   &__commentForm {
-    flex-basis: 20%;
+    flex-grow: 0;
+    flex-shrink: 0;
     margin-top: var(--gap-4);
 
     &--withBorder {
@@ -133,11 +136,11 @@
   }
 }
 
-:root {
-  --totaraComment-sidePanel-commentBox-height: 40vh;
-}
-
 .tui-sidePanelCommentBox {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+
   /* Overriding the comment box to make it fit with the sidepanel.*/
   &__header {
     margin: 0;
@@ -149,13 +152,18 @@
   }
 
   &__box {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+
     .tui-commentBox {
+      display: flex;
+      flex-direction: column;
+      flex-grow: 1;
+
       /* Overriding the comment thread to make it fit with the sidepanel*/
       &__comments {
-        /* This is needed for scrolling*/
-        position: relative;
-
-        height: var(--totaraComment-sidePanel-commentBox-height);
+        padding-right: var(--gap-2);
         overflow: auto;
 
         /* This is not support by IE or Edge.*/
@@ -330,6 +338,11 @@
     justify-content: flex-end;
     margin-top: var(--gap-4);
   }
+
+  &__input {
+    max-height: 200px;
+    overflow: auto;
+  }
 }
 
 .tui-editCommentReplyForm {
@@ -367,6 +380,7 @@
 
   &__formBox {
     flex: 1 1 auto;
+    width: 100%;
     -ms-word-break: break-all;
     overflow-wrap: break-word;
     -webkit-hyphens: none;

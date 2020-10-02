@@ -82,11 +82,11 @@ export default {
 </lang-strings>
 
 <style lang="scss">
-:root {
-  --totaraComment-sidePanel-commentBox-height: 40vh;
-}
-
 .tui-sidePanelCommentBox {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+
   // Overriding the comment box to make it fit with the sidepanel.
   &__header {
     margin: 0;
@@ -98,13 +98,18 @@ export default {
   }
 
   &__box {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+
     .tui-commentBox {
+      display: flex;
+      flex-direction: column;
+      flex-grow: 1;
+
       // Overriding the comment thread to make it fit with the sidepanel
       &__comments {
-        // This is needed for scrolling
-        position: relative;
-
-        height: var(--totaraComment-sidePanel-commentBox-height);
+        padding-right: var(--gap-2);
         overflow: auto;
 
         // This is not support by IE or Edge.

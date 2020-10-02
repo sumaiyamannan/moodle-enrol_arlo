@@ -21,7 +21,7 @@
     <div class="tui-participantContent">
       <ConfirmationModal
         :open="modalOpen"
-        :confirm-button-text="$str('submit', 'moodle')"
+        :confirm-button-text="$str('submit', 'core')"
         :title="
           $str('user_activities_submit_confirmation_title', 'mod_perform')
         "
@@ -95,7 +95,6 @@
           >
             <SidePanel
               :initially-open="true"
-              :limit-height="false"
               :show-button-control="false"
               :sticky="false"
             >
@@ -864,7 +863,7 @@ export default {
           .forEach(item => {
             this.initialValues.sectionElements[
               item.section_element_id
-            ] = JSON.parse(item.response_data);
+            ] = JSON.parse(item.response_data_raw);
             this.hasOtherResponse = item.other_responder_groups.length > 0;
             item.other_responder_groups.forEach(group => {
               if (group.responses.length > 0 && item.response_data) {
@@ -1306,7 +1305,7 @@ export default {
       "user_activities_submit_confirmation_title",
       "user_activities_your_relationship_to_user"
     ],
-    "moodle": [
+    "core": [
        "submit"
     ]
   }

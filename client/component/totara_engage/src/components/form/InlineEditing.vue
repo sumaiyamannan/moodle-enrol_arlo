@@ -54,7 +54,7 @@ export default {
     buttonAriaLabel: {
       type: String,
       default() {
-        return this.$str('edit', 'moodle');
+        return this.$str('edit', 'core');
       },
     },
     fullWidth: Boolean,
@@ -90,7 +90,7 @@ export default {
 
 <lang-strings>
   {
-    "moodle": [
+    "core": [
       "edit"
     ]
   }
@@ -111,6 +111,8 @@ export default {
   }
 
   &--updateAble {
+    padding-right: 2rem;
+
     &:after {
       position: absolute;
       top: 0;
@@ -126,6 +128,9 @@ export default {
       border: 2px solid var(--color-secondary);
       cursor: pointer;
       & .tui-inlineEditing__btn {
+        flex-grow: 0;
+        flex-shrink: 0;
+        width: 1.5rem;
         outline: none;
       }
     }

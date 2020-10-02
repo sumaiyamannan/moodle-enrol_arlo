@@ -30,6 +30,7 @@
           :display="subjectUser.card_display"
           :label-id="$id('user-info')"
           no-border
+          no-padding
           read-only
         />
       </div>
@@ -58,7 +59,7 @@
           >
             {{ $str('user_activities_your_capacity', 'mod_perform') }}
           </template>
-          <template v-if="!currentUserIsSubject">
+          <template v-if="!currentUserIsSubject && jobAssignments.length > 0">
             {{
               $str(
                 'user_activities_their_capacity',

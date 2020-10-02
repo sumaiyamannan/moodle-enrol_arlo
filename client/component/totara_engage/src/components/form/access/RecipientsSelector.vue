@@ -24,13 +24,14 @@
       class="tui-engageSharedRecipientsSelector__label"
     />
     <InfoIconButton
-      :aria-label="$str('info', 'moodle')"
+      :is-help-for="shareLabel"
       class="tui-engageSharedRecipientsSelector__icon"
     >
       {{ shareHelpInfo }}
     </InfoIconButton>
     <TagList
       :id="generatedId"
+      :filter="query"
       :items="items"
       :tags="tags"
       :separator="true"
@@ -45,6 +46,7 @@
         >
           <MiniProfileCard
             :no-border="true"
+            :no-padding="true"
             :read-only="true"
             :display="item.user.card_display"
           />
@@ -387,9 +389,6 @@ export default {
 
 <lang-strings>
   {
-    "moodle": [
-      "info"
-    ],
     "totara_engage": [
       "alreadyshared",
       "resharetorecipients",

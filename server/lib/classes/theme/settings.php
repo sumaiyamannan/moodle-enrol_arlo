@@ -164,9 +164,9 @@ final class settings {
         foreach ($classes as $class) {
             /** @var theme_file $theme_file */
             $theme_file = new $class($this->theme_config);
+            $theme_file->set_tenant_id($this->tenant_id);
+            $theme_file->set_user_id($user_id);
             if ($theme_file->is_enabled()) {
-                $theme_file->set_tenant_id($this->tenant_id);
-                $theme_file->set_user_id($user_id);
                 $files[] = $theme_file;
             }
         }
@@ -180,6 +180,16 @@ final class settings {
         foreach ($categories as $category) {
             foreach ($category['properties'] as $property) {
                 $this->validate_property($property);
+            }
+        }
+
+        // Only brand and colours for tenants.
+        if ($this->tenant_id !== 0) {
+            $categories = array_filter($categories, function ($category) {
+                return !in_array($category['name'], ['brand', 'colours', 'tenant']);
+            });
+            if (sizeof($categories) > 0) {
+                throw new \invalid_parameter_exception('Tenants are only allowed to update brand and colours.');
             }
         }
     }
@@ -247,7 +257,9 @@ final class settings {
                 if ($instance->get_ui_key() === $file['ui_key']) {
                     $instance->set_user_id($user_id);
                     $instance->set_tenant_id($this->tenant_id);
-                    $instance->save_files($file['draft_id']);
+                    if ($instance->is_enabled()) {
+                        $instance->save_files($file['draft_id']);
+                    }
                     continue 2;
                 }
             }
@@ -287,7 +299,7 @@ final class settings {
         // If tenant then check if tenant enabled.
         $tenant_enabled = false;
         if ($this->tenant_id > 0) {
-            $tenant_enabled = $this->is_enabled('tenant', 'formtenant_field_tenant', false);
+            $tenant_enabled = $this->is_tenant_branding_enabled();
         }
 
         $css = '';
@@ -300,7 +312,7 @@ final class settings {
                     return $property['type'] === 'boolean';
                 });
                 $css = ':root{';
-                foreach($category['properties'] as $property) {
+                foreach ($category['properties'] as $property) {
                     if ($property['type'] !== 'value') {
                         continue;
                     }
@@ -315,7 +327,7 @@ final class settings {
             // Custom CSS is just output as it is - the user will need
             // to know how to format it correctly.
             if ($category['name'] === 'custom') {
-                foreach($category['properties'] as $property) {
+                foreach ($category['properties'] as $property) {
                     $css .= "\n{$property['value']}\n";
                 }
             }
@@ -354,6 +366,15 @@ final class settings {
         return !empty($prop)
             ? filter_var($prop['value'], FILTER_VALIDATE_BOOLEAN) ?? $default
             : $default;
+    }
+
+    /**
+     * Check if tenant branding is enabled.
+     *
+     * @return bool
+     */
+    public function is_tenant_branding_enabled(): bool {
+        return $this->is_enabled('tenant', 'formtenant_field_tenant', false);
     }
 
 }

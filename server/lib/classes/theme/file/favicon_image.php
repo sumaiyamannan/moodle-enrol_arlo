@@ -27,7 +27,6 @@ use context;
 use core\files\type\file_type;
 use core\files\type\image;
 use core\theme\settings;
-use moodle_url;
 use theme_config;
 
 /**
@@ -39,8 +38,8 @@ use theme_config;
  *
  * This file handler is also used by theme settings to generate a dynamic list
  * of files that can be customised by a user.
- * @see core\theme\settings
- * @see core\theme\file\theme_file
+ * @see settings
+ * @see theme_file
  *
  * @package core\theme\file
  */
@@ -82,7 +81,7 @@ class favicon_image extends theme_file {
      * @inheritDoc
      */
     public function get_context(): ?context {
-        return \context_system::instance();
+        return $this->get_default_context($this->tenant_id);
     }
 
     /**
@@ -118,7 +117,7 @@ class favicon_image extends theme_file {
         // Fall back on global setting when tenant favicon not set.
         if ($this->tenant_id > 0) {
             $settings = new settings($this->theme_config, $this->tenant_id);
-            if (!$settings->is_enabled('tenant', 'formtenant_field_tenant', false)) {
+            if (!$settings->is_tenant_branding_enabled()) {
                 $this->tenant_id = 0;
             }
         }

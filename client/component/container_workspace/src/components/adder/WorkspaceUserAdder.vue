@@ -30,7 +30,7 @@
     class="tui-workspaceUserAdder"
     @cancel="$emit('cancel')"
     @selected-tab-active="selectedUserIds = $event"
-    @load-more="fetchMore"
+    @load-more="loadMore"
     @added="addedUsers($event)"
   >
     <FilterBar
@@ -40,13 +40,13 @@
     >
       <template v-slot:filters-left>
         <SearchBox
-          :value="searchTerm"
+          :value="tempSearchTerm"
           name="user-search-input"
           :label-visible="false"
           :placeholder="$str('search', 'totara_core')"
           :aria-label="$str('filter_users', 'container_workspace')"
-          @input="searchTerm = $event"
-          @submit="triggerSearch = true"
+          @input="tempSearchTerm = $event"
+          @submit="searchTerm = tempSearchTerm"
         />
       </template>
     </FilterBar>
@@ -65,7 +65,7 @@
       >
         <template v-slot:header-row>
           <HeaderCell size="12" valign="start">
-            {{ $str('name', 'moodle') }}
+            {{ $str('name', 'core') }}
           </HeaderCell>
 
           <HeaderCell
@@ -79,11 +79,7 @@
         </template>
 
         <template v-slot:row="{ row: { card_display, fullname } }">
-          <Cell
-            size="10"
-            :column-header="$str('name', 'moodle')"
-            valign="start"
-          >
+          <Cell size="10" :column-header="$str('name', 'core')" valign="start">
             <div class="tui-workspaceUserAdder__name">
               <Avatar
                 v-if="card_display.profile_picture_url"
@@ -120,7 +116,7 @@
       >
         <template v-slot:header-row>
           <HeaderCell size="12" valign="start">
-            {{ $str('name', 'moodle') }}
+            {{ $str('name', 'core') }}
           </HeaderCell>
 
           <HeaderCell
@@ -133,11 +129,7 @@
           </HeaderCell>
         </template>
         <template v-slot:row="{ row: { card_display, fullname } }">
-          <Cell
-            size="10"
-            :column-header="$str('name', 'moodle')"
-            valign="start"
-          >
+          <Cell size="10" :column-header="$str('name', 'core')" valign="start">
             <div class="tui-workspaceUserAdder__name">
               <Avatar
                 v-if="card_display.profile_picture_url"
@@ -203,11 +195,8 @@ export default {
         return {
           workspace_id: this.workspaceId,
           search_term: this.searchTerm,
+          cursor: null,
         };
-      },
-
-      skip() {
-        return !this.triggerSearch;
       },
 
       update({ cursor, users }) {
@@ -216,18 +205,11 @@ export default {
           items: users,
         };
       },
-
-      result() {
-        // Set it to false so that we don't trigger search when the search
-        // term is changed.
-        this.triggerSearch = false;
-      },
     },
   },
 
   data() {
     return {
-      triggerSearch: true,
       fields: [],
       users: {
         items: [],
@@ -236,6 +218,7 @@ export default {
           next: null,
         },
       },
+      tempSearchTerm: '',
       searchTerm: '',
       selectedUserIds: [],
     };
@@ -254,7 +237,7 @@ export default {
   },
 
   methods: {
-    async fetchMore() {
+    async loadMore() {
       this.$apollo.queries.users.fetchMore({
         variables: {
           cursor: this.users.cursor.next,
@@ -291,7 +274,7 @@ export default {
     "search"
   ],
 
-  "moodle": [
+  "core": [
     "name"
   ]
 }

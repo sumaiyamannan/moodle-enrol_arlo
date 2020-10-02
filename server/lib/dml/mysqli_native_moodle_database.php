@@ -272,6 +272,7 @@ class mysqli_native_moodle_database extends moodle_database {
                 $collation = $rec['@@collation_database'];
             }
             $result->close();
+            $this->dboptions['dbcollation'] = $collation;
             return $collation;
         }
 
@@ -290,6 +291,16 @@ class mysqli_native_moodle_database extends moodle_database {
         }
         $result->close();
 
+        if (!$collation && $this->get_dbvendor() === 'mysql' && version_compare($this->get_server_info()['version'], '8.0', '>')) {
+            // Only accent and case sensitive collations are fully supported,
+            // admins do need to upgrade to MySQL 8. Really!
+            $collation = 'utf8mb4_0900_as_cs';
+        }
+
+        if (!$collation && ((defined('PHPUNIT_UTIL') && PHPUNIT_UTIL) || (defined('BEHAT_UTIL') && BEHAT_UTIL))) {
+            // Tests expect accent and case sensitive collations.
+            $collation = 'utf8mb4_bin';
+        }
 
         if (!$collation) {
             // Get the default database collation, but only if using utf8 or utf8mb4 compatible collations.
@@ -632,6 +643,23 @@ class mysqli_native_moodle_database extends moodle_database {
         $this->mysqli->set_charset($this->get_charset());
         $this->query_end(true);
 
+        // Make sure correct driver was selected
+        // because MariaDB is NOT a drop-in replacement for recent MySQL!
+        if (!$this->external) {
+            $si = $this->get_server_info();
+            if ($this->get_dbvendor() === 'mysql') {
+                if (version_compare($si['version'], '10.0', '>')) {
+                    $this->dispose();
+                    throw new dml_exception('dbusemariadb');
+                }
+            } else if ($this->get_dbvendor() === 'mariadb') {
+                if (substr($si['version'], 0, 2) === '8.' || substr($si['version'], 0, 4) === '5.7.' ) {
+                    $this->dispose();
+                    throw new dml_exception('dbusemysql');
+                }
+            }
+        }
+
         // Totara: Configuration related to specific MySQL versions.
         $this->version_specific_support();
 
@@ -640,7 +668,6 @@ class mysqli_native_moodle_database extends moodle_database {
         // habits like truncating data or performing some transparent cast losses.
         // With strict mode enforced, Moodle DB layer will be consistently throwing
         // the corresponding exceptions as expected.
-        $si = $this->get_server_info();
         $sql = "SET SESSION sql_mode = 'STRICT_ALL_TABLES,ANSI_QUOTES'";
         $this->query_start($sql, null, SQL_QUERY_AUX);
         $result = $this->mysqli->query($sql);
@@ -673,7 +700,7 @@ class mysqli_native_moodle_database extends moodle_database {
      * Add configuration for specific versions of MySQL
      */
     protected function version_specific_support() {
-        $version = $this->mysqli->server_info;
+        $version = $this->get_server_info()['version'];
 
         // MySQL Bug https://bugs.mysql.com/bug.php?id=84812
         if (version_compare($version, '5.7.21') < 0
@@ -711,9 +738,28 @@ class mysqli_native_moodle_database extends moodle_database {
             return $this->serverinfo;
         }
 
+        $version = $this->mysqli->server_info;
+        // Sometimes the version reported by client is not correct, such as on Azure MariaDB,
+        // other setups with MySQL routers might be affected too.
+        $sql = "SELECT VERSION()";
+        $this->query_start($sql, NULL, SQL_QUERY_AUX);
+        $result = $this->mysqli->query($sql);
+        $this->query_end($result);
+        if ($rec = $result->fetch_assoc()) {
+            $version = reset($rec);
+        }
+        if (preg_match('/^5\.5\.5-(10\..+)-MariaDB/i', $version, $matches)) {
+            // Legacy MariaDB backwards compatibility hack.
+            $version = $matches[1];
+        }
+        // Normalise the version, no fancy suffixes here.
+        if (preg_match('/^\d+(\.\d+)+/i', $version, $matches)) {
+            $version = $matches[0];
+        }
+
         $this->serverinfo = array(
             'description' => $this->mysqli->server_info,
-            'version' => $this->mysqli->server_info,
+            'version' => $version,
         );
 
         return $this->serverinfo;
@@ -1880,7 +1926,7 @@ class mysqli_native_moodle_database extends moodle_database {
      * @return string or empty if not supported
      */
     public function sql_regex_word_boundary_start(): string {
-        $version = $this->mysqli->server_info;
+        $version = $this->get_server_info()['version'];
         // ICU expression library in MySQL 8 has new word boundary markers.
         if (version_compare($version, '8.0.4', '>=')) {
             return '\\b';
@@ -1895,7 +1941,7 @@ class mysqli_native_moodle_database extends moodle_database {
      * @return string or empty if not supported
      */
     public function sql_regex_word_boundary_end(): string {
-        $version = $this->mysqli->server_info;
+        $version = $this->get_server_info()['version'];
         // ICU expression library in MySQL 8 has new word boundary markers.
         if (version_compare($version, '8.0.4', '>=')) {
             return '\\b';

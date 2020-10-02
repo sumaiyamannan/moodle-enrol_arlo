@@ -23,11 +23,9 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-if ($hassiteconfig) {
-    $settings = new admin_externalpage(
-        'ventura_editor',
-        get_string('pluginname', 'theme_ventura'),
-        $CFG->wwwroot . '/theme/ventura/index.php',
-        'totara/core:appearance'
-    );
-}
+$settings = new admin_externalpage(
+    'ventura_editor',
+    get_string('pluginname', 'theme_ventura'),
+    $CFG->wwwroot . '/theme/ventura/index.php',
+    'totara/tui:themesettings'
+);

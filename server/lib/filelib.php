@@ -4096,25 +4096,6 @@ function file_pluginfile($relativepath, $forcedownload, $preview = null, $theme 
     /** @var context $context */
     list($context, $course, $cm) = get_context_info_array($contextid);
 
-    // Totara: enforce tenant separation.
-    if ($context->is_user_access_prevented()) {
-        $ignorerestriction = false;
-
-        // The only exception is profile images of participants in the same tenant.
-        if (!empty($USER->tenantid) and $component === 'user' and $filearea === 'icon') {
-            if ($context->contextlevel == CONTEXT_USER and !$context->tenantid) {
-                $tenant = core\record\tenant::fetch($USER->tenantid);
-                if ($DB->record_exists('cohort_members', ['cohortid' => $tenant->cohortid, 'userid' => $context->instanceid])) {
-                    $ignorerestriction = true;
-                }
-            }
-        }
-
-        if (!$ignorerestriction) {
-            send_file_not_found();
-        }
-    }
-
     $fs = get_file_storage();
 
     // ========================================================================================================================
@@ -4135,6 +4116,10 @@ function file_pluginfile($relativepath, $forcedownload, $preview = null, $theme 
         if (!$entry = $DB->get_record('post', array('module'=>'blog', 'id'=>$entryid))) {
             send_file_not_found();
         }
+
+        // TODO TL-27935 Implement multi-tenancy checks here for when isolation mode has been enabled.
+        // Presently this will require gathering courseid and calling require_login correctly as well.
+
         if ($CFG->bloglevel < BLOG_GLOBAL_LEVEL) {
             require_login();
             if (isguestuser()) {
@@ -4179,6 +4164,11 @@ function file_pluginfile($relativepath, $forcedownload, $preview = null, $theme 
                 require_login();
             }
 
+            // Check multi-tenancy. Ensure tenant members cannot get to system details when isolation mode is on.
+            if ($context->is_user_access_prevented()) {
+                send_file_not_found();
+            }
+
             $fullpath = "/$context->id/$component/$filearea/".implode('/', $args);
 
             if (!$file = $fs->get_file_by_hash(sha1($fullpath)) or $file->is_directory()) {
@@ -4191,19 +4181,6 @@ function file_pluginfile($relativepath, $forcedownload, $preview = null, $theme 
         } else if ($filearea === 'feedback' and $context->contextlevel == CONTEXT_COURSE) {
             //TODO: nobody implemented this yet in grade edit form!!
             send_file_not_found();
-
-            if ($CFG->forcelogin || $course->id != SITEID) {
-                require_login($course);
-            }
-
-            $fullpath = "/$context->id/$component/$filearea/".implode('/', $args);
-
-            if (!$file = $fs->get_file_by_hash(sha1($fullpath)) or $file->is_directory()) {
-                send_file_not_found();
-            }
-
-            \core\session\manager::write_close(); // Unlock session during file serving.
-            send_stored_file($file, 60*60, 0, $forcedownload, array('preview' => $preview, 'theme' => $theme));
         } else {
             send_file_not_found();
         }
@@ -4216,6 +4193,9 @@ function file_pluginfile($relativepath, $forcedownload, $preview = null, $theme 
             if ($CFG->forcelogin) {
                 require_login();
             }
+
+            // No multi-tenancy checks here, there are no caps or conditions above require_login above required in order
+            // to view tag descriptions.
 
             $fullpath = "/$context->id/tag/description/".implode('/', $args);
 
@@ -4232,6 +4212,8 @@ function file_pluginfile($relativepath, $forcedownload, $preview = null, $theme 
     // ========================================================================================================================
     } else if ($component === 'badges') {
         require_once($CFG->libdir . '/badgeslib.php');
+
+        // No multi-tenancy checks here, badge images are public and must be consumable by external backpacks.
 
         $badgeid = (int)array_shift($args);
         $badge = new badge($badgeid);
@@ -4292,6 +4274,11 @@ function file_pluginfile($relativepath, $forcedownload, $preview = null, $theme 
                 send_file_not_found();
             }
 
+            // Check multi-tenancy.
+            if ($context->is_user_access_prevented()) {
+                send_file_not_found();
+            }
+
             // Get the event if from the args array
             $eventid = array_shift($args);
 
@@ -4312,10 +4299,12 @@ function file_pluginfile($relativepath, $forcedownload, $preview = null, $theme 
 
         } else if ($filearea === 'event_description' and $context->contextlevel == CONTEXT_COURSE) {
 
-            // Respect forcelogin and require login unless this is the site.... it probably
-            // should NEVER be the site
-            if ($CFG->forcelogin || $course->id != SITEID) {
-                require_login($course);
+            // Must be logged in for the course, even if it is the site course.
+            require_login($course);
+
+            // Check multi-tenancy.
+            if ($context->is_user_access_prevented()) {
+                send_file_not_found();
             }
 
             // Must be able to at least view the course. This does not apply to the front page.
@@ -4386,6 +4375,23 @@ function file_pluginfile($relativepath, $forcedownload, $preview = null, $theme 
                 redirect($theme->image_url('u/'.$filename, 'moodle')); // intentionally not cached
             }
 
+            if ($context->is_user_access_prevented()) {
+                $ignore_restriction = false;
+                // The only exception is profile images of participants in the same tenant.
+                if (!empty($USER->tenantid) && !$context->tenantid) {
+                    $tenant = core\record\tenant::fetch($USER->tenantid);
+                    if ($DB->record_exists('cohort_members', ['cohortid' => $tenant->cohortid, 'userid' => $context->instanceid])) {
+                        $ignore_restriction = true;
+                    }
+                }
+                if (!$ignore_restriction) {
+                    // Protect images if multi-tenancy is not going to permit the current user to view the requested users
+                    // image.
+                    $theme = theme_config::load($themename);
+                    redirect($theme->image_url('u/'.$filename, 'moodle')); // intentionally not cached
+                }
+            }
+
             if (!$file = $fs->get_file($context->id, 'user', 'icon', 0, '/', $filename.'.png')) {
                 if (!$file = $fs->get_file($context->id, 'user', 'icon', 0, '/', $filename.'.jpg')) {
                     if ($filename === 'f3') {
@@ -4426,6 +4432,11 @@ function file_pluginfile($relativepath, $forcedownload, $preview = null, $theme 
             }
 
             if ($USER->id !== $context->instanceid) {
+                send_file_not_found();
+            }
+
+            // Check multi-tenancy. This should never fail, but lets play it safe.
+            if ($context->is_user_access_prevented()) {
                 send_file_not_found();
             }
 
@@ -4488,6 +4499,11 @@ function file_pluginfile($relativepath, $forcedownload, $preview = null, $theme 
                 send_file_not_found();
             }
 
+            // Check multi-tenancy. This should not be required as its the current user, but best be safe.
+            if ($context->is_user_access_prevented()) {
+                send_file_not_found();
+            }
+
             $filename = array_pop($args);
             $filepath = $args ? '/'.implode('/', $args).'/' : '/';
             if (!$file = $fs->get_file($context->id, 'user', 'backup', 0, $filepath, $filename) or $file->is_directory()) {
@@ -4513,6 +4529,7 @@ function file_pluginfile($relativepath, $forcedownload, $preview = null, $theme 
                 require_login();
             }
 
+            // Check multi-tenancy.
             if ($context->is_user_access_prevented()) {
                 send_file_not_found();
             }
@@ -4542,9 +4559,9 @@ function file_pluginfile($relativepath, $forcedownload, $preview = null, $theme 
 
         // Totara: default image for course backgrounds in grid catalogue.
         if ($filearea === 'defaultimage') {
-            if ($CFG->forcelogin && empty($CFG->publishgridcatalogimage)) {
-                require_login();
-            }
+
+            // Default course images are public. Dont' check login, or multi-tenancy.
+
             if ($context->contextlevel != CONTEXT_SYSTEM) {
                 send_file_not_found();
             }
@@ -4567,18 +4584,64 @@ function file_pluginfile($relativepath, $forcedownload, $preview = null, $theme 
             $file = reset($files);
 
             \core\session\manager::write_close(); // Unlock session during file serving.
-            $options = ['preview' => $preview, 'filename' => $filename, 'theme' => $theme];
-            if (!empty($CFG->publishgridcatalogimage)) {
-                // Grid catalog images should be cache-able by both browsers and proxies according
-                // to $CFG->publishgridcatalogimage.
-                $options['cacheability'] = 'public';
+            $options = [
+                'preview' => $preview,
+                'filename' => $filename,
+                'theme' => $theme,
+                'cacheability' => 'public', // Default course images are cache-able
+            ];
+            send_stored_file($file, $lifetime, 0, $forcedownload, $options);
+        }
+        // This filearea is used for the custom course image of the theme
+        // which could also be overridden by the tenant
+        if ($filearea === 'defaultcourseimage') {
+            // For all course images defined not on the system level
+            // require users to be logged in
+            if ($context->contextlevel !== CONTEXT_SYSTEM) {
+                require_login();
+
+                if ($context->is_user_access_prevented()) {
+                    send_file_not_found();
+                }
             }
+            if (count($args) < 2) {
+                send_file_not_found();
+            }
+
+            $themerev = array_shift($args);
+            $lifetime = 60;
+            if ($themerev > 0) {
+                $lifetime = 60 * 60 * 2;
+            }
+
+            $course_image = new \core_course\theme\file\course_image();
+            $item_id = $course_image->get_item_id();
+
+            $filename = array_shift($args);
+            $fs = get_file_storage();
+            $files = $fs->get_area_files($context->id, 'course', 'defaultcourseimage', $item_id, "timemodified DESC", false);
+            if (!$files) {
+                send_file_not_found();
+            }
+            $file = reset($files);
+
+            \core\session\manager::write_close(); // Unlock session during file serving.
+            $options = [
+                'preview' => $preview,
+                'filename' => $filename,
+                'theme' => $theme,
+                'cacheability' => 'public', // Default course images are cache-able
+            ];
             send_stored_file($file, $lifetime, 0, $forcedownload, $options);
         }
         // Totara: one image per course for background in grid catalogue.
         if ($filearea === 'images') {
             if ($CFG->forcelogin && empty($CFG->publishgridcatalogimage)) {
                 require_login();
+            }
+            // If images are not published then check multi-tenancy.
+            if (empty($CFG->publishgridcatalogimage) && $context->is_user_access_prevented()) {
+                send_file_not_found();
             }
             if ($context->contextlevel != CONTEXT_COURSE) {
                 send_file_not_found();
@@ -4618,7 +4681,10 @@ function file_pluginfile($relativepath, $forcedownload, $preview = null, $theme 
             if ($CFG->forcelogin) {
                 require_login();
             }
-
+            // Always check multi-tenancy. Isolation mode will prevent guests, and tenant members accessing contexts not in their tenant.
+            if ($context->is_user_access_prevented()) {
+                send_file_not_found();
+            }
             $filename = array_pop($args);
             $filepath = $args ? '/'.implode('/', $args).'/' : '/';
             if (!$file = $fs->get_file($context->id, 'course', $filearea, 0, $filepath, $filename) or $file->is_directory()) {
@@ -4629,11 +4695,7 @@ function file_pluginfile($relativepath, $forcedownload, $preview = null, $theme 
             send_stored_file($file, 60*60, 0, $forcedownload, array('preview' => $preview, 'theme' => $theme));
 
         } else if ($filearea === 'section') {
-            if ($CFG->forcelogin) {
-                require_login($course);
-            } else if ($course->id != SITEID) {
-                require_login($course);
-            }
+            require_course_login($course, true, null, false);
 
             $sectionid = (int)array_shift($args);
 
@@ -4668,6 +4730,7 @@ function file_pluginfile($relativepath, $forcedownload, $preview = null, $theme 
 
         // User is able to access cohort if they have view cap on cohort level or
         // the cohort is visible and they have view cap on course level.
+        // This will check multi-tenancy as well.
         $canview = has_capability('moodle/cohort:view', $cohortcontext) ||
                 ($cohort->visible && has_capability('moodle/cohort:view', $context));
 
@@ -4838,6 +4901,11 @@ function file_pluginfile($relativepath, $forcedownload, $preview = null, $theme 
                 send_file_not_found();
             }
 
+            // Check multi-tenancy.
+            if ($context->is_user_access_prevented()) {
+                send_file_not_found();
+            }
+
             $formid = (int)array_shift($args);
 
             $sql = "SELECT ga.id
@@ -4882,6 +4950,11 @@ function file_pluginfile($relativepath, $forcedownload, $preview = null, $theme 
 
             // Require login to the course first (without login to the module).
             require_course_login($course, true);
+
+            // Check multi-tenancy.
+            if ($context->is_user_access_prevented()) {
+                send_file_not_found();
+            }
 
             // Now check if module is available OR it is restricted but the intro is shown on the course page.
             $cminfo = cm_info::create($cm);
@@ -4967,37 +5040,6 @@ function file_pluginfile($relativepath, $forcedownload, $preview = null, $theme 
     // ========================================================================================================================
     } else if (strpos($component, '_') === false) {
         // all core subsystems have to be specified above, no more guessing here!
-        send_file_not_found();
-
-        // ========================================================================================================================
-    } else if (strpos($component, 'performelement_') === 0) {
-        $modname = substr($component, 15);
-        if (!file_exists("$CFG->dirroot/mod/perform/element/$modname/lib.php")) {
-            send_file_not_found();
-        }
-        require_once("$CFG->dirroot/mod/perform/element/$modname/lib.php");
-
-        if ($context->contextlevel == CONTEXT_MODULE) {
-            $element = [
-                'context_id' => $context->id,
-                'plugin_name' => $modname,
-            ];
-            if (!$DB->record_exists('perform_element', $element)) {
-                // somebody tries to gain illegal access!
-                send_file_not_found();
-            }
-        }
-
-        $filefunction = $component.'_pluginfile';
-        $filefunctionold = $modname.'_pluginfile';
-        if (function_exists($filefunction)) {
-            // if the function exists, it must send the file and terminate. Whatever it returns leads to "not found"
-            $filefunction($course, $cm, $context, $filearea, $args, $forcedownload, array('preview' => $preview, 'theme' => $theme));
-        } else if (function_exists($filefunctionold)) {
-            // if the function exists, it must send the file and terminate. Whatever it returns leads to "not found"
-            $filefunctionold($course, $cm, $context, $filearea, $args, $forcedownload, array('preview' => $preview, 'theme' => $theme));
-        }
-
         send_file_not_found();
 
         // ========================================================================================================================

@@ -1,7 +1,3 @@
-:root {
-  --weka-select-color: #8cf;
-}
-
 .tui-weka {
   display: flex;
   flex-direction: column;
@@ -21,6 +17,7 @@
     display: flex;
     flex-direction: column;
     flex-grow: 1;
+    overflow: auto;
 
     > .tui-weka-editor {
       flex-grow: 1;
@@ -86,7 +83,7 @@
   }
 
   .ProseMirror-selectednode {
-    outline: var(--border-width-normal) solid var(--weka-select-color);
+    outline: var(--border-width-normal) solid var(--color-secondary);
   }
 
   /* Make sure li selections wrap around markers */
@@ -101,7 +98,7 @@
     right: -2px;
     bottom: -2px;
     left: -32px;
-    border: var(--border-width-normal) solid var(--weka-select-color);
+    border: var(--border-width-normal) solid var(--color-secondary);
     content: '';
     pointer-events: none;
   }
@@ -192,7 +189,7 @@
   }
 
   &.ProseMirror-selectednode > &__inner > .tui-audioBlock {
-    outline: var(--border-width-normal) solid var(--weka-select-color);
+    outline: var(--border-width-normal) solid var(--color-secondary);
   }
 
   &__inner {
@@ -222,7 +219,7 @@
 
   &.ProseMirror-selectednode > &__inner > .tui-imageBlock {
     /* Set the outline for the picture only.*/
-    outline: var(--border-width-normal) solid var(--weka-select-color);
+    outline: var(--border-width-normal) solid var(--color-secondary);
   }
 
   &__inner {
@@ -269,7 +266,7 @@
     outline: none;
   }
   &.ProseMirror-selectednode > &__inner {
-    outline: var(--border-width-normal) solid var(--weka-select-color);
+    outline: var(--border-width-normal) solid var(--color-secondary);
   }
 
   &__inner {
@@ -295,7 +292,7 @@
   }
 
   &.ProseMirror-selectednode > &__inner > .tui-videoBlock {
-    outline: var(--border-width-normal) solid var(--weka-select-color);
+    outline: var(--border-width-normal) solid var(--color-secondary);
   }
 
   &__inner {
@@ -311,10 +308,12 @@
 
 .tui-wekaHashtagSuggestions {
   position: absolute;
+  z-index: var(--zindex-popover);
 }
 
 .tui-wekaUserSuggestions {
   position: absolute;
+  z-index: var(--zindex-popover);
   width: 32.6rem;
 }
 

@@ -19,12 +19,11 @@
 
 <template>
   <div
-    :no-border="noBorder"
     class="tui-miniProfileCard"
     :class="{
       'tui-miniProfileCard--border': !noBorder,
       'tui-miniProfileCard--hasShadow': hasShadow,
-      'tui-miniProfileCard--no-padding': noBorder,
+      'tui-miniProfileCard--no-padding': noPadding,
       'tui-miniProfileCard--no-avatar': !noBorder && !hasAvatar,
       'tui-miniProfileCard--no-dropdown': !noBorder && !hasDropDown,
     }"
@@ -134,6 +133,7 @@ export default {
     buttonIconSize: String,
     dropDownButtonAriaLabel: String,
     noBorder: Boolean,
+    noPadding: Boolean,
     hasShadow: Boolean,
     display: {
       type: Object,
@@ -219,7 +219,7 @@ export default {
         return this.dropDownButtonAriaLabel;
       }
 
-      return this.$str('actions', 'moodle');
+      return this.$str('actions', 'core');
     },
 
     profileUrl() {
@@ -235,7 +235,7 @@ export default {
 
 <lang-strings>
   {
-    "moodle": [
+    "core": [
       "actions"
     ]
   }
@@ -280,38 +280,38 @@ export default {
     flex: 1;
     flex-direction: column;
     overflow: hidden;
+  }
 
-    &__row {
-      display: flex;
-      align-items: center;
+  &__row {
+    display: flex;
+    align-items: center;
 
-      &-text {
-        @include tui-font-body-small();
-        margin: 0;
-        overflow: hidden;
-        white-space: nowrap;
-        text-overflow: ellipsis;
+    &-text {
+      @include tui-font-body-small();
+      margin: 0;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
 
-        &--bold {
-          @include tui-font-heavy();
-        }
+      &--bold {
+        @include tui-font-heavy();
       }
+    }
 
-      &-link {
-        @include tui-font-link-small();
-        margin: 0;
-        overflow: hidden;
-        white-space: nowrap;
-        text-overflow: ellipsis;
+    &-link {
+      @include tui-font-link-small();
+      margin: 0;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
 
-        &--bold {
-          @include tui-font-heavy();
-        }
+      &--bold {
+        @include tui-font-heavy();
       }
+    }
 
-      &--withGap {
-        margin-bottom: var(--gap-1);
-      }
+    &--withGap {
+      margin-bottom: var(--gap-1);
     }
   }
 

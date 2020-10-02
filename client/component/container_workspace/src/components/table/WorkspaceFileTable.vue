@@ -32,7 +32,7 @@
         </HeaderCell>
 
         <HeaderCell size="2">
-          {{ $str('size', 'moodle') }}
+          {{ $str('size', 'core') }}
         </HeaderCell>
 
         <HeaderCell size="2">
@@ -62,7 +62,7 @@
           {{ row.extension }}
         </Cell>
 
-        <Cell size="2" :column-header="$str('size', 'moodle')">
+        <Cell size="2" :column-header="$str('size', 'core')">
           {{ row.file_size }}
         </Cell>
 
@@ -87,7 +87,7 @@
             </a>
 
             <a :href="row.download_url">
-              {{ $str('download', 'moodle') }}
+              {{ $str('download', 'core') }}
             </a>
           </div>
         </Cell>
@@ -103,7 +103,7 @@
         {{ $str('total_files', 'container_workspace', page.cursor.total) }}
       </div>
       <Button
-        class="tui-contributionBaseContent__loadMore"
+        class="tui-workspaceFileTable__loadMore"
         :text="$str('loadmore', 'container_workspace')"
         @click="loadMoreItems"
       />
@@ -222,7 +222,7 @@ export default {
       "total_files"
     ],
 
-    "moodle": [
+    "core": [
       "download",
       "size"
     ]

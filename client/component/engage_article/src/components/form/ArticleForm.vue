@@ -53,6 +53,7 @@
           v-if="draftId"
           :id="id"
           v-model="content"
+          class="tui-engageArticleForm__editor"
           component="engage_article"
           area="content"
           :file-item-id="draftId"
@@ -62,7 +63,7 @@
 
       <div class="tui-engageArticleForm__description-tip">
         <p>{{ $str('contributetip', 'totara_engage') }}</p>
-        <InfoIconButton :aria-label="$str('info', 'moodle')">
+        <InfoIconButton :is-help-for="$str('hashtags', 'totara_engage')">
           {{ $str('contributetip_help', 'totara_engage') }}
         </InfoIconButton>
       </div>
@@ -74,7 +75,7 @@
         :styleclass="{ primary: 'true' }"
         :disabled="disabled"
         :aria-label="$str('createarticleshort', 'engage_article')"
-        :text="$str('next', 'moodle')"
+        :text="$str('next', 'core')"
         @click="submit"
       />
 
@@ -190,9 +191,8 @@ export default {
 
 <lang-strings>
   {
-    "moodle": [
-      "next",
-      "info"
+    "core": [
+      "next"
     ],
     "totara_core": [
       "save"
@@ -206,7 +206,8 @@ export default {
     ],
     "totara_engage": [
       "contributetip",
-      "contributetip_help"
+      "contributetip_help",
+      "hashtags"
     ]
   }
 </lang-strings>
@@ -214,10 +215,13 @@ export default {
 <style lang="scss">
 .tui-engageArticleForm {
   display: flex;
-  flex: 1;
+  flex-basis: 0;
   flex-direction: column;
+  flex-grow: 1;
+  min-height: 0;
 
   &__title {
+    // TODO: should not be overriding tui-formRow styles
     &.tui-formRow {
       // Reset form row margin.
       margin-bottom: 0;
@@ -227,22 +231,27 @@ export default {
       &__desc {
         margin: 0;
       }
+
+      &__action {
+        max-width: none;
+      }
     }
   }
 
   &__description {
     display: flex;
+    flex-basis: 0;
     flex-direction: column;
     flex-grow: 1;
+    min-height: 0;
     margin-top: var(--gap-8);
 
     &-formRow {
+      flex-basis: 0;
       flex-grow: 1;
-      // Reset margin of itself.
-      &.tui-formRow {
-        margin-bottom: 0;
-      }
+      min-height: 0;
 
+      // TODO: should not be overriding tui-formRow styles
       .tui-formRow {
         // Reset the margin of label section when it is hidden. So that it does not give us any extra spaces.
         &__desc {
@@ -250,13 +259,18 @@ export default {
         }
 
         &__action {
+          flex-basis: 0;
           // Expand the box.
           flex-grow: 1;
+          max-width: none;
+          min-height: 0;
         }
 
         // override flex wrap to make video not over flow
         &__inner {
+          flex-basis: 0;
           flex-wrap: nowrap;
+          min-height: 0;
         }
       }
     }
@@ -266,6 +280,12 @@ export default {
       display: flex;
       margin-top: var(--gap-2);
     }
+  }
+
+  &__editor {
+    flex-basis: 0;
+    flex-grow: 1;
+    min-height: 0;
   }
 
   &__buttons {

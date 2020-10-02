@@ -10,11 +10,23 @@ query totara_playlist_resource_playlists(
   ) {
     __typename
     user {
+      __typename
       id
-      email
+      # Note that fullname is needed for displaying data.
       fullname
-      profileimageurl
-      profileimagealt
+      card_display {
+        __typename
+        profile_picture_alt
+        profile_picture_url
+        profile_url
+        display_fields {
+          __typename
+          is_custom
+          associate_url
+          label
+          value
+        }
+      }
     }
     id
     contextid

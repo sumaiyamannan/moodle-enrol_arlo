@@ -22,13 +22,14 @@
       slot="author-profile"
       :display="user.card_display"
       :no-border="true"
+      :no-padding="true"
     >
       <template v-slot:drop-down-items>
         <DropdownItem
           v-if="article.owned || article.updateable"
           @click="openModalFromAction = true"
         >
-          {{ $str('delete', 'moodle') }}
+          {{ $str('delete', 'core') }}
         </DropdownItem>
         <DropdownItem v-if="!article.owned" @click="reportResource">
           {{ $str('reportresource', 'engage_article') }}
@@ -61,7 +62,7 @@
         :access-value="article.resource.access"
         :topics="article.topics"
         :submitting="false"
-        :open-modal="openModalFromButtonLabel"
+        :open-access-modal="openModalFromButtonLabel"
         :selected-time-view="article.timeview"
         :enable-time-view="true"
         @access-update="updateAccess"
@@ -367,7 +368,7 @@ export default {
       "reportresource",
       "error:reportresource"
     ],
-    "moodle": [
+    "core": [
       "delete"
     ],
     "totara_reportedcontent": [

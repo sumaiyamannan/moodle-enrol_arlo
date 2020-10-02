@@ -60,7 +60,7 @@
             :update-able="canUpdate"
             :is-loading="$apollo.loading"
             @refetch="refetchCards"
-            @resource-added="refetchCards"
+            @resource-added="refetchCardsAndPlaylist"
             @resource-reordered="resourceReordered"
           />
 
@@ -212,6 +212,11 @@ export default {
       this.$apollo.queries.contribution.refetch();
     },
 
+    refetchCardsAndPlaylist() {
+      this.$apollo.queries.contribution.refetch();
+      this.$apollo.queries.playlist.refetch();
+    },
+
     resourceReordered(obj) {
       const { list, instanceid, destinationIndex, playlistId } = obj;
       this.contribution = Object.assign({}, this.contribution, { cards: list });
@@ -323,7 +328,7 @@ export default {
   display: flex;
   flex-direction: column;
 
-  .tui-responsive > .tui-grid > .tui-grid-item--first {
+  .tui-responsive > .tui-grid > .tui-grid-item {
     min-height: var(--playlistView-min-height);
   }
 

@@ -26,8 +26,8 @@ namespace core\webapi\resolver\mutation;
 use core\theme\helper;
 use core\theme\settings as theme_settings;
 use core\webapi\execution_context;
-use core\webapi\middleware\require_core_appearance;
 use core\webapi\middleware\require_login;
+use core\webapi\middleware\require_theme_settings;
 use core\webapi\mutation_resolver;
 use core\webapi\resolver\has_middleware;
 
@@ -47,6 +47,10 @@ final class update_theme_settings implements mutation_resolver, has_middleware {
         $tenant_id = $args['tenant_id'] ?? 0;
         $categories = $args['categories'];
         $files = $args['files'];
+
+        if (!empty($tenant_id) && !$CFG->tenantsenabled) {
+            throw new \invalid_parameter_exception('Can only set tenant_id when multi-tenancy is enabled.');
+        }
 
         // Load theme config for theme.
         $theme_config = \theme_config::load($theme);
@@ -70,8 +74,7 @@ final class update_theme_settings implements mutation_resolver, has_middleware {
     public static function get_middleware(): array {
         return [
             new require_login(),
-            new require_core_appearance('tenant_id'),
+            new require_theme_settings('tenant_id'),
         ];
     }
-
 }

@@ -32,7 +32,7 @@
 
     <template v-else>
       <p class="tui-wekaImageBlock__text">
-        {{ $str('loadinghelp', 'moodle') }}
+        {{ $str('loadinghelp', 'core') }}
       </p>
     </template>
   </div>
@@ -104,7 +104,7 @@ export default {
           },
         },
         {
-          label: this.$str('remove', 'moodle'),
+          label: this.$str('remove', 'core'),
           action: () => {
             this.$_removeNode();
           },
@@ -113,7 +113,7 @@ export default {
 
       if (this.downloadUrl) {
         rtn.push({
-          label: this.$str('download', 'moodle'),
+          label: this.$str('download', 'core'),
           action: () => {
             window.document.location.href = this.downloadUrl;
           },
@@ -220,7 +220,7 @@ export default {
 
 <lang-strings>
   {
-    "moodle": [
+    "core": [
       "loadinghelp",
       "remove",
       "download"
@@ -248,7 +248,7 @@ export default {
 
   &.ProseMirror-selectednode > &__inner > .tui-imageBlock {
     // Set the outline for the picture only.
-    outline: var(--border-width-normal) solid var(--weka-select-color);
+    outline: var(--border-width-normal) solid var(--color-secondary);
   }
 
   &__inner {

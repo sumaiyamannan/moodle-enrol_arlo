@@ -43,7 +43,7 @@
     >
       <CloseButton
         v-if="dismissableSources.overlayClose"
-        :aria-label="$str('closebuttontitle', 'moodle')"
+        :aria-label="$str('closebuttontitle', 'core')"
         :class="'tui-modal__outsideClose'"
         :size="300"
         @click="dismiss()"
@@ -53,7 +53,7 @@
         <div ref="inner" class="tui-modal__inner">
           <CloseButton
             v-if="dismissableSources.overlayClose"
-            :aria-label="$str('closebuttontitle', 'moodle')"
+            :aria-label="$str('closebuttontitle', 'core')"
             :class="'tui-modal__close'"
             :size="300"
             @click="dismiss()"
@@ -332,7 +332,9 @@ export default {
 
 <lang-strings>
 {
-  "moodle": ["closebuttontitle"]
+  "core": [
+    "closebuttontitle"
+  ]
 }
 </lang-strings>
 
@@ -341,12 +343,6 @@ $tui-modal-smallSize: 400px !default;
 $tui-modal-normalSize: 560px !default;
 $tui-modal-largeSize: 800px !default;
 $tui-modal-sheetBreakpoint: 768px !default;
-
-:root {
-  --modal-container-padding: var(--gap-12);
-  --modal-sheet-padding: var(--gap-12);
-  --modal-border-radius: 0;
-}
 
 .tui-modal {
   position: fixed;

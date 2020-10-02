@@ -297,8 +297,6 @@ export default {
 
 <style lang="scss">
 .tui-commentBox {
-  display: flex;
-  flex-direction: column;
   height: 100%;
 
   // The parent that using this box should be able to override its padding.
@@ -315,8 +313,13 @@ export default {
     }
   }
 
+  &__comments {
+    flex-grow: 1;
+  }
+
   &__commentForm {
-    flex-basis: 20%;
+    flex-grow: 0;
+    flex-shrink: 0;
     margin-top: var(--gap-4);
 
     &--withBorder {

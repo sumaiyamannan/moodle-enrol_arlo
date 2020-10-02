@@ -31,6 +31,7 @@
 
       <MiniProfileCard
         :no-border="true"
+        :no-padding="true"
         :display="survey.resource.user.card_display"
         class="tui-engageSurveySidePanel__profile"
       >
@@ -63,7 +64,7 @@
             :access-value="survey.resource.access"
             :topics="survey.topics"
             :submitting="false"
-            :open-modal="openModalFromButtonLabel"
+            :open-access-modal="openModalFromButtonLabel"
             :enable-time-view="false"
             @close-modal="openModalFromButtonLabel = false"
             @access-update="updateAccess"

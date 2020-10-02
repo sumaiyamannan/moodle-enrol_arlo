@@ -54,7 +54,9 @@
                 <span class="tui-workspaceForm__editor-tip-text">
                   {{ $str('hashtag_tip', 'container_workspace') }}
                 </span>
-                <InfoIconButton :aria-label="$str('info', 'moodle')">
+                <InfoIconButton
+                  :is-help-for="$str('hashtags', 'totara_engage')"
+                >
                   {{ $str('hashtag_tip_help', 'container_workspace') }}
                 </InfoIconButton>
               </div>
@@ -155,14 +157,14 @@
         :loading="submitting || !editorReady"
         :disabled="submitting || disableSubmit"
         :text="submitButtonLabel"
-        :aria-label="$str('submit', 'moodle')"
+        :aria-label="$str('submit', 'core')"
         :primary="true"
         type="submit"
         @click.prevent="submit"
       />
 
       <Button
-        :text="$str('cancel', 'moodle')"
+        :text="$str('cancel', 'core')"
         :disabled="submitting"
         @click.prevent="$emit('cancel')"
       />
@@ -247,7 +249,7 @@ export default {
     submitButtonLabel: {
       type: String,
       default() {
-        return this.$str('create', 'moodle');
+        return this.$str('create', 'core');
       },
     },
   },
@@ -383,12 +385,13 @@ export default {
       "hashtag_tip",
       "hashtag_tip_help"
     ],
-
-    "moodle": [
+    "totara_engage": [
+      "hashtags"
+    ],
+    "core": [
       "create",
       "cancel",
-      "submit",
-      "info"
+      "submit"
     ]
   }
 </lang-strings>
@@ -401,13 +404,21 @@ export default {
 
   &__container {
     display: flex;
+    flex-direction: column-reverse;
     align-items: stretch;
+
+    @media (min-width: $tui-screen-sm) {
+      flex-direction: row;
+    }
   }
 
   &__inputs {
     display: flex;
     flex-direction: column;
-    width: 66%;
+
+    @media (min-width: $tui-screen-sm) {
+      width: 66%;
+    }
   }
 
   &__unhiddenRow {
@@ -459,12 +470,23 @@ export default {
 
   &__imagePicker {
     // This will let us to have our custom FORM input :)
-    width: calc(100% - (66% + var(--gap-4)));
+    width: 15rem;
+    height: 15rem;
+
+    @media (min-width: $tui-screen-sm) {
+      width: calc(100% - (66% + var(--gap-4)));
+      height: 30.8rem;
+    }
 
     &.tui-formRow {
       // Reset margin
-      margin: 0;
-      margin-left: var(--gap-4);
+      margin-top: var(--gap-2);
+      margin-bottom: var(--gap-8);
+
+      @media (min-width: $tui-screen-sm) {
+        margin: 0;
+        margin-left: var(--gap-4);
+      }
 
       .tui-formRow {
         &__desc {

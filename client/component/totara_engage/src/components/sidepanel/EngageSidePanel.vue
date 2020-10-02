@@ -85,10 +85,36 @@ export default {
 
 <style lang="scss">
 .tui-engageSidePanel {
-  padding: var(--gap-8);
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  padding: var(--gap-4);
+
+  @media (min-width: $tui-screen-sm) {
+    padding: var(--gap-8);
+  }
 
   &__tabs {
-    padding-top: var(--gap-8);
+    display: flex;
+    flex: 1 0 1px;
+    flex-direction: column;
+    padding-top: var(--gap-6);
+
+    @media (min-width: $tui-screen-sm) {
+      padding-top: var(--gap-8);
+      overflow: auto;
+    }
+
+    .tui-tabs__panels {
+      flex-basis: 0;
+      flex-grow: 1;
+      flex-shrink: 0;
+
+      @media (min-width: $tui-screen-sm) {
+        min-height: 0;
+      }
+    }
+
     // Overriding the fallback select list when there isn't enough space
     .tui-formRow__action {
       width: 200px;
@@ -96,9 +122,14 @@ export default {
   }
 
   &__commentBox {
-    // Since the tab is already having a padding which it is '--gap-4'.
-    // Therefore we just need another '--gap-4'.
-    margin-top: var(--gap-4);
+    height: 100%;
+
+    @media (min-width: $tui-screen-sm) {
+      // Since the tab is already having a padding which it is '--gap-4'.
+      // Therefore we just need another '--gap-4'.
+      height: calc(100% - var(--gap-4));
+      margin-top: var(--gap-4);
+    }
   }
 
   &__overviewBox {
