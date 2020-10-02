@@ -1,0 +1,64 @@
+@import url('https://fonts.googleapis.com/css?family=Lato&display=swap');
+
+#access-message {
+  text-align: center;
+  font-family: "Lato", sans-serif;
+  margin-top: 0;
+}
+
+@media only screen and (min-width: 400px) {
+  #access-message {
+    margin-top: 100px;
+  }
+}
+
+#access-message .content {
+  width: auto;
+  max-width: 500px;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-left: auto;
+  margin-right: auto;
+  background-color: #bc3626;
+  color: white;
+  padding: 30px;
+  border-radius: 15px 0 15px 15px;
+}
+
+#access-message p,
+#access-message h1 {
+  width: 100%;
+}
+
+#access-message h1 {
+  font-size: 40px;
+  letter-spacing: .7px
+}
+
+#access-message p {
+  font-size: 1.4rem;
+}
+
+#access-message a {
+  color: white;
+  text-decoration: none;
+}
+
+#access-message a:hover {
+  text-decoration: underline;
+}
+
+#access-message .logo {
+  background: url('catalyst-logo.svg') no-repeat scroll;
+  background-size: 100%;
+  padding: 0;
+  width: 180px;
+  height: 50px;
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-left: auto;
+  margin-right: auto;
+}
