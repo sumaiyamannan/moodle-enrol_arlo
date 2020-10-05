@@ -46,6 +46,8 @@ redirect_if_major_upgrade_required();
 
 $testsession = optional_param('testsession', 0, PARAM_INT); // test session works properly
 $anchor      = optional_param('anchor', '', PARAM_RAW);      // Used to restore hash anchor to wantsurl.
+$noredirect  = optional_param('magicpony', 0, PARAM_BOOL); // don't redirect
+$noredirect |= optional_param('noredirect', 0, PARAM_BOOL); // don't redirect
 
 $context = context_system::instance();
 $PAGE->set_url("$CFG->wwwroot/login/index.php");
@@ -340,7 +342,7 @@ if (empty($SESSION->wantsurl)) {
 }
 
 /// Redirect to alternative login URL if needed
-if ((!empty($CFG->allowlogincsrf) || $authsequence[0] == 'shibboleth') && !empty($CFG->alternateloginurl)) { // Totara: alternate login url is deprecated!
+if ((!empty($CFG->allowlogincsrf) || $authsequence[0] == 'shibboleth') && !empty($CFG->alternateloginurl) && empty($noredirect)) { // Totara: alternate login url is deprecated!
     $loginurl = new moodle_url($CFG->alternateloginurl);
 
     $loginurlstr = $loginurl->out(false);
