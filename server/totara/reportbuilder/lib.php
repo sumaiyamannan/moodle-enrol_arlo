@@ -6460,6 +6460,13 @@ function reportbuilder_send_scheduled_report($sched) {
     }
     $writerclassname = $formats[$format];
 
+    // Force csv writer for very large exports to prevent memory issues.
+    $exportlimit = get_config('reportbuilder', 'exportadhoclimit');
+    if (!empty($exportlimit) && $report->get_filtered_count() > $exportlimit*4) {
+        error_log('create_attachment - forcing csv format');
+        $writerclassname = $formats['csv'];
+    }
+
     if ($sched->exporttofilesystem == REPORT_BUILDER_EXPORT_SAVE or
         $sched->exporttofilesystem == REPORT_BUILDER_EXPORT_EMAIL_AND_SAVE) {
 
