@@ -723,6 +723,11 @@ class totara_reportbuilder_column_testcase extends reportcache_advanced_testcase
         // Create a job assignment.
         \totara_job\job_assignment::create_default(2, array('organisationid' => 1, 'positionid' => 1));
 
+        $f2fmoduleid = $DB->get_field('modules', 'id', ['name' => 'facetoface']);
+        $this->course_modules_data = array(
+            'id' => 1, 'course' => 1, 'module' => $f2fmoduleid, 'instance' => 1,
+        );
+
         $this->loadDataSet($this->createArrayDataset(array(
             'user_info_field' => array($this->user_info_field_data),
             'user_info_data' => array($this->user_info_data_data),
