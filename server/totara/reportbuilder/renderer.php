@@ -411,6 +411,13 @@ class totara_reportbuilder_renderer extends plugin_renderer_base {
         global $CFG, $PAGE;
         require_once($CFG->dirroot . '/totara/reportbuilder/export_form.php');
 
+        $exportlimit = get_config('reportbuilder', 'exportadhoclimit');
+        if (!empty($exportlimit) && $report->get_filtered_count() > $exportlimit) {
+            echo html_writer::tag('p', get_string('exportdisabled', 'totara_reportbuilder'),
+                array('class' => 'dimmed_text'));
+            return;
+        }
+
         if ($report instanceof reportbuilder) {
             $id = $report->_id;
             $url = $report->get_current_url();

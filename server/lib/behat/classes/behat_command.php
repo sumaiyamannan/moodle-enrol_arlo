@@ -124,7 +124,7 @@ class behat_command {
         }
 
         if (!$parallerun) {
-            $command = TOOL_BEHAT_DIR_VENDOR . $separator . 'bin' . $separator . $exec;
+            $command = 'php ' . TOOL_BEHAT_DIR_VENDOR . $separator . 'bin' . $separator . $exec;
         } else {
             $command = $separator . 'admin' . $separator . 'tool' . $separator . 'behat' . $separator . 'cli' . $separator . 'run.php';
             $command = testing_cli_argument_path($command);

@@ -78,13 +78,6 @@ if (!empty($CFG->maintenance_enabled) and !$hasmaintenanceaccess) {
     print_maintenance_message();
 }
 
-$hassiteconfig = has_capability('moodle/site:config', context_system::instance());
-
-// Totara: Check if this is an initial install without a site fullname.
-if ($hassiteconfig && (moodle_needs_upgrading() || (empty($SITE->fullname) || empty($SITE->shortname)))) {
-    redirect($CFG->wwwroot .'/'. $CFG->admin .'/index.php');
-}
-
 // Totara: Ask for registration if necessary.
 require_once("$CFG->dirroot/$CFG->admin/registerlib.php");
 if (is_registration_required()) {
