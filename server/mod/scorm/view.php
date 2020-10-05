@@ -66,6 +66,8 @@ $contextmodule = context_module::instance($cm->id);
 
 // Totara: respect view and launch permissions.
 require_capability('mod/scorm:view', $contextmodule);
+// Trigger module viewed event. Moved here to allow autoenrol to work as expected.
+scorm_view($scorm, $course, $cm, $contextmodule);
 $canlaunch = has_capability('mod/scorm:launch', $contextmodule);
 
 $launch = false; // Does this automatically trigger a launch based on skipview.
@@ -128,9 +130,6 @@ $strscorm  = get_string("modulename", "scorm");
 
 $shortname = format_string($course->shortname, true, array('context' => $context));
 $pagetitle = strip_tags($shortname.': '.format_string($scorm->name));
-
-// Trigger module viewed event.
-scorm_view($scorm, $course, $cm, $contextmodule);
 
 if ($canlaunch && empty($preventskip) && empty($launch) && (has_capability('mod/scorm:skipview', $contextmodule))) {
     scorm_simple_play($scorm, $USER, $contextmodule, $cm->id);
