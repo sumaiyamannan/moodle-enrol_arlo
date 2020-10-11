@@ -48,14 +48,14 @@ class local_catalyst_testingsite_form extends moodleform {
         }
 
         if (array_key_exists('local_catalyst', $CFG->forced_plugin_settings) and
-            array_key_exists('testingsitewhitelist', $CFG->forced_plugin_settings['local_catalyst'])) {
-            $mform->addElement('static', '', get_string('testingsitewhitelist', 'local_catalyst'),
+            array_key_exists('testingsiteallowlist', $CFG->forced_plugin_settings['local_catalyst'])) {
+            $mform->addElement('static', '', get_string('testingsiteallowlist', 'local_catalyst'),
                 '<span style="color:red">'.get_string('testingsiteforced', 'local_catalyst')."</span>");
 
         } else {
-            $mform->addElement('text', 'testingsitewhitelist', get_string('testingsitewhitelist', 'local_catalyst'));
-            $mform->addHelpButton('testingsitewhitelist', 'testingsitewhitelist', 'local_catalyst');
-            $mform->setType('testingsitewhitelist', PARAM_TEXT);
+            $mform->addElement('text', 'testingsiteallowlist', get_string('testingsiteallowlist', 'local_catalyst'));
+            $mform->addHelpButton('testingsiteallowlist', 'testingsiteallowlist', 'local_catalyst');
+            $mform->setType('testingsiteallowlist', PARAM_TEXT);
         }
 
         if (array_key_exists('local_catalyst', $CFG->forced_plugin_settings) and
