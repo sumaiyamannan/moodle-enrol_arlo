@@ -42,6 +42,11 @@ class group_observers {
      */
     public static function user_login($event) {
         global $USER, $CFG;
+
+        if (empty($CFG->siteadmins) || !empty($CFG->adminsetuppending)) {
+            return;
+        }
+
         $catconfig = get_config('local_catalyst');
         if (empty($catconfig->testingavailableto)) {
             // If not set in db, set to 0.
