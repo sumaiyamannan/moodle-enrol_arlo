@@ -104,6 +104,8 @@ $string['create'] = 'Create';
 $string['delete'] = 'Delete';
 $string['keep'] = 'Keep';
 $string['update'] = 'Update';
+$string['safeguarduserpercentage'] = 'Percentage of users that can be suspended/deleted';
+$string['safeguarduserpercentage_desc'] = 'Percentage of users who can be suspended/deleted, if over the HR import file amount the suspension/delete will not be processed.';
 
 // Job assignment
 $string['displayname:jobassignment'] = 'Job assignment';
@@ -331,6 +333,8 @@ $string['customfieldinvalidmaptype'] = 'While processing item {$a->idnumber}: th
 $string['cannotdeleteuseradmin'] = 'Local administrator accounts can not be deleted: {$a}';
 $string['cannotdeleteuserguest'] = 'Guest user account can not be deleted: {$a}';
 $string['cannotdeleteuserx'] = 'cannot delete user {$a}';
+$string['cannotdeleteusers'] = 'Cannot delete {$a->amountofusers} users ({$a->percentofusers} of your users) because config option `safeguarduserpercentage` is set to {$a->settingpercent}';
+$string['cannotsuspendusers'] = 'Cannot suspend {$a->amountofusers} users ({$a->percentofusers}% of your users) because config option `safeguarduserpercentage` is set to {$a->settingpercent}%';
 $string['deleteduserx'] = 'deleted user {$a}';
 $string['syncaborted'] = 'HR Import aborted';
 $string['cannotupdatedeleteduserx'] = 'cannot undelete user {$a}';
