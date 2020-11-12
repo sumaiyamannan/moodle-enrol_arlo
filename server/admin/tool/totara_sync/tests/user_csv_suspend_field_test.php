@@ -148,6 +148,7 @@ class tool_totara_sync_user_csv_suspend_field_testcase extends advanced_testcase
             'undeletepwreset' => '0',
             'ignoreexistingpass' => '0',
             'sourceallrecords' => '0',
+            'safeguarduserpercentage' => 100,
         );
 
         foreach ($configcsv as $k => $v) {
