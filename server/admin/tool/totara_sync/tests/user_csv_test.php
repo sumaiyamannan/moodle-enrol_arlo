@@ -148,6 +148,7 @@ class tool_totara_sync_user_csv_testcase extends advanced_testcase {
             'ignoreexistingpass' => '0',
             'sourceallrecords' => '0',
             'csvsaveemptyfields' => true,
+            'safeguarduserpercentage' => 100,
         );
     }
 
