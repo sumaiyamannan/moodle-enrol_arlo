@@ -108,6 +108,11 @@ class totara_sync_element_user extends totara_sync_element {
         $mform->addElement('select', 'allow_delete', get_string('delete', 'tool_totara_sync'), $deleteopt);
         $mform->setDefault('allow_delete', self::KEEP_USERS);
         $mform->setExpanded('crudheading');
+
+        $mform->addElement('text', 'safeguarduserpercentage', get_string('safeguarduserpercentage', 'tool_totara_sync'), get_string('safeguarduserpercentage_desc', 'tool_totara_sync'));
+        $mform->setType('safeguarduserpercentage', PARAM_INT);
+        $mform->disabledIf('safeguarduserpercentage', 'allow_delete', 'eq', self::KEEP_USERS);
+        $mform->setDefault('safeguarduserpercentage', 30);
     }
 
     function validation($data, $files) {
@@ -141,6 +146,7 @@ class totara_sync_element_user extends totara_sync_element {
         $this->set_config('allow_create', !empty($data->allow_create));
         $this->set_config('allow_update', !empty($data->allow_update));
         $this->set_config('allow_delete', $data->allow_delete);
+        $this->set_config('safeguarduserpercentage', $data->safeguarduserpercentage);
 
         if (!empty($data->source_user)) {
             $source = $this->get_source($data->source_user);
@@ -207,6 +213,9 @@ class totara_sync_element_user extends totara_sync_element {
         if (!isset($this->config->allow_delete)) {
             $this->config->allow_delete = self::KEEP_USERS;
         }
+        if (!isset($this->config->safeguarduserpercentage)) {
+            $this->config->safeguarduserpercentage = 30;
+        }
 
         // May sure the required deleted column is present if necessary.
         $synctablecolumns = $DB->get_columns($synctable);
@@ -214,34 +223,52 @@ class totara_sync_element_user extends totara_sync_element {
 
         if ($this->config->allow_delete == self::DELETE_USERS) {
             $sql = null;
+            $countsql = null;
             if ($this->config->sourceallrecords == 0) {
                 if ($deletedcolumnpresent) {
                     // Get records with "deleted" flag set.
                     // Do not use DISTINCT here, idnumber may not be unique - we want errors for all duplicates.
                     // If there are repeated rows in external table we will just delete twice.
-                    $sql = "SELECT u.id, u.idnumber, u.auth
-                              FROM {{$synctable}} s
+                    $from = "FROM {{$synctable}} s
                               JOIN {user} u ON (s.idnumber = u.idnumber AND u.idnumber != '')
                              WHERE u.totarasync = 1 AND u.deleted = 0 AND s.deleted = 1";
+                    $sql = "SELECT u.id, u.idnumber, u.auth " . $from;
+                    $countsql = "SELECT COUNT(u.id) " . $from;
                 }
             } else if ($this->config->sourceallrecords == 1) {
                 // All records provided by source - get missing user records.
                 // Also consider the deleted flag if present.
                 if ($deletedcolumnpresent) {
-                    $sql = "SELECT u.id, u.idnumber, u.auth
-                              FROM {user} u
+                    $from = "FROM {user} u
                          LEFT JOIN {{$synctable}} s ON (u.idnumber = s.idnumber AND u.idnumber != '')
                              WHERE u.totarasync = 1 AND u.deleted = 0 AND (s.idnumber IS NULL OR s.deleted = 1)";
+                    $sql = "SELECT u.id, u.idnumber, u.auth " . $from;
+                    $countsql = "SELECT COUNT(u.id) " . $from;
                 } else {
-                    $sql = "SELECT u.id, u.idnumber, u.auth
-                              FROM {user} u
+                    $from = "FROM {user} u
                          LEFT JOIN {{$synctable}} s ON (u.idnumber = s.idnumber AND u.idnumber != '')
                              WHERE u.totarasync = 1 AND u.deleted = 0 AND s.idnumber IS NULL";
+                    $sql = "SELECT u.id, u.idnumber, u.auth " . $from;
+                    $countsql = "SELECT COUNT(u.id) " . $from;
                 }
             }
-            if ($sql) {
+            if ($sql && $countsql) {
+                // Get amount of users, get percentage of users in $usercount and check if over safeguarduserpercentage. If so, don't do anything.
+                $usercount = $DB->count_records('user', array('totarasync' => 1, 'deleted' => 0, 'suspended' => 0));
+                $safeguardcount = $DB->count_records_sql($countsql);
+
                 $rs = $DB->get_recordset_sql($sql);
                 foreach ($rs as $user) {
+                    if (round(($safeguardcount / $usercount) * 100, 2) > intval($this->config->safeguarduserpercentage)) {
+                        $this->addlog(get_string('cannotdeleteusers', 'tool_totara_sync', array(
+                            'settingpercent' => $this->config->safeguarduserpercentage,
+                            'amountofusers' => $safeguardcount,
+                            'percentofusers' => round(($safeguardcount / $usercount) * 100, 2)
+                        )), 'error',
+                            'deleteuser');
+                        $problemswhileapplying = true;
+                        break;
+                    }
                     // Remove user.
                     try {
                         // Do not delete the records which have invalid values(e.g. spelling mistake).
@@ -283,34 +310,52 @@ class totara_sync_element_user extends totara_sync_element {
 
         } else if ($this->config->allow_delete == self::SUSPEND_USERS) {
             $sql = null;
+            $countsql = null;
             if ($this->config->sourceallrecords == 0) {
                 if ($deletedcolumnpresent) {
                     // Get records with "deleted" flag set.
                     // Do not use DISTINCT here, idnumber may not be unique - we want errors for all duplicates.
                     // If there are repeated rows in external table we will just delete twice.
-                    $sql = "SELECT u.id, u.idnumber, u.auth
-                              FROM {{$synctable}} s
+                    $from = "FROM {{$synctable}} s
                               JOIN {user} u ON (s.idnumber = u.idnumber AND u.idnumber != '')
                              WHERE u.totarasync = 1 AND u.deleted = 0 AND u.suspended = 0 AND s.deleted = 1";
+                    $sql = "SELECT u.id, u.idnumber, u.auth " . $from;
+                    $countsql = "SELECT COUNT(u.id) " . $from;
                 }
             } else if ($this->config->sourceallrecords == 1) {
                 // All records provided by source - get missing user records.
                 // Also consider the deleted flag if present.
                 if ($deletedcolumnpresent) {
-                    $sql = "SELECT u.id, u.idnumber, u.auth
-                              FROM {user} u
+                    $from = "FROM {user} u
                          LEFT JOIN {{$synctable}} s ON (u.idnumber = s.idnumber AND u.idnumber != '')
                              WHERE u.totarasync = 1 AND u.deleted = 0 AND u.suspended = 0 AND (s.idnumber IS NULL OR s.deleted = 1)";
+                    $sql = "SELECT u.id, u.idnumber, u.auth " . $from;
+                    $countsql = "SELECT COUNT(u.id) " . $from;
                 } else {
-                    $sql = "SELECT u.id, u.idnumber, u.auth
-                              FROM {user} u
+                    $from = "FROM {user} u
                          LEFT JOIN {{$synctable}} s ON (u.idnumber = s.idnumber AND u.idnumber != '')
                              WHERE u.totarasync = 1  AND u.deleted = 0 AND u.suspended = 0 AND s.idnumber IS NULL";
+                    $sql = "SELECT u.id, u.idnumber, u.auth " . $from;
+                    $countsql = "SELECT COUNT(u.id) " . $from;
                 }
             }
-            if ($sql) {
+            if ($sql && $countsql) {
+                // Get amount of users, get percentage of users in $usercount and check if over safeguarduserpercentage. If so, don't do anything.
+                $usercount = $DB->count_records('user', array('totarasync' => 1, 'deleted' => 0, 'suspended' => 0));
+                $safeguardcount = $DB->count_records_sql($countsql);
+
                 $rs = $DB->get_recordset_sql($sql);
                 foreach ($rs as $user) {
+                    if (round(($safeguardcount / $usercount) * 100, 2) > intval($this->config->safeguarduserpercentage)) {
+                        $this->addlog(get_string('cannotsuspendusers', 'tool_totara_sync', array(
+                            'settingpercent' => $this->config->safeguarduserpercentage,
+                            'amountofusers' => $safeguardcount,
+                            'percentofusers' => round(($safeguardcount / $usercount) * 100, 2)
+                        )), 'error',
+                            'suspenduser');
+                        $problemswhileapplying = true;
+                        break;
+                    }
                     // Do not suspend the records which have invalid values(e.g. spelling mistake).
                     if (array_search($user->idnumber, $invalididnumbers) === false) {
                         $user = $DB->get_record('user', array('id' => $user->id));
