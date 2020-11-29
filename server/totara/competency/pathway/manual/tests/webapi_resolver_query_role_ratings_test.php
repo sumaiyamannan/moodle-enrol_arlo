@@ -37,6 +37,8 @@ require_once(__DIR__ . '/pathway_manual_base_testcase.php');
 
 /**
  * Tests the query to fetch all roles and their latest ratings for a given user and competency
+ *
+ * @group totara_competency
  */
 class pathway_manual_webapi_resolver_query_role_ratings_testcase extends pathway_manual_base_testcase {
 
@@ -137,7 +139,7 @@ class pathway_manual_webapi_resolver_query_role_ratings_testcase extends pathway
 
         $this->setUser($this->user1->id);
 
-        /** @var \pathway_manual\entities\rating $rating */
+        /** @var \pathway_manual\entity\rating $rating */
         $rating = $this->resolve()[0]->get_latest_rating();
         $this->assertEquals('Rating One', $rating->comment);
         $this->assertEquals($this->scalevalue1->id, $rating->scale_value_id);

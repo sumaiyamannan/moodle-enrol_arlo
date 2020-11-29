@@ -24,14 +24,17 @@
 use core\orm\query\builder;
 use pathway_learning_plan\learning_plan;
 use totara_competency\aggregation_users_table;
-use totara_competency\entities\competency;
-use totara_competency\entities\competency_achievement;
-use totara_competency\entities\pathway;
-use totara_competency\entities\scale_value;
+use totara_competency\entity\competency;
+use totara_competency\entity\competency_achievement;
+use totara_competency\entity\pathway;
+use totara_competency\entity\scale_value;
 use totara_competency\expand_task;
 use totara_competency\hook\competency_configuration_changed;
 use totara_core\advanced_feature;
 
+/**
+ * @group totara_competency
+ */
 class pathway_learning_plan_totara_plan_observer_testcase extends advanced_testcase {
 
     public function test_event_for_competency_with_lp_pathway() {

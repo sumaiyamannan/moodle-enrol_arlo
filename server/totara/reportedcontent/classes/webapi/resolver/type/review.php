@@ -47,6 +47,7 @@ final class review implements type_resolver {
                 "Expecting parameter \$source to be an instance of '{$cls}'"
             );
         }
+
         $formatter = new review_formatter($source);
 
         $format = null;

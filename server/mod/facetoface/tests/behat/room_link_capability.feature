@@ -1,4 +1,4 @@
-@javascript @mod @mod_facetoface @totara
+@javascript @mod @mod_facetoface @mod_facetoface_virtual_room @totara
 Feature: Check seminar room link setting
   In order to allow users to see the room link
   As an admin
@@ -39,7 +39,7 @@ Feature: Check seminar room link setting
       | Name                         | Room 1          |
       | Capacity                     | 10              |
       | Allow booking conflicts      | 0               |
-      | Room link                    | http://example.com?id=12345 |
+      | Virtual room link            | http://example.com?id=12345 |
       | Building                     | Some Building 1 |
       | Address                      | 123 Main Street |
     And I press "Add a room"

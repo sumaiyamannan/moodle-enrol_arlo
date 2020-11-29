@@ -22,7 +22,7 @@
  */
 
 use core\collection;
-use totara_competency\entities\assignment;
+use totara_competency\entity\assignment;
 use totara_competency\models\assignment as assignment_model;
 use totara_competency\models\profile\item;
 use totara_competency\models\profile\traits\assignment_key;
@@ -31,6 +31,9 @@ global $CFG;
 
 require_once($CFG->dirroot . '/totara/competency/tests/totara_competency_testcase.php');
 
+/**
+ * @group totara_competency
+ */
 class totara_competency_model_profile_item_testcase extends totara_competency_testcase {
 
     use assignment_key;

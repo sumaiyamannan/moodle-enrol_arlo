@@ -84,6 +84,7 @@
         :shared-by-count="article.sharedbycount"
         :like-button-aria-label="likeButtonLabel"
         :liked="article.reacted"
+        :show-like-button="!isPrivateResource"
         component-name="engage_article"
         @access-update="updateAccess"
         @access-modal="openModalFromButtonLabel = true"
@@ -104,11 +105,15 @@
       />
     </template>
 
-    <template v-if="featureRecommenders" v-slot:related>
+    <template
+      v-if="featureRecommenders"
+      v-slot:related="{ triggerShowRelated }"
+    >
       <Related
         component="engage_article"
         area="related"
         :resource-id="resourceId"
+        @show-related="triggerShowRelated()"
       />
     </template>
   </EngageSidePanel>
@@ -129,6 +134,7 @@ import DropdownItem from 'tui/components/dropdown/DropdownItem';
 import ArticlePlaylistBox from 'engage_article/components/sidepanel/content/ArticlePlaylistBox';
 import Related from 'engage_article/components/sidepanel/Related';
 import { notify } from 'tui/notifications';
+import { AccessManager } from 'totara_engage/index';
 
 // GraphQL queries
 import getArticle from 'engage_article/graphql/get_article';
@@ -228,6 +234,10 @@ export default {
 
     featureRecommenders() {
       return this.features && this.features.recommenders;
+    },
+
+    isPrivateResource() {
+      return AccessManager.isPrivate(this.article.resource.access);
     },
   },
 

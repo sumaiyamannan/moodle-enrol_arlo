@@ -22,7 +22,7 @@
  * @category test
  */
 
-use pathway_manual\entities\rating as rating_entity;
+use pathway_manual\entity\rating as rating_entity;
 use pathway_manual\models\rating as rating_model;
 use pathway_manual\models\roles\appraiser;
 use pathway_manual\models\roles\manager;
@@ -33,6 +33,9 @@ defined('MOODLE_INTERNAL') || die();
 
 require_once(__DIR__ . '/pathway_manual_base_testcase.php');
 
+/**
+ * @group totara_competency
+ */
 class pathway_manual_rating_model_testcase extends pathway_manual_base_testcase {
 
     public function test_create_with_missing_capability_rating_self() {

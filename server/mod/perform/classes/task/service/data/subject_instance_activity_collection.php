@@ -25,7 +25,7 @@ namespace mod_perform\task\service\data;
 
 use coding_exception;
 use core\orm\query\builder;
-use mod_perform\entities\activity\activity;
+use mod_perform\entity\activity\activity;
 
 /**
  * A collection of activity configuration used in subject/participant instance creation.
@@ -97,7 +97,8 @@ class subject_instance_activity_collection {
         $activity_id_chunks = array_chunk($activity_ids, builder::get_db()->get_max_in_params());
 
         foreach ($activity_id_chunks as $activity_id_chunk) {
-            $activities = activity::repository()->where_in('id', $activity_id_chunk)
+            $activities = activity::repository()
+                ->where('id', $activity_id_chunk)
                 ->eager_load_instance_creation_data()
                 ->get();
 

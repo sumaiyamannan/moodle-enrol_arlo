@@ -108,6 +108,7 @@ export default {
           playlist_id: this.playlistId,
           area: 'adder',
           include_footnotes: false,
+          image_preview_mode: 'totara_engage_adder_thumbnail',
         });
       },
       update({ resources: { cursor, cards } }) {
@@ -207,7 +208,8 @@ export default {
 <lang-strings>
 {
   "totara_playlist": [
-    "selectcontent"
+    "selectcontent",
+    "privacywarningtitle"
   ]
 }
 </lang-strings>

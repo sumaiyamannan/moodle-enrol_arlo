@@ -160,7 +160,7 @@ Feature: Respond to activity with multiple sections
     Then I should see "Once submitted, your responses will be visible to other users who have permission to view them."
     And I should not see "You will not be able to update your responses after submission."
     And I confirm the tui confirmation modal
-    And I should see "Section submitted." in the tui success notification toast
+    And I should see "Section submitted" in the tui success notification toast
 
   Scenario: Navigate to next section from side panel
     Given I log in as "user1"
@@ -216,3 +216,33 @@ Feature: Respond to activity with multiple sections
     # test click "OK" on popup confirm, then show correct section
     When I confirm the browser confirmation popup
     Then I should see "section 1" in the ".tui-participantContent__sectionHeading-title" "css_element"
+
+  Scenario: Show updated responses when navigate to different section then navigate back
+    Given I log in as "user1"
+    And I navigate to the outstanding perform activities list page
+    And I click on "Closed activity" "link"
+
+    Then I should see "section 1"
+    When I answer "short text" question "test element title" with "John Answer one"
+    And I click on "Submit" "button"
+    And I confirm the tui confirmation modal
+    # navigate to section 2
+    And I click on "section 2" "button"
+    And I answer "short text" question "test element title" with "John Answer two"
+    And I click on "draft" "button"
+    # navigate back to section 1
+    When I click on "section 1" "button"
+    Then I should see "John Answer one" in the ".tui-performElementResponse" "css_element"
+    # navigate back to section 2
+    When I click on "section 2" "button"
+    Then the field "Your response" matches value "John Answer two"
+
+  Scenario: End user can navigate back to activity list by nav link
+    Given I log in as "user1"
+    And I navigate to the outstanding perform activities list page
+    And I click on "Closed activity" "link"
+    Then I should see "Performance activities"
+
+    When I click on "Performance activities" "link"
+    Then I should see "Closed activity"
+    And I should see "Open activity"

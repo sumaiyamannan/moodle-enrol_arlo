@@ -23,7 +23,7 @@
 
 namespace mod_perform\models\activity;
 
-use mod_perform\entities\activity\element as element_entity;
+use mod_perform\entity\activity\element as element_entity;
 
 /**
  * Class element_plugin
@@ -107,19 +107,73 @@ abstract class element_plugin {
     /**
      * This method return element's admin form vue component name
      *
+     * This function is going to be deprecated. Use element_plugin::get_admin_edit_component() instead
+     *
      * @return string
+     * @deprecated since Totara 13.2
      */
     public function get_admin_form_component(): string {
-        return $this->get_component_path('AdminForm');
+        debugging(
+            '\mod_perform\models\activity\element_plugin::get_admin_form_component() is deprecated and should no longer be used.'
+            . ' There is no alternative.',
+            DEBUG_DEVELOPER
+        );
+
+        return $this->get_component_path('ElementAdminForm');
+    }
+
+    /**
+     * This method return element's admin form vue component name
+     *
+     * @return string
+     */
+    public function get_admin_edit_component(): string {
+        return $this->get_component_path('AdminEdit');
     }
 
     /**
      * This method return element's admin display vue component name
      *
+     * This function is going to be deprecated. Use element_plugin::get_admin_view_component() instead
+     *
      * @return string
+     * @deprecated since Totara 13.2
      */
     public function get_admin_display_component(): string {
-        return $this->get_component_path('AdminDisplay');
+        debugging(
+            '\mod_perform\models\activity\element_plugin::get_admin_display_component() is deprecated and should no longer be used.'
+            . ' There is no alternative.',
+            DEBUG_DEVELOPER
+        );
+
+        return $this->get_component_path('ElementAdminDisplay');
+    }
+
+    /**
+     * This method return element's admin view vue component name
+     *
+     * @return string
+     */
+    public function get_admin_view_component(): string {
+        return $this->get_component_path('AdminView');
+    }
+
+    /**
+     * This method return element's admin read only display vue component name
+     *
+     * This function is going to be deprecated. Use element_plugin::get_admin_summary_component() instead
+     *
+     * @return string
+     * @deprecated since Totara 13.2
+     */
+    public function get_admin_read_only_display_component(): string {
+        debugging(
+            '\mod_perform\models\activity\element_plugin::get_admin_read_only_display_component() is deprecated and should no longer be used.'
+            . ' There is no alternative.',
+            DEBUG_DEVELOPER
+        );
+
+        return $this->get_component_path('ElementAdminReadOnlyDisplay');
     }
 
     /**
@@ -127,8 +181,8 @@ abstract class element_plugin {
      *
      * @return string
      */
-    public function get_admin_read_only_display_component(): string {
-        return $this->get_component_path('AdminReadOnlyDisplay');
+    public function get_admin_summary_component(): string {
+        return $this->get_component_path('AdminSummary');
     }
 
     /**
@@ -142,9 +196,16 @@ abstract class element_plugin {
     /**
      * This method return element's user form vue component name
      * @return string
+     * @deprecated since Totara 13.2
      */
     public function get_participant_response_component(): string {
-        return $this->get_component_path('ParticipantResponse');
+        debugging(
+            '\mod_perform\models\activity\element_plugin::get_participant_response_component() is deprecated and should no longer be used.'
+            . 'Only classes expending \mod_perform\models\activity\respondable_element_plugin should implement this method',
+            DEBUG_DEVELOPER
+        );
+
+        return $this->get_component_path('ElementParticipantResponse');
     }
 
     /**
@@ -158,7 +219,6 @@ abstract class element_plugin {
             $this->get_plugin_name() .
             '/components/' .
             $this->get_component_name_prefix() .
-            'Element' .
             $suffix;
     }
 
@@ -195,6 +255,27 @@ abstract class element_plugin {
     public function get_is_respondable(): bool {
         return $this instanceof respondable_element_plugin;
     }
+
+    /**
+     * return true if element has title
+     *
+     * @return bool
+     */
+    abstract public function has_title(): bool;
+
+    /**
+     * Return Title Text
+     *
+     * @return string
+     */
+    abstract public function get_title_text(): string;
+
+    /**
+     * return true if element title is required
+     *
+     * @return bool
+     */
+    abstract public function is_title_required(): bool;
 
     /**
      * Return if element plugin is a Question element group or Other element group

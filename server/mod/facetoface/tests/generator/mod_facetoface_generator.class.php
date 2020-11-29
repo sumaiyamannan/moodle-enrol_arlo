@@ -195,6 +195,11 @@ class mod_facetoface_generator extends testing_module_generator {
             }, $record->sessiondates);
             unset($record->sessiondates);
         }
+        foreach ($sessiondates as $sessiondate) {
+            if ($sessiondate->timestart >= $sessiondate->timefinish) {
+                throw new coding_exception("The session start time {$sessiondate->timestart} is later than the finish time {$sessiondate->timefinish}.");
+            }
+        }
 
         if (!isset($record->capacity)) {
             $record->capacity = 10;
@@ -264,7 +269,7 @@ class mod_facetoface_generator extends testing_module_generator {
         }
 
         if (empty($record->url)) {
-            $record->url = 'https://example.com/channel/id/12345';
+            $record->url = '';
         }
 
         if (!isset($record->description)) {

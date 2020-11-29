@@ -26,7 +26,10 @@ namespace totara_msteams\watcher;
 use context_module;
 use core\orm\query\builder;
 use core\output\flex_icon;
+use engage_article\totara_engage\resource\article;
+use stdClass;
 use theme_msteams\hook\get_page_navigation_hook;
+use totara_playlist\totara_engage\link\nav_helper;
 
 /**
  * Watchers.
@@ -53,6 +56,8 @@ final class watchers {
         '/course/view.php' => self::REWIND,
         // Enrol page.
         '/enrol/index.php' => self::REWIND,
+        // Engage resource page.
+        '/totara/engage/resources/article/index.php' => 'on_engage_resource',
         // Any activity page.
         '/mod/' => self::BACK,
     ];
@@ -76,9 +81,13 @@ final class watchers {
      * Fill in the page navigation content.
      *
      * @param get_page_navigation_hook $hook
-     * @param integer $action
+     * @param integer|string $action
      */
-    private static function create_navigation(get_page_navigation_hook $hook, int $action): void {
+    private static function create_navigation(get_page_navigation_hook $hook, $action): void {
+        if (is_string($action)) {
+            self::{$action}($hook);
+            return;
+        }
         if ($action === self::HIDDEN) {
             return;
         }
@@ -96,7 +105,8 @@ final class watchers {
         $context = $hook->get_context();
         if ($context instanceof context_module) {
             $coursecontext = $context->get_course_context(false);
-            $mod = builder::table('course_modules', 'cm')->join(['modules', 'm'], 'module', 'id')->where('cm.id', $context->instanceid)->select('m.name')->order_by('cm.id')->first();
+            $cm = builder::table('course_modules', 'cm')->join(['modules', 'm'], 'module', 'id')->where('cm.id', $context->instanceid)->select_raw('cm.instance, m.name AS modname')->order_by('cm.id')->first();
+            /** @var stdClass|null $cm */
             if ($coursecontext) {
                 $hook->navigation = array_merge($hook->navigation ?: [], [[
                     'href' => $coursecontext->get_url(),
@@ -104,7 +114,7 @@ final class watchers {
                     'icon' => new flex_icon('theme_msteams|navigation-back')
                 ]]);
             }
-            if (!empty($mod) && in_array($mod->name, self::MODULES_BREAKAWAY)) {
+            if (!empty($cm) && (in_array($cm->modname, self::MODULES_BREAKAWAY) || self::is_incompatible_scorm($cm))) {
                 if (empty($hook->alert)) {
                     $hook->alert = get_string('alert:opennew', 'totara_msteams');
                 }
@@ -113,14 +123,52 @@ final class watchers {
     }
 
     /**
+     * Return true if the current module is a scorm with any 'new window' setting.
+     *
+     * @param stdClass $cm
+     * @return boolean
+     */
+    private static function is_incompatible_scorm(stdClass $cm): bool {
+        if ($cm->modname != 'scorm') {
+            return false;
+        }
+        $scorm = builder::table('scorm')->where('id', $cm->instance)->select('popup')->one();
+        /** @var stdClass|null $scorm */
+        if (!$scorm) {
+            return false;
+        }
+        // All 'new window' options are not very compatible at the moment.
+        return !empty($scorm->popup);
+    }
+
+    /**
+     * Look after the article page.
+     *
+     * @param get_page_navigation_hook $hook
+     */
+    private static function on_engage_resource(get_page_navigation_hook $hook): void {
+        // Hack for extracting parameters on the engage article page.
+        // Any parameter change to totara/engage/resources/article/index.php must apply here as well.
+        $id = required_param('id', PARAM_INT);
+        $source = optional_param('source', null, PARAM_TEXT);
+        $resource = article::from_resource_id($id);
+        [$back_button,] = nav_helper::build_resource_nav_buttons($resource->get_id(), $resource->get_userid(), $source);
+        $hook->navigation = array_merge($hook->navigation ?: [], [[
+            'href' => $back_button['url'],
+            'text' => $back_button['label'],
+            'icon' => new flex_icon('theme_msteams|navigation-back')
+        ]]);
+    }
+
+    /**
      * Look up a known URL.
      *
      * @param string $localurl
      * @param integer|null $defaultaction
      * @param array $urllist
-     * @return integer|null
+     * @return integer|string|null
      */
-    private static function look_up_local_url(string $localurl, ?int $defaultaction, array $urllist): ?int {
+    private static function look_up_local_url(string $localurl, ?int $defaultaction, array $urllist) {
         foreach ($urllist as $url => $action) {
             if (strpos($localurl, $url) === 0) {
                 return $action;

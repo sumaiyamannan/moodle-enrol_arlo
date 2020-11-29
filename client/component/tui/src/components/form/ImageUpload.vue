@@ -1,4 +1,4 @@
-av<!--
+<!--
   This file is part of Totara Enterprise Extensions.
 
   Copyright (C) 2020 onwards Totara Learning Solutions LTD
@@ -53,7 +53,7 @@ av<!--
           <AddIcon size="200" />
         </ButtonIcon>
         <ButtonIcon
-          v-if="files && files[0]"
+          v-if="(files && files[0]) || showDelete"
           class="tui-formImageUpload__deleteButton"
           :styleclass="{ stealth: true }"
           :aria-label="
@@ -122,7 +122,8 @@ export default {
     acceptedTypes: Array,
     ariaDescribedby: String,
     ariaLabelExtension: String,
-    contextId: Number,
+    contextId: [Number, String],
+    showDelete: Boolean,
   },
 
   data() {
@@ -162,9 +163,16 @@ export default {
       if (deleteDraft && file) {
         deleteDraft(file);
       }
-      this.selectedImageUrl = this.defaultUrl;
+
       this.$refs.inputFile.value = '';
-      this.$emit('update', null);
+
+      if (file) {
+        this.selectedImageUrl = this.currentUrl;
+        this.$emit('delete', { draft: true });
+      } else {
+        this.selectedImageUrl = this.defaultUrl;
+        this.$emit('delete', { draft: false });
+      }
     },
   },
 };

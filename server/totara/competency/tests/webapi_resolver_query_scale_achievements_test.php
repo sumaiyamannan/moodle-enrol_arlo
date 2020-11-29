@@ -23,9 +23,9 @@
  */
 
 use core\webapi\execution_context;
-use totara_competency\entities\assignment;
-use totara_competency\entities\pathway_achievement;
-use totara_competency\entities\scale_value;
+use totara_competency\entity\assignment;
+use totara_competency\entity\pathway_achievement;
+use totara_competency\entity\scale_value;
 use totara_competency\expand_task;
 use totara_competency\plugin_types;
 use totara_competency\task\competency_aggregation_all;
@@ -38,6 +38,8 @@ defined('MOODLE_INTERNAL') || die();
 
 /**
  * Tests the query to fetch all scales and their items for single value pathways
+ *
+ * @group totara_competency
  */
 class totara_competency_webapi_resolver_query_scale_achievements_testcase extends advanced_testcase {
 

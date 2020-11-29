@@ -22,15 +22,18 @@
  */
 
 use core\orm\entity\entity;
-use pathway_criteria_group\entities\criteria_group;
-use pathway_criteria_group\entities\criteria_group_criterion;
-use totara_criteria\entities\criteria_item;
-use totara_criteria\entities\criteria_item_record;
-use totara_criteria\entities\criterion;
+use pathway_criteria_group\entity\criteria_group;
+use pathway_criteria_group\entity\criteria_group_criterion;
+use totara_criteria\entity\criteria_item;
+use totara_criteria\entity\criteria_item_record;
+use totara_criteria\entity\criterion;
 
 global $CFG;
 require_once($CFG->dirroot . '/totara/hierarchy/prefix/competency/lib.php');
 
+/**
+ * @group totara_competency
+ */
 class totara_criteria_competency_deletion_testcase extends advanced_testcase {
 
     /**

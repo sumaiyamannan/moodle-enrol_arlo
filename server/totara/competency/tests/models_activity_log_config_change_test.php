@@ -22,9 +22,12 @@
  */
 
 use totara_competency\models\activity_log;
-use totara_competency\entities\configuration_change;
-use totara_competency\entities\scale_value;
+use totara_competency\entity\configuration_change;
+use totara_competency\entity\scale_value;
 
+/**
+ * @group totara_competency
+ */
 class totara_competency_models_activity_log_config_change_testcase extends advanced_testcase {
 
     public function test_changed_aggregation() {

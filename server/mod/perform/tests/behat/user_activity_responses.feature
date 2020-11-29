@@ -34,7 +34,7 @@ Feature: Viewing other responses
     When I click on "Submit" "button"
     And I confirm the tui confirmation modal
     Then I should see "Performance activities"
-    And I should see "Section submitted." in the tui success notification toast
+    And I should see "Section submitted" in the tui success notification toast
     And the "Your activities" tui tab should be active
 
     When I click on "John is participating subject" "link"
@@ -86,7 +86,7 @@ Feature: Viewing other responses
     And I confirm the tui confirmation modal
 
     Then I should see "Performance activities"
-    And I should see "Section submitted." in the tui success notification toast
+    And I should see "Section submitted" in the tui success notification toast
     And the "Activities about others" tui tab should be active
 
     When I click on "Close" "button"
@@ -119,7 +119,7 @@ Feature: Viewing other responses
     And I confirm the tui confirmation modal
 
     Then I should see "Performance activities"
-    And I should see "Section submitted." in the tui success notification toast and close it
+    And I should see "Section submitted" in the tui success notification toast and close it
     And the "Activities about others" tui tab should be active
 
     When I log out
@@ -154,7 +154,7 @@ Feature: Viewing other responses
     When I click on "Submit" "button"
     And I confirm the tui confirmation modal
     Then I should see "Performance activities"
-    And I should see "Section submitted." in the tui success notification toast
+    And I should see "Section submitted" in the tui success notification toast
     And the "Your activities" tui tab should be active
 
   Scenario: I can save as a draft
@@ -175,3 +175,16 @@ Feature: Viewing other responses
     And I click show others responses
     And I wait until ".tui-otherParticipantResponses" "css_element" exists
     Then I should see "No response submitted"
+
+  Scenario: I can navigate back to activity list by nav link
+    When I log in as "john"
+    And I navigate to the outstanding perform activities list page
+    And I click on "John draft" "link"
+    Then I should see "Performance activities"
+
+    When I click on "Performance activities" "link"
+    Then I should see "Your activities"
+    And I should see "John draft"
+    And I should see "John is view-only subject"
+    And I should see "John is participating subject"
+

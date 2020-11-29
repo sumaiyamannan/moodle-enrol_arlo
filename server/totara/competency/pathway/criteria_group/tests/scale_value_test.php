@@ -25,6 +25,9 @@ use \totara_criteria\criterion;
 use \pathway_criteria_group\criteria_group;
 use \hierarchy_competency\event\scale_value_deleted;
 
+/**
+ * @group totara_competency
+ */
 class scale_value_test extends \advanced_testcase {
 
     /**
@@ -152,7 +155,7 @@ class scale_value_test extends \advanced_testcase {
             );
         }
 
-        /** @var \totara_competency\entities\scale $scale */
+        /** @var \totara_competency\entity\scale $scale */
 
         foreach ($this->data['competency_list'] as $competency) {
                 $criteria_group_data = [

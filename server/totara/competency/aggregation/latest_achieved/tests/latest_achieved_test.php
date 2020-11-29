@@ -21,15 +21,17 @@
  * @package aggregation_latest_achieved
 */
 
-
 use aggregation_latest_achieved\latest_achieved;
 use core\orm\collection;
 use pathway_test_pathway\test_pathway;
-use totara_competency\entities\competency_framework;
-use totara_competency\entities\pathway_achievement;
-use totara_competency\entities\scale;
+use totara_competency\entity\competency_framework;
+use totara_competency\entity\pathway_achievement;
+use totara_competency\entity\scale;
 use totara_competency\pathway;
 
+/**
+ * @group totara_competency
+ */
 class aggregation_latest_achieved_aggregation_testcase extends advanced_testcase {
 
     public function test_aggregation_type() {

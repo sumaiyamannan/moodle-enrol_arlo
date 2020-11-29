@@ -25,7 +25,10 @@
     :default-url="metadata.default_url"
     :accepted-types="metadata.type.valid_extensions"
     :aria-describedby="ariaDescribedby"
-    :context-id="contextId"
+    :context-id="parseInt(contextId)"
+    :show-delete="showDelete"
+    @update="updateImage"
+    @delete="deleteImage"
   />
 </template>
 
@@ -40,7 +43,34 @@ export default {
   props: {
     metadata: Object,
     ariaDescribedby: String,
-    contextId: Number,
+    contextId: [Number, String],
+    showDelete: Boolean,
+  },
+
+  methods: {
+    /**
+     * New image has been uploaded and we need to save it.
+     *
+     * @param {String} url
+     */
+    updateImage({ url }) {
+      this.$emit('update', {
+        ui_key: this.metadata.ui_key,
+        url: url,
+      });
+    },
+
+    /**
+     * Delete image from form if draft or emit delete event.
+     *
+     * @param {Boolean} draft
+     */
+    deleteImage({ draft }) {
+      this.$emit('delete', {
+        ui_key: this.metadata.ui_key,
+        draft: draft,
+      });
+    },
   },
 };
 </script>

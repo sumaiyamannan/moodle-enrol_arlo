@@ -269,6 +269,10 @@ class mod_facetoface_renderer extends plugin_renderer_base {
      * @return string HTML fragment to be output
      */
     public function session_user_selector(\stdClass $team, \stdClass $session, array $reserveinfo): string {
+        global $PAGE;
+
+        $extrafields = get_extra_user_fields($PAGE->context);
+
         $output = html_writer::start_tag('div', array('class' => 'row-fluid user-multiselect'));
 
         // Current allocations.
@@ -287,7 +291,7 @@ class mod_facetoface_renderer extends plugin_renderer_base {
             $opts .= html_writer::tag('option', get_string('none'), array('value' => null, 'disabled' => 'disabled'));
         } else {
             foreach ($team->current as $user) {
-                $name = fullname($user);
+                $name = mod_facetoface\attendees_list_helper::output_user_for_selection($user, $extrafields, true);
                 $attr = array('value' => $user->id);
                 if (in_array($user->id, $selected)) {
                     $attr['selected'] = 'selected';
@@ -303,7 +307,7 @@ class mod_facetoface_renderer extends plugin_renderer_base {
         if (!empty($team->othersession)) {
             $opts .= html_writer::start_tag('optgroup', array('label' => get_string('othersession', 'mod_facetoface')));
             foreach ($team->othersession as $user) {
-                $name = fullname($user);
+                $name = mod_facetoface\attendees_list_helper::output_user_for_selection($user, $extrafields, true);
                 $attr = array('value' => $user->id, 'disabled' => 'disabled');
                 if (!empty($user->cannotremove)) {
                     $name .= ' (' . get_string($user->cannotremove, 'mod_facetoface') . ')';
@@ -334,7 +338,7 @@ class mod_facetoface_renderer extends plugin_renderer_base {
         $selected = optional_param_array('allocation', array(), PARAM_INT);
         $optspotential = array();
         foreach ($team->potential as $potential) {
-            $optspotential[$potential->id] = fullname($potential);
+            $optspotential[$potential->id] = mod_facetoface\attendees_list_helper::output_user_for_selection($potential, $extrafields, true);
         }
         $attr = array('multiple' => 'multiple', 'id' => 'allocation', 'size' => 20);
         if ($reserveinfo['allocate'][$session->id] == 0) {
@@ -699,27 +703,29 @@ class mod_facetoface_renderer extends plugin_renderer_base {
     }
 
     /**
-     * Gets the HTML output for room details.
+     * Gets the HTML output of room details for the session.
      *
+     * @param \mod_facetoface\seminar_session $date
      * @param \mod_facetoface\room $room - The room instance to get details for
      * @param string|null $backurl
-     * @param \mod_facetoface\seminar_session $date
      * @param bool $joinnow to display virtual room link if exists and time has come(15 min prior to the session start time)
      * @return string containing room details with relevant html tags.
      */
-    public function get_room_details_html(room $room, string $backurl = null, bool $joinnow = false): string {
+    public function get_session_room_details_html(seminar_session $date, room $room, string $backurl = null, bool $joinnow = false): string {
         global $CFG;
         $url = new moodle_url('/mod/facetoface/reports/rooms.php', array(
             'roomid' => $room->get_id(),
+            'sdid' => $date->get_id(),
         ));
 
         $roomhtml = '';
         if ($joinnow && !empty($room->get_url())) {
             $roomurl = new moodle_url(s($room->get_url()));
+            $roomlinklabel = get_string('roomjoinnowx', 'mod_facetoface', $room->get_name());
             $roomhtml .= '<br>' . html_writer::link(
                 $roomurl,
                 get_string('roomjoinnow', 'mod_facetoface'),
-                ['class' => 'roomurl btn btn-primary btn-xs', 'role' => 'button', 'target' => '_blank', 'rel' => 'noreferrer']
+                ['class' => 'roomurl btn btn-primary btn-xs', 'role' => 'button', 'target' => '_blank', 'rel' => 'noopener noreferrer', 'aria-label' => $roomlinklabel, 'title' => $roomlinklabel]
             );
         }
         // Display room custom fields?
@@ -882,15 +888,6 @@ class mod_facetoface_renderer extends plugin_renderer_base {
         if ($displayadmincontents) {
             // Allow scheduling conflicts.
             $builder->add_detail(get_string('allowassetconflicts', 'mod_facetoface'), $item->get_allowconflicts() ? get_string('yes') : get_string('no'));
-        }
-
-        // Room link.
-        if ($item instanceof room) {
-            if (!empty($item->get_url())) {
-                // No conditions, everyone allow to see the room link who can access the room information.
-                $roomurl = s($item->get_url());
-                $builder->add_detail_unsafe(get_string('roomurl', 'mod_facetoface'), html_writer::link(new moodle_url($roomurl), $roomurl));
-            }
         }
 
         // Description.
@@ -1693,7 +1690,7 @@ class mod_facetoface_renderer extends plugin_renderer_base {
                                 $states[] = 'joinnow';
                             }
                         }
-                        $roomoutputs[] = $this->get_room_details_html($room, $backurl, $joinnow);
+                        $roomoutputs[] = $this->get_session_room_details_html($date, $room, $backurl, $joinnow);
                     }
                 }
 
@@ -1896,7 +1893,7 @@ class mod_facetoface_renderer extends plugin_renderer_base {
             if ((bool)$room->get_url()) {
                 $joinnow = \mod_facetoface\room_helper::show_joinnow($seminarevent, $date, null, $time);
             }
-            $listitems[] = $this->get_room_details_html($room, $currenturl, $joinnow);
+            $listitems[] = $this->get_session_room_details_html($date, $room, $currenturl, $joinnow);
         }
         return self::render_unordered_list($listitems);
     }

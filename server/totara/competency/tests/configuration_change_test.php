@@ -21,10 +21,13 @@
  * @package totara_competency
  */
 
-use totara_competency\entities\configuration_change;
-use totara_competency\entities\scale_value;
+use totara_competency\entity\configuration_change;
+use totara_competency\entity\scale_value;
 use totara_core\advanced_feature;
 
+/**
+ * @group totara_competency
+ */
 class totara_competency_configuration_change_testcase extends advanced_testcase {
 
     public function test_configuration_change_is_logged() {

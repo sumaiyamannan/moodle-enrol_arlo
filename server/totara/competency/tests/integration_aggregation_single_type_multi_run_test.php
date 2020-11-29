@@ -25,8 +25,8 @@ use pathway_learning_plan\learning_plan;
 use pathway_manual\manual;
 use pathway_manual\models\roles\manager;
 use pathway_manual\models\roles\self_role;
-use totara_competency\entities\competency_achievement;
-use totara_competency\entities\pathway_achievement;
+use totara_competency\entity\competency_achievement;
+use totara_competency\entity\pathway_achievement;
 use totara_competency\hook\competency_configuration_changed;
 use totara_competency\linked_courses;
 use totara_criteria\criterion;
@@ -37,6 +37,8 @@ require_once($CFG->dirroot . '/totara/competency/tests/integration_aggregation.p
 /**
  * This class contains integration tests with all pathways of the same type with multiple runs
  * Integration test file is split because of the sheer size of the file if all integration tests were to be placed in the same file
+ *
+ * @group totara_competency
  */
 class totara_competency_integration_aggregation_single_type_multi_run_testcase extends totara_competency_integration_aggregation {
 

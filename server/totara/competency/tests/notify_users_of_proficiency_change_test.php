@@ -21,13 +21,15 @@
  * @package totara_competency
  */
 
-use totara_competency\entities\competency;
+use totara_competency\entity\competency;
 use totara_competency\hook\competency_achievement_updated_bulk;
 use totara_competency\watcher\notify_users_of_proficiency_change;
 use core\orm\query\builder;
 
 /**
  * Class notify_users_of_proficiency_change_test
+ *
+ * @group totara_competency
  */
 class totara_competency_notify_users_of_proficiency_change_test extends advanced_testcase {
 

@@ -27,10 +27,11 @@ use coding_exception;
 use core\orm\collection;
 use core\orm\entity\model;
 use core\orm\query\builder;
-use mod_perform\entities\activity\element as element_entity;
-use mod_perform\entities\activity\section as section_entity;
-use mod_perform\entities\activity\section_element as section_element_entity;
+use mod_perform\entity\activity\element as element_entity;
+use mod_perform\entity\activity\section as section_entity;
+use mod_perform\entity\activity\section_element as section_element_entity;
 use mod_perform\models\response\participant_section;
+use  mod_perform\models\activity\element as model_element;
 use stdClass;
 
 /**
@@ -224,27 +225,27 @@ class section extends model {
      * @return stdClass
      */
     public function get_section_elements_summary(): stdClass {
-
-        $total_count = section_element_entity::repository()
-            ->where('section_id', $this->id)
-            ->count();
-
-        $required_count = section_element_entity::repository()
-            ->join([element_entity::TABLE, 'element'], 'element_id', 'id')
-            ->where('section_id', $this->id)
-            ->where('element.is_required', 1)
-            ->count();
-
-        $optional_count = section_element_entity::repository()
-            ->join([element_entity::TABLE, 'element'], 'element_id', 'id')
-            ->where('section_id', $this->id)
-            ->where('element.is_required', 0)
-            ->count();
+        $other_element_count = 0;
+        $optional_count = 0;
+        $required_count = 0;
+        foreach ($this->entity->section_elements as $section_element) {
+            $is_required = $section_element->element->is_required;
+            $element = model_element::load_by_entity($section_element->element);
+            if (!$element->is_respondable) {
+                $other_element_count ++;
+            } else {
+                if ($is_required) {
+                    $required_count++;
+                } else {
+                    $optional_count++;
+                }
+            }
+        }
 
         return (object)[
             'required_question_count' => $required_count,
             'optional_question_count' => $optional_count,
-            'other_element_count'     => $total_count - ($required_count + $optional_count),
+            'other_element_count'     => $other_element_count,
         ];
     }
 

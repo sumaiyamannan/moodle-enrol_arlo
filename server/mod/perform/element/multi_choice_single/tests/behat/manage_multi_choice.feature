@@ -13,33 +13,32 @@ Feature: Manage performance activity multiple choice elements
     #Add multiple elements
     And I click on "Activity one" "link"
     And I navigate to manage perform activity content page
-    And I click multi choice single question element
+    And I add a "Multiple choice: single-select" activity content element
     And I set the following fields to these values:
-      | rawTitle   | Question 1   |
-      | answers[0] | Option one   |
-      | answers[1] | Option two   |
-      | identifier | Identifier 1 |
-    And I save multi choice single question element data
-    And I click multi choice single question element
+      | rawTitle          | Question 1   |
+      | options[0][value] | Option one   |
+      | options[1][value] | Option two   |
+      | identifier        | Identifier 1 |
+    And I save the activity content element
+    And I add a "Multiple choice: single-select" activity content element
     And I set the following fields to these values:
-      | rawTitle   | Question 2   |
-      | answers[0] | Option three |
-      | answers[1] | Option four  |
-    And I save multi choice single question element data
-    And I click multi choice single question element
+      | rawTitle          | Question 2   |
+      | options[0][value] | Option three |
+      | options[1][value] | Option four  |
+    And I save the activity content element
+    And I add a "Multiple choice: single-select" activity content element
     And I set the following fields to these values:
-      | rawTitle   | Question 3 |
-      | answers[0] | Option five |
-      | answers[1] | Option six |
-    And I save multi choice single question element data
+      | rawTitle          | Question 3  |
+      | options[0][value] | Option five |
+      | options[1][value] | Option six  |
+    And I save the activity content element
     And I close the tui notification toast
-    And I close the tui modal
+    And I follow "Content (Activity one)"
     When I navigate to manage perform activity content page
     Then I should see perform multi choice single question "Question 1" is saved with options "Option one,Option two"
     And I should see perform multi choice single question "Question 2" is saved with options "Option three,Option four"
     And I should see perform multi choice single question "Question 3" is saved with options "Option five,Option six"
-    When I click on identifier icon for question "Question 1"
-    Then I should see "Identifier 1"
+    And I should see "Identifier 1" in the "Question 1" tui "card"
 
   Scenario: Save multiple choice elements with more options
     Given I log in as "admin"
@@ -47,17 +46,17 @@ Feature: Manage performance activity multiple choice elements
 
     And I click on "Activity one" "link"
     And I navigate to manage perform activity content page
-    And I click multi choice single question element
+    And I add a "Multiple choice: single-select" activity content element
     And I set the following fields to these values:
       | rawTitle   | Question 1 |
-      | answers[0] | Option one |
-      | answers[1] | Option two |
+      | options[0][value] | Option one |
+      | options[1][value] | Option two |
     And I click multi choice single question add new option
     And I set the following fields to these values:
-      |answers[2]        | Option three |
-    And I save multi choice single question element data
+      |options[2][value]        | Option three |
+    And I save the activity content element
     And I close the tui notification toast
-    And I close the tui modal
+    And I follow "Content (Activity one)"
     And I navigate to manage perform activity content page
     Then I should see perform multi choice single question "Question 1" is saved with options "Option one,Option two,Option three"
 
@@ -67,18 +66,18 @@ Feature: Manage performance activity multiple choice elements
 
     And I click on "Activity one" "link"
     And I navigate to manage perform activity content page
-    And I click multi choice single question element
+    And I add a "Multiple choice: single-select" activity content element
     And I set the following fields to these values:
       | rawTitle   | Question 1 |
-      | answers[0] | Option one |
-      | answers[1] | Option two |
+      | options[0][value] | Option one |
+      | options[1][value] | Option two |
     And I click multi choice single question add new option
     And I set the following fields to these values:
-      | answers[2] | Option three |
+      | options[2][value] | Option three |
     And I delete multi choice single question option
-    And I save multi choice single question element data
+    And I save the activity content element
     And I close the tui notification toast
-    And I close the tui modal
+    And I follow "Content (Activity one)"
     And I navigate to manage perform activity content page
     Then I should see perform multi choice single question "Question 1" is saved with options "Option one,Option two"
 
@@ -88,10 +87,10 @@ Feature: Manage performance activity multiple choice elements
 
     And I click on "Activity one" "link"
     And I navigate to manage perform activity content page
-    And I click multi choice single question element
+    And I add a "Multiple choice: single-select" activity content element
     And I set the following fields to these values:
       | rawTitle | Question 1 |
-    And I save multi choice single question element data
+    And I save the activity content element
     And I should see "Required"
 
   Scenario: Save required and optional multiple choice elements
@@ -103,22 +102,22 @@ Feature: Manage performance activity multiple choice elements
     And I should see "0" in the "other" element summary of the activity section
     # Add multiple elements
     And I navigate to manage perform activity content page
-    And I click multi choice single question element
+    And I add a "Multiple choice: single-select" activity content element
     When I set the following fields to these values:
       | rawTitle   | Question 1 |
-      | answers[0] | Option one |
-      | answers[1] | Option two |
+      | options[0][value] | Option one |
+      | options[1][value] | Option two |
     And I click on the "responseRequired" tui checkbox
-    And I save multi choice single question element data
+    And I save the activity content element
     Then I should see "Required"
-    And I click multi choice single question element
+    And I add a "Multiple choice: single-select" activity content element
     When I set the following fields to these values:
       | rawTitle   | Question 2 |
-      | answers[0] | Option one |
-      | answers[1] | Option two |
-    And I save multi choice single question element data
+      | options[0][value] | Option one |
+      | options[1][value] | Option two |
+    And I save the activity content element
     When I close the tui notification toast
-    And I close the tui modal
+    And I follow "Content (Activity one)"
     Then I should see "1" in the "required" element summary of the activity section
     And I should see "1" in the "optional" element summary of the activity section
     And I should see "0" in the "other" element summary of the activity section

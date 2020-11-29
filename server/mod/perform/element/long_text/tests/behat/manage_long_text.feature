@@ -11,28 +11,24 @@ Feature: Manage performance activity long text elements
 
     # Add multiple elements
     When I navigate to the edit perform activities page for activity "Add Element Activity"
-    And I click on "Edit content elements" "button"
-    And I click on "Add element" "button"
-    And I click on "Long text" "button"
+    And I click on "Edit content elements" "link_or_button"
+    And I add a "Text: Long response" activity content element
     When I set the following fields to these values:
       | rawTitle   | Question 1   |
       | identifier | Identifier 1 |
     And I click on the "responseRequired" tui checkbox
-    And I click on "Done" "button" in the ".tui-performEditSectionContentModal__form" "css_element"
+    And I save the activity content element
     Then I should see "Required"
-    When I click on identifier icon for question "Question 1"
-    Then I should see "Identifier 1"
-    When I click on "Add element" "button"
-    And I click on "Long text" "button"
+    Then I should see "Identifier 1" in the "Question 1" tui "card"
+    And I add a "Text: Long response" activity content element
     And I set the following fields to these values:
       | rawTitle | Question 2 |
-    And I click on "Done" "button" in the ".tui-performEditSectionContentModal__form" "css_element"
+    And I save the activity content element
     And I close the tui notification toast
-    And I close the tui modal
+    And I follow "Content (Add Element Activity)"
     Then I should see "1" in the "required" element summary of the activity section
     And I should see "1" in the "optional" element summary of the activity section
     And I should see "0" in the "other" element summary of the activity section
-    When I click on "Edit content elements" "button"
-    And I should see "Required"
-    When I click on identifier icon for question "Question 1"
-    Then I should see "Identifier 1"
+    When I click on "Edit content elements" "link_or_button"
+    Then I should see "Required"
+    And I should see "Identifier 1" in the "Question 1" tui "card"

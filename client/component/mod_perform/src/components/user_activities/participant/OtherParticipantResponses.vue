@@ -41,15 +41,16 @@
               :profile-picture="
                 response.participant_instance.participant.profileimageurlsmall
               "
-              size="xsmall"
+              size="xxsmall"
             />
 
             <ElementParticipantResponse>
               <template v-slot:content>
                 <component
-                  :is="componentFor()"
-                  :data="JSON.parse(response.response_data)"
+                  :is="sectionElement.responseDisplayComponent"
                   :element="sectionElement.element"
+                  :data="response.response_data"
+                  :response-lines="response.response_data_formatted_lines"
                 />
               </template>
             </ElementParticipantResponse>
@@ -80,9 +81,10 @@
             <ElementParticipantResponse>
               <template v-slot:content>
                 <component
-                  :is="componentFor()"
-                  :data="JSON.parse(response.response_data)"
+                  :is="sectionElement.responseDisplayComponent"
                   :element="sectionElement.element"
+                  :data="response.response_data"
+                  :response-lines="response.response_data_formatted_lines"
                 />
               </template>
             </ElementParticipantResponse>
@@ -119,8 +121,19 @@ export default {
   },
 
   computed: {
+    /**
+     * @return {Object} The section element "other responder groups", with the response data parsed.
+     */
     responderGroups() {
-      return this.sectionElement.other_responder_groups;
+      return this.sectionElement.other_responder_groups.map(group => {
+        const responses = group.responses.map(response => {
+          return Object.assign({}, response, {
+            response_data: JSON.parse(response.response_data),
+          });
+        });
+
+        return Object.assign({}, group, { responses });
+      });
     },
     anonymousGroupLabel() {
       if (this.viewOnly) {
@@ -131,16 +144,6 @@ export default {
     },
   },
   methods: {
-    /**
-     * Get an async component for participant response component
-     * @returns {function}
-     */
-    componentFor() {
-      return tui.asyncComponent(
-        this.sectionElement.element.type.participant_response_component
-      );
-    },
-
     /**
      * Check question has other responses
      *
@@ -167,10 +170,11 @@ export default {
 
 <style lang="scss">
 .tui-otherParticipantResponses {
-  &__response {
-    width: 100%;
-    margin-top: var(--gap-1);
+  & > * + * {
+    margin-top: var(--gap-8);
+  }
 
+  &__response {
     & > * + * {
       margin-top: var(--gap-6);
     }

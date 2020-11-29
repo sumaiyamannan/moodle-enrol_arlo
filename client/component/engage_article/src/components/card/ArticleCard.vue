@@ -64,9 +64,11 @@
         @click="updateBookmark"
       />
 
-      <h3 :id="labelId" slot="second" class="tui-engageArticleCard__title">
-        {{ name }}
-      </h3>
+      <a slot="second" class="tui-engageArticleCard__link" :href="url">
+        <h3 :id="labelId" class="tui-engageArticleCard__title">
+          {{ name }}
+        </h3>
+      </a>
 
       <div
         v-if="extraData.timeview"
@@ -296,6 +298,16 @@ export default {
     width: 100%;
   }
 
+  &__link {
+    color: var(--color-neutral-7);
+    text-decoration: none;
+
+    &:hover,
+    &:focus {
+      color: var(--color-neutral-7);
+    }
+  }
+
   &__icons {
     display: flex;
     flex-direction: row;
@@ -315,7 +327,9 @@ export default {
   &__title {
     @include tui-font-heading-x-small();
     margin-top: var(--gap-4);
+    -ms-word-break: break-all;
     overflow-wrap: break-word;
+    hyphens: none;
   }
 
   &__subTitle {

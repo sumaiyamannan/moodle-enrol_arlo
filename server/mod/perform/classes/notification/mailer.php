@@ -24,7 +24,7 @@
 namespace mod_perform\notification;
 
 use coding_exception;
-use core\entities\user as user_entity;
+use core\entity\user as user_entity;
 use core\message\message;
 use core_user;
 use dml_exception;
@@ -148,7 +148,7 @@ class mailer {
      */
     private function resolve_recipient(relationship_model $relationship): ?notification_recipient_model {
         foreach ($this->recipients as $recipient) {
-            if ($recipient->get_relationship_id() == $relationship->id) {
+            if ($recipient->core_relationship_id == $relationship->id) {
                 return $recipient;
             }
         }

@@ -55,8 +55,11 @@ class totara_playlist_create_testcase extends advanced_testcase {
 
         $parameters = [
             'name' => 'Hello World',
-            'summary' => "This is just a summary",
-            'summary_format' => FORMAT_PLAIN,
+            'summary' => json_encode([
+                'type' => 'doc',
+                'content' => [paragraph::create_json_node_from_text("This is just a summary")]
+            ]),
+            'summary_format' => FORMAT_JSON_EDITOR,
         ];
 
         $ec = execution_context::create('ajax', 'totara_playlist_create_playlist');
@@ -69,7 +72,7 @@ class totara_playlist_create_testcase extends advanced_testcase {
         $playlist = $result->data['playlist'];
 
         $this->assertEquals('Hello World', $playlist['name']);
-        $this->assertEquals('This is just a summary', $playlist['summary']);
+        $this->assertStringContainsString('This is just a summary', $playlist['summary']);
     }
 
     /**
@@ -171,5 +174,40 @@ class totara_playlist_create_testcase extends advanced_testcase {
 
         self::assertEquals($user_one->id, $message->useridfrom);
         self::assertEquals($user_two->id, $message->useridto);
+    }
+
+    /**
+     * @return void
+     */
+    public function create_playlist_with_invalid_length(): void {
+        $this->setAdminUser();
+
+        $name = 'TfIKQ8IXoycfkcbGaav6B1XVVibwtIYTlyGIOiJukJ4xVOVd4dlbDBnVioSmM5LwdJ7lEv7MCNax';
+        $this->assertEquals(76, strlen($name));
+
+        $this->expectException(\totara_playlist\exception\playlist_exception::class);
+        $this->expectExceptionMessage('Cannot create playlist');
+        playlist::create($name);
+    }
+
+    /**
+     * @return void
+     */
+    public function create_playlist_with_invalid_length_via_graphql(): void {
+        $this->setAdminUser();
+        $name = 'TfIKQ8IXoycfkcbGaav6B1XVVibwtIYTlyGIOiJukJ4xVOVd4dlbDBnVioSmM5LwdJ7lEv7MCNax';
+        $this->assertEquals(76, strlen($name));
+
+        $parameters = [
+            'name' => $name,
+            'summary' => "This is just a summary",
+            'summary_format' => FORMAT_PLAIN,
+        ];
+
+        $ec = execution_context::create('ajax', 'totara_playlist_create_playlist');
+
+        $this->expectException(\totara_playlist\exception\playlist_exception::class);
+        $this->expectExceptionMessage('Cannot create playlist');
+        graphql::execute_operation($ec, $parameters);
     }
 }

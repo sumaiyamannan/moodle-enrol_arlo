@@ -23,8 +23,8 @@
 
 namespace mod_perform\task\service\data;
 
-use mod_perform\entities\activity\activity;
-use totara_core\entities\relationship;
+use mod_perform\entity\activity\activity;
+use totara_core\entity\relationship;
 
 /**
  * Instance creation Activity configuration.
@@ -157,6 +157,7 @@ class subject_instance_activity {
         $this->section_relationships = [];
         foreach ($this->activity->sections as $section) {
             foreach ($section->section_relationships as $section_relationship) {
+                $section_relationship->relate('section', $section);
                 $this->section_relationships[] = $section_relationship;
             }
         }

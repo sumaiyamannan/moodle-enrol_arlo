@@ -46,6 +46,7 @@ use mod_facetoface\query\event\filter\event_time_filter;
 use mod_facetoface\task\send_user_message_adhoc_task;
 use mod_facetoface\notification\notification_map;
 use mod_facetoface\query\event\query_notifications;
+use core\json_editor\helper\document_helper;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -1023,7 +1024,7 @@ class facetoface_notification extends data_object {
         $this->_event->roleid      = $CFG->learnerroleid;
         $this->_event->subject     = $subject;
         $this->_event->fullmessage       = $plaintext;
-        $this->_event->fullmessageformat = FORMAT_PLAIN;
+        $this->_event->fullmessageformat = document_helper::is_valid_json_document($this->_event->fullmessage) ? FORMAT_JSON_EDITOR : FORMAT_HTML;
         $this->_event->fullmessagehtml   = $body;
         $this->_event->smallmessage      = $plaintext;
 
@@ -1694,6 +1695,10 @@ function facetoface_message_substitutions($msg, $coursename, $facetofacename, $u
         $rolename = $rolenames[$approvalrole]->localname;
     }
     // Replace.
+    // This fix HTML body where an url use the square brackets
+    // from <a href="example.com/a.php?s=%5Bseminarname%5D">click here</a>
+    // to <a href="example.com/a.php?s=[seminarname]">click here</a>
+    $msg = preg_replace(['/%5B/', '/%5D/'], ['[', ']'], $msg);
     $msg = str_replace('[sessionrole]', $rolename, $msg);
     // Legacy.
     $msg = str_replace(get_string('placeholder:sessionrole', 'facetoface'), $rolename, $msg);
@@ -2049,6 +2054,11 @@ function facetoface_notification_loop_session_placeholders($msg, $session, $room
                         //Totara: resource title is linked
                         $partial = html_writer::link($url, $attachment->get_name(), ['title' => get_string("{$attachment_type}details", 'mod_facetoface')]);
                         if ($attachment_type == 'room') {
+                            if (!empty($attachment->get_url())) {
+                                $virtual_room_link = html_writer::link($attachment->get_url(), get_string('roomurl', 'mod_facetoface'));
+                                $partial .= "\n<br> " . $virtual_room_link;
+                            }
+
                             $cfs_for_partial = array();
                             foreach (['building', 'location'] as $cfkey) {
                                 if ($attachments['roomcustomfields'][$attachment->get_id()][$cfkey] ?? false) {

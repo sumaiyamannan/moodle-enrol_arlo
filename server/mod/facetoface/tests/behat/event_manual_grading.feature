@@ -119,11 +119,11 @@ Feature: Event manual grading
     And I click on "Take event attendance" "link"
 
     When I set the following fields to these values:
-      | One Uno's event grade    | 12     |
-      | Two Duex's event grade   | 31.415 |
-      | Three Toru's event grade | 56     |
-      | Four Wha's event grade   | 99.999 |
-      | Five Cinq's event grade  |        |
+      | One Uno's event grade    | 12    |
+      | Two Duex's event grade   | 31.42 |
+      | Three Toru's event grade | 56    |
+      | Four Wha's event grade   | 100   |
+      | Five Cinq's event grade  |       |
     And I click on "Save attendance" "button"
 
     Then the following fields match these values:
@@ -152,7 +152,11 @@ Feature: Event manual grading
     And I should not see "Six Sechs" in the "#user-grades" "css_element"
 
   Scenario: Take attendance and manually fill invalid event grades
-    Given I am on "seminar 1" seminar homepage
+    Given the following "language customisation" exist in "tool_customlang" plugin:
+      | component       | id     | string |
+      | core_langconfig | decsep | ● |
+
+    And I am on "seminar 1" seminar homepage
     And I click on "Take event attendance" "link"
 
     And I set the field "One Uno's event grade" to "forty-two"
@@ -167,7 +171,6 @@ Feature: Event manual grading
     And I should see "Event grade value \"999\" has to be between 0 and 100" in the ".alert-danger" "css_element"
     And I should see "Event grade value \"五十六\" has to be between 0 and 100" in the ".alert-danger" "css_element"
     And I should see "Event grade value \"２４\" has to be between 0 and 100" in the ".alert-danger" "css_element"
-    And I click on "Close" "button" in the ".alert-danger" "css_element"
 
     When I click on "Save attendance" "button"
     Then I should see "Successfully updated attendance" in the ".alert-success" "css_element"
@@ -213,3 +216,44 @@ Feature: Event manual grading
     And I should see "50.00" in the "Four Wha" "table_row"
     And I should see "10.00" in the "Five Cinq" "table_row"
 
+  Scenario: Take attendance and manually fill event grades when the course decimal points is changed from default to 3
+    Given I am on "course1" course homepage
+    And I navigate to "Setup > Course grade settings" in the course gradebook
+    And I set the field "Overall decimal points" to "3"
+    And I press "Save changes"
+
+    And I am on "seminar 1" seminar homepage
+    And I click on "Take event attendance" "link"
+
+    When I set the following fields to these values:
+      | One Uno's event grade    | 12     |
+      | Two Duex's event grade   | 31.415 |
+      | Three Toru's event grade | 56     |
+      | Four Wha's event grade   | 99.999 |
+      | Five Cinq's event grade  |        |
+    And I click on "Save attendance" "button"
+
+    Then the following fields match these values:
+      | One Uno's attendance     | Not set  |
+      | Two Duex's attendance    | Not set  |
+      | Three Toru's attendance  | Not set  |
+      | Four Wha's attendance    | Not set  |
+      | Five Cinq's attendance   | Not set  |
+      | One Uno's event grade    | 12       |
+      | Two Duex's event grade   | 31.415   |
+      | Three Toru's event grade | 56       |
+      | Four Wha's event grade   | 99.999   |
+      | Five Cinq's event grade  |          |
+
+    And I should see "Successfully updated attendance" in the ".alert-success" "css_element"
+    And I click on "Close" "button" in the ".alert-success" "css_element"
+
+    And I navigate to "Grades" node in "Course administration"
+
+    When I follow "Grader report"
+    Then I should see "12.00" in the "One Uno" "table_row"
+    And I should see "31.415" in the "Two Duex" "table_row"
+    And I should see "56.00" in the "Three Toru" "table_row"
+    And I should see "99.999" in the "Four Wha" "table_row"
+    And I should not see ".00" in the "Five Cinq" "table_row"
+    And I should not see "Six Sechs" in the "#user-grades" "css_element"

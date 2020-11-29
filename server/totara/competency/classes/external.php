@@ -26,26 +26,32 @@ namespace totara_competency;
 
 use container_course\course as container_course;
 use context_system;
+use core\collection;
 use core\format;
 use core\orm\query\builder;
 use coursecat;
-use totara_competency\entities\competency;
-use totara_competency\entities\competency_framework;
-use totara_competency\entities\course;
+use external_api;
+use external_function_parameters;
+use external_multiple_structure;
+use external_single_structure;
+use external_value;
+use totara_competency\entity\competency;
+use totara_competency\entity\competency_framework;
+use totara_competency\entity\course;
 use totara_core\advanced_feature;
 use core\webapi\formatter\field\string_field_formatter;
 
 defined('MOODLE_INTERNAL') || die;
 
-class external extends \external_api {
+class external extends external_api {
 
     /**
      * get_pathways
      */
     public static function get_pathways_parameters() {
-        return new \external_function_parameters(
+        return new external_function_parameters(
             [
-                'competency_id' => new \external_value(PARAM_INT, 'Id of the competency'),
+                'competency_id' => new external_value(PARAM_INT, 'Id of the competency'),
             ]
         );
     }
@@ -63,7 +69,7 @@ class external extends \external_api {
     }
 
     public static function get_categories_parameters() {
-        return new \external_function_parameters([]);
+        return new external_function_parameters([]);
     }
 
     public static function get_categories() {
@@ -87,30 +93,40 @@ class external extends \external_api {
     }
 
     public static function get_categories_returns() {
-        // Todo: define return structure.
-        return null;
+        return new external_single_structure(
+            [
+                'items' => new external_multiple_structure(
+                    new external_single_structure(
+                        [
+                            'id' => new external_value(PARAM_INT, 'Category id'),
+                            'fullname' => new external_value(PARAM_TEXT, 'Category fullname'),
+                        ]
+                    )
+                )
+            ]
+        );
     }
 
     /**
      * get_courses
      */
     public static function get_courses_parameters() {
-        return new \external_function_parameters(
+        return new external_function_parameters(
             [
-                'filters' => new \external_single_structure(
+                'filters' => new external_single_structure(
                     [
-                        'category' => new \external_value(PARAM_INT, 'Filter by category id', VALUE_OPTIONAL, null),
-                        'name' => new \external_value(PARAM_TEXT, 'Search by username, full name ', VALUE_OPTIONAL, null),
-                        'ids' => new \external_multiple_structure(
-                            new \external_value(PARAM_INT, 'ids', VALUE_OPTIONAL),
+                        'category' => new external_value(PARAM_INT, 'Filter by category id', VALUE_OPTIONAL, null),
+                        'name' => new external_value(PARAM_TEXT, 'Search by username, full name ', VALUE_OPTIONAL, null),
+                        'ids' => new external_multiple_structure(
+                            new external_value(PARAM_INT, 'ids', VALUE_OPTIONAL),
                             'ids to filter by',
                             VALUE_OPTIONAL
                         ),
                     ]
                 ),
-                'page' => new \external_value(PARAM_INT, 'Not used'),
-                'order' => new \external_value(PARAM_ALPHANUMEXT, 'Name of column to order by'),
-                'direction' => new \external_value(PARAM_ALPHA, 'Direction of ordering (either ASC or DESC)'),
+                'page' => new external_value(PARAM_INT, 'Not used'),
+                'order' => new external_value(PARAM_ALPHANUMEXT, 'Name of column to order by'),
+                'direction' => new external_value(PARAM_ALPHA, 'Direction of ordering (either ASC or DESC)'),
             ]
         );
     }
@@ -172,8 +188,6 @@ class external extends \external_api {
             ];
         }
         $data['items'] = $items;
-
-        // Todo: Don't want to change javascript yet, so keeping the old name of this value:
         $data['items_per_page'] = $data['per_page'];
 
         return $data;
@@ -183,31 +197,31 @@ class external extends \external_api {
      * @return null
      */
     public static function get_courses_returns() {
-        return new \external_single_structure(
+        return new external_single_structure(
             [
-                'items' => new \external_multiple_structure(
-                    new \external_single_structure(
+                'items' => new external_multiple_structure(
+                    new external_single_structure(
                         [
-                            'id' => new \external_value(PARAM_INT, 'Course id'),
-                            'shortname' => new \external_value(PARAM_TEXT, 'Course shortname'),
-                            'fullname' => new \external_value(PARAM_TEXT, 'Course fullname'),
+                            'id' => new external_value(PARAM_INT, 'Course id'),
+                            'shortname' => new external_value(PARAM_TEXT, 'Course shortname'),
+                            'fullname' => new external_value(PARAM_TEXT, 'Course fullname'),
                         ]
                     )
                 ),
-                'page' => new \external_value(PARAM_INT, 'Current page'),
-                'pages' => new \external_value(PARAM_INT, 'Total number of pages'),
-                'items_per_page' => new \external_value(PARAM_INT, 'Number of items per page'),
-                'next' => new \external_value(PARAM_INT, 'Next page number', VALUE_OPTIONAL),
-                'prev' => new \external_value(PARAM_INT, 'Previous page number', VALUE_OPTIONAL),
-                'total' => new \external_value(PARAM_INT, 'Total number of items'),
+                'page' => new external_value(PARAM_INT, 'Current page'),
+                'pages' => new external_value(PARAM_INT, 'Total number of pages'),
+                'items_per_page' => new external_value(PARAM_INT, 'Number of items per page'),
+                'next' => new external_value(PARAM_INT, 'Next page number', VALUE_OPTIONAL),
+                'prev' => new external_value(PARAM_INT, 'Previous page number', VALUE_OPTIONAL),
+                'total' => new external_value(PARAM_INT, 'Total number of items'),
             ]
         );
     }
 
     public static function get_linked_courses_parameters() {
-        return new \external_function_parameters(
+        return new external_function_parameters(
             [
-                'competency_id' => new \external_value(PARAM_INT, 'The ID of the competency'),
+                'competency_id' => new external_value(PARAM_INT, 'The ID of the competency'),
             ]
         );
     }
@@ -231,9 +245,6 @@ class external extends \external_api {
 
         $linked_courses = [];
         foreach ($linked_courses_records as $linked_courses_record) {
-            // Todo: permission checks. Can see courses.
-            // If in admin context, may still return, but with hidden.
-
             $linked_courses[] = [
                 'id' => $linked_courses_record->id,
                 'mandatory' => ($linked_courses_record->linktype == linked_courses::LINKTYPE_MANDATORY),
@@ -245,13 +256,13 @@ class external extends \external_api {
     }
 
     public static function get_linked_courses_returns() {
-        return new \external_function_parameters(
+        return new external_function_parameters(
             [
-                'items' => new \external_multiple_structure(
-                    new \external_single_structure([
-                        'id' => new \external_value(PARAM_INT, 'Course id'),
-                        'mandatory' => new \external_value(PARAM_BOOL, 'Indication whether this is a mandatory course'),
-                        'fullname' => new \external_value(PARAM_TEXT, 'Full name of courses')
+                'items' => new external_multiple_structure(
+                    new external_single_structure([
+                        'id' => new external_value(PARAM_INT, 'Course id'),
+                        'mandatory' => new external_value(PARAM_BOOL, 'Indication whether this is a mandatory course'),
+                        'fullname' => new external_value(PARAM_TEXT, 'Full name of courses')
                     ])
                 )
             ]
@@ -259,13 +270,13 @@ class external extends \external_api {
     }
 
     public static function set_linked_courses_parameters() {
-        return new \external_function_parameters(
+        return new external_function_parameters(
             [
-                'competency_id' => new \external_value(PARAM_INT, 'The ID of the competency'),
-                'courses' => new \external_multiple_structure(
-                    new \external_single_structure([
-                        'id' => new \external_value(PARAM_INT, 'Course id'),
-                        'mandatory' => new \external_value(PARAM_BOOL, 'Indication this a mandatory course'),
+                'competency_id' => new external_value(PARAM_INT, 'The ID of the competency'),
+                'courses' => new external_multiple_structure(
+                    new external_single_structure([
+                        'id' => new external_value(PARAM_INT, 'Course id'),
+                        'mandatory' => new external_value(PARAM_BOOL, 'Indication this a mandatory course'),
                     ])
                 )
             ]
@@ -281,8 +292,28 @@ class external extends \external_api {
         advanced_feature::require('competencies');
         require_capability('totara/hierarchy:updatecompetency', context_system::instance());
 
-        // Todo: permission checks on courses being visible.
-        linked_courses::set_linked_courses($competency_id, $courses);
+        global $CFG;
+        require_once($CFG->dirroot . '/totara/coursecatalog/lib.php');
+
+        $incoming_courses = collection::new($courses);
+        $incoming_course_ids = $incoming_courses->pluck('id');
+
+        [$totara_visibility_sql, $totara_visibility_params] = totara_visibility_where();
+        $visible_course_ids = course::repository()
+            ->select(['id'])
+            ->where('containertype', container_course::get_type())
+            ->filter_by_ids($incoming_course_ids)
+            ->where_raw($totara_visibility_sql, $totara_visibility_params)
+            ->get()
+            ->pluck('id');
+
+        $linkable_courses = $incoming_courses->filter(
+            function (array $details) use ($visible_course_ids): bool {
+                return in_array($details['id'], $visible_course_ids);
+            }
+        )->all();
+
+        linked_courses::set_linked_courses($competency_id, $linkable_courses);
     }
 
     public static function set_linked_courses_returns() {
@@ -291,16 +322,16 @@ class external extends \external_api {
 
     /** delete_pathways */
     public static function delete_pathways_parameters() {
-        return new \external_function_parameters(
+        return new external_function_parameters(
             [
-                'competency_id' => new \external_value(PARAM_INT, 'Id of the competency'),
-                'pathways' => new \external_multiple_structure(
-                    new \external_single_structure([
-                        'type' => new \external_value(PARAM_ALPHAEXT, 'Pathway type'),
-                        'id' => new \external_value(PARAM_INT, 'Pathway id'),
+                'competency_id' => new external_value(PARAM_INT, 'Id of the competency'),
+                'pathways' => new external_multiple_structure(
+                    new external_single_structure([
+                        'type' => new external_value(PARAM_ALPHAEXT, 'Pathway type'),
+                        'id' => new external_value(PARAM_INT, 'Pathway id'),
                     ])
                 ),
-                'actiontime' => new \external_value(PARAM_INT, 'Time user initiated the action. It is used to group changes done in single user action together'),
+                'actiontime' => new external_value(PARAM_INT, 'Time user initiated the action. It is used to group changes done in single user action together'),
             ]
         );
     }
@@ -322,11 +353,11 @@ class external extends \external_api {
      * set_overall_aggregation
      */
     public static function set_overall_aggregation_parameters() {
-        return new \external_function_parameters(
+        return new external_function_parameters(
             [
-                'competency_id' => new \external_value(PARAM_INT, 'Id of the competency'),
-                'type' => new \external_value(PARAM_ALPHANUMEXT, 'Aggregation type'),
-                'actiontime' => new \external_value(PARAM_INT, 'Time user initiated the action. It is used to group changes done in single user action together'),
+                'competency_id' => new external_value(PARAM_INT, 'Id of the competency'),
+                'type' => new external_value(PARAM_ALPHANUMEXT, 'Aggregation type'),
+                'actiontime' => new external_value(PARAM_INT, 'Time user initiated the action. It is used to group changes done in single user action together'),
             ]
         );
     }
@@ -347,7 +378,7 @@ class external extends \external_api {
     }
 
     public static function set_overall_aggregation_returns() {
-        return new \external_value(PARAM_ALPHANUMEXT, 'Aggregation type');
+        return new external_value(PARAM_ALPHANUMEXT, 'Aggregation type');
     }
 
     public static function get_frameworks() {
@@ -369,7 +400,7 @@ class external extends \external_api {
     }
 
     public static function get_frameworks_parameters() {
-        return new \external_function_parameters([]);
+        return new external_function_parameters([]);
     }
 
     public static function get_frameworks_returns() {

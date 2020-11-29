@@ -32,17 +32,19 @@ class multi_choice_multi extends respondable_element_plugin {
     /**
      * @inheritDoc
      */
-    public function validate_response(?string $encoded_response_data, ?element $element): collection {
+    public function validate_response(
+        ?string $encoded_response_data,
+        ?element $element,
+        $is_draft_validation = false
+    ): collection {
         $element_data = $element->data ?? null;
         $answer_option = $this->decode_response($encoded_response_data, $element_data);
 
         $errors = new collection();
 
-        if (empty($answer_option) && !is_null($element) && $element->is_required) {
+        if ($this->fails_required_validation(empty($answer_option), $element, $is_draft_validation)) {
             $errors->append(new answer_required_error());
         }
-
-        // TODO: TL-25497
 
         return $errors;
     }
@@ -63,12 +65,8 @@ class multi_choice_multi extends respondable_element_plugin {
             return null;
         }
 
-        if (!isset($response_data['answer_option'])) {
-            throw new coding_exception('Invalid response data format, expected "answer_option" field');
-        }
-
-        if (!is_array($response_data['answer_option'])) {
-            throw new coding_exception('Invalid response data format, expected "answer_option" to be an array');
+        if (!is_array($response_data)) {
+            throw new coding_exception('Invalid response data format, expected array of selected options');
         }
 
         if ($element_data === null || !isset($element_data['options'])) {
@@ -81,29 +79,32 @@ class multi_choice_multi extends respondable_element_plugin {
 
         $responses = [];
         foreach ($element_data['options'] as $i => $option) {
-            if (!isset($option['name']) || !isset($option['value'])) {
+            if (!isset($option['name'], $option['value'])) {
                 throw new coding_exception('Invalid element options format, expected "name" and "value" fields');
             }
-            foreach ($response_data['answer_option'] as $answer_option) {
+
+            foreach ($response_data as $answer_option) {
                 if ($option['name'] == $answer_option) {
                     $responses[] = $option['value'];
                 }
             }
         }
+
         return $responses;
     }
 
     /**
      * @inheritDoc
      */
-    public function get_group(): int {
-        return self::GROUP_QUESTION;
+    public function get_sortorder(): int {
+        return 40;
     }
 
     /**
      * @inheritDoc
      */
-    public function get_sortorder(): int {
-        return 20;
+    public function get_example_response_data(): string {
+        return '[]';
     }
+
 }

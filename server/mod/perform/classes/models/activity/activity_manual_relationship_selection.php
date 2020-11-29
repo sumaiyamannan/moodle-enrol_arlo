@@ -25,7 +25,7 @@
 namespace mod_perform\models\activity;
 
 use core\orm\entity\model;
-use mod_perform\entities\activity\manual_relationship_selection;
+use mod_perform\entity\activity\manual_relationship_selection;
 use totara_core\relationship\relationship;
 
 /**
@@ -69,7 +69,7 @@ class activity_manual_relationship_selection extends model {
      * @return relationship
      */
     public function get_manual_relationship(): relationship {
-        return relationship::load_by_id($this->entity->manual_relationship_id);
+        return relationship::load_by_entity($this->entity->participant_relationship);
     }
 
     /**
@@ -78,7 +78,7 @@ class activity_manual_relationship_selection extends model {
      * @return relationship
      */
     public function get_selector_relationship(): relationship {
-        return relationship::load_by_id($this->entity->selector_relationship_id);
+        return relationship::load_by_entity($this->entity->selector_relationship);
     }
 
     /**

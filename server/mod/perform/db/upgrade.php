@@ -29,13 +29,11 @@
  *
  */
 
-use mod_perform\entities\activity\element;
-use mod_perform\models\activity\element_identifier;
-
 defined('MOODLE_INTERNAL') || die();
 
 function xmldb_perform_upgrade($oldversion) {
     global $DB, $CFG;
+    require_once(__DIR__ . '/upgradelib.php');
 
     $dbman = $DB->get_manager();
 
@@ -117,6 +115,118 @@ function xmldb_perform_upgrade($oldversion) {
 
         // Perform savepoint reached.
         upgrade_mod_savepoint(true, 2020090104, 'perform');
+    }
+
+    // Totara 13.0 release line.
+
+    if ($oldversion < 2020100101) {
+        $sql = "UPDATE {report_builder}
+                   SET source = 'perform_manage_participation_participant_instance'
+                 WHERE source = 'participant_instance_manage_participation'";
+        $DB->execute($sql);
+
+        $sql = "UPDATE {report_builder}
+                   SET source = 'perform_manage_participation_participant_section'
+                 WHERE source = 'participant_section_manage_participation'";
+        $DB->execute($sql);
+
+        $sql = "UPDATE {report_builder}
+                   SET source = 'perform_manage_participation_subject_instance'
+                 WHERE source = 'subject_instance_manage_participation'";
+        $DB->execute($sql);
+
+        $sql = "UPDATE {report_builder}
+                   SET source = 'perform_participation_participant_instance'
+                 WHERE source = 'perform_participant_instance'";
+        $DB->execute($sql);
+
+        $sql = "UPDATE {report_builder}
+                   SET source = 'perform_participation_participant_section'
+                 WHERE source = 'perform_participant_section'";
+        $DB->execute($sql);
+
+        $sql = "UPDATE {report_builder}
+                   SET source = 'perform_participation_subject_instance'
+                 WHERE source = 'perform_subject_instance'";
+        $DB->execute($sql);
+
+        $sql = "UPDATE {report_builder}
+                   SET source = 'perform_response_element'
+                 WHERE source = 'element_performance_reporting'";
+        $DB->execute($sql);
+
+        $sql = "UPDATE {report_builder}
+                   SET source = 'perform_response_subject_instance'
+                 WHERE source = 'subject_instance_performance_reporting'";
+        $DB->execute($sql);
+
+        $sql = "UPDATE {report_builder}
+                   SET source = 'perform_response_user'
+                 WHERE source = 'user_performance_reporting'";
+        $DB->execute($sql);
+
+        // Perform savepoint reached.
+        upgrade_mod_savepoint(true, 2020100101, 'perform');
+    }
+
+    if ($oldversion < 2020100102) {
+        // Create records for existing activities that do not already have records for the following notifications:
+        mod_perform_upgrade_create_missing_notification_records([
+            'completion' => [],
+            'due_date' => [],
+            'due_date_reminder' => [86400], // Trigger: 1 day (in seconds)
+            'instance_created' => [],
+            'instance_created_reminder' => [86400], // Trigger: 1 day (in seconds)
+            'overdue_reminder' => [86400], // Trigger: 1 day (in seconds)
+            'participant_selection' => [],
+            'reopened' => [],
+        ]);
+
+        // Perform savepoint reached.
+        upgrade_mod_savepoint(true, 2020100102, 'perform');
+    }
+
+    if ($oldversion < 2020100103) {
+        // Define field task_id to be added to perform_subject_instance.
+        $table = new xmldb_table('perform_subject_instance');
+        $field = new xmldb_field('task_id', XMLDB_TYPE_CHAR, '32', null, null, null, null, 'updated_at');
+
+        // Conditionally launch add field task_id.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        $index = new xmldb_index('task_id', XMLDB_INDEX_NOTUNIQUE, array('task_id'));
+
+        // Conditionally launch add index task_id.
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+
+        // Define field task_id to be added to perform_participant_instance.
+        $table = new xmldb_table('perform_participant_instance');
+        $field = new xmldb_field('task_id', XMLDB_TYPE_CHAR, '32', null, null, null, null, 'updated_at');
+
+        // Conditionally launch add field task_id.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        $index = new xmldb_index('task_id', XMLDB_INDEX_NOTUNIQUE, array('task_id'));
+
+        // Conditionally launch add index task_id.
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+
+        // Perform savepoint reached.
+        upgrade_mod_savepoint(true, 2020100103, 'perform');
+    }
+
+    if ($oldversion < 2020100105) {
+        mod_perform_upgrade_unwrap_response_data();
+
+        upgrade_mod_savepoint(true, 2020100105, 'perform');
     }
 
     return true;

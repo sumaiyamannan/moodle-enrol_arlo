@@ -24,16 +24,19 @@
 
 use core\orm\query\builder;
 use pathway_manual\models\roles\self_role;
-use totara_competency\entities\achievement_via;
-use totara_competency\entities\competency_achievement;
-use totara_competency\entities\competency_assignment_user;
-use totara_competency\entities\competency_assignment_user_log;
-use totara_competency\entities\scale_value;
+use totara_competency\entity\achievement_via;
+use totara_competency\entity\competency_achievement;
+use totara_competency\entity\competency_assignment_user;
+use totara_competency\entity\competency_assignment_user_log;
+use totara_competency\entity\scale_value;
 use totara_competency\expand_task;
 use totara_competency\settings;
 use totara_competency\task\competency_aggregation_all;
 use totara_job\job_assignment;
 
+/**
+ * @group totara_competency
+ */
 class totara_competency_user_unassigned_testcase extends advanced_testcase {
 
     /**
@@ -212,7 +215,8 @@ class totara_competency_user_unassigned_testcase extends advanced_testcase {
         $this->assertGreaterThan(0, competency_assignment_user_log::repository()
             ->where('assignment_id', $ass->id)
             ->where('user_id', $user->id)
-            ->count());
+            ->count()
+        );
 
         // We need to remove user from a position and check that the event has been fired
         // To remove user from a position we need to remove the related job assignment record.
@@ -441,7 +445,7 @@ class totara_competency_user_unassigned_testcase extends advanced_testcase {
         // We need to get some of the data we're manipulating
         $achievements = competency_achievement::repository()
             ->where('assignment_id', '!=', $assignment->id)
-            ->or_where(function(builder $builder) use ($assignment, $user) {
+            ->or_where(function (builder $builder) use ($assignment, $user) {
                 $builder->where('assignment_id', $assignment->id)
                     ->where('user_id', '!=', $user->id);
             })
@@ -449,7 +453,7 @@ class totara_competency_user_unassigned_testcase extends advanced_testcase {
 
         $assignment_user_log_entries = competency_assignment_user_log::repository()
             ->where('assignment_id', '!=', $assignment->id)
-            ->or_where(function(builder $repository) use ($assignment, $user) {
+            ->or_where(function (builder $repository) use ($assignment, $user) {
                 $repository->where('assignment_id', $assignment->id)
                     ->where('user_id', '!=', $user->id);
             })
@@ -470,7 +474,7 @@ class totara_competency_user_unassigned_testcase extends advanced_testcase {
             $data['achievements'],
             competency_achievement::repository()
                 ->where('assignment_id', '!=', $assignment->id)
-                ->or_where(function(builder $repository) use ($assignment, $user) {
+                ->or_where(function (builder $repository) use ($assignment, $user) {
                     $repository->where('assignment_id', $assignment->id)
                         ->where('user_id', '!=', $user->id);
                 })
@@ -482,7 +486,7 @@ class totara_competency_user_unassigned_testcase extends advanced_testcase {
             $data['assignment_user_log_entries'],
             competency_assignment_user_log::repository()
                 ->where('assignment_id', '!=', $assignment->id)
-                ->or_where(function(builder $repository) use ($assignment, $user) {
+                ->or_where(function (builder $repository) use ($assignment, $user) {
                     $repository->where('assignment_id', $assignment->id)
                         ->where('user_id', '!=', $user->id);
                 })

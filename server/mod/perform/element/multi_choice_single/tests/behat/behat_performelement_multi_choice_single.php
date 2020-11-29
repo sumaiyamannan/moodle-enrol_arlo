@@ -25,15 +25,21 @@ use Behat\Mink\Exception\ExpectationException;
 
 class behat_performelement_multi_choice_single extends behat_base {
 
-    public const DONE_BUTTON_LOCATOR  = '.tui-elementAdminFormActionButtons__done';
-    public const EDIT_ELEMENT_LOCATOR = '.tui-elementEditMultiChoiceSingle';
-    public const ADD_OPTION_LOCATOR   = '.tui-elementEditMultiChoiceSingle__add-option';
+    public const EDIT_ELEMENT_LOCATOR = '.tui-multiChoiceSingleAdminEdit';
+    public const ADD_OPTION_LOCATOR   = '.tui-multiChoiceSingleAdminEdit__addOption';
     public const QUESTION_DISPLAY_OPTIONS_LOCATOR = '.tui-radio__label';
 
     /**
      * @When /^I click multi choice single question element$/
+     * @deprecated since Totara 13.2
      */
     public function i_click_multi_choice_single_question_element(): void {
+        debugging(
+            '\behat_performelement_multi_choice_single::i_save_multi_choice_single_question_element_data() is deprecated and should no longer be used.'
+            . ' Please use behat_mod_perform::i_add_a_custom_element() with "Multiple choice: single-select" as the parameter',
+            DEBUG_DEVELOPER
+        );
+
         behat_hooks::set_step_readonly(false);
 
         $behat_general = behat_context_helper::get('behat_general');
@@ -44,11 +50,18 @@ class behat_performelement_multi_choice_single extends behat_base {
 
     /**
      * @When /^I save multi choice single question element data$/
+     * @deprecated since Totara 13.2
      */
     public function i_save_multi_choice_single_question_element_data(): void {
+        debugging(
+            '\behat_performelement_multi_choice_single::i_save_multi_choice_single_question_element_data() is deprecated and should no longer be used.'
+            . ' Please use behat_mod_perform::i_save_the_custom_element_settings() with "save" as the parameter',
+            DEBUG_DEVELOPER
+        );
+
         behat_hooks::set_step_readonly(false);
 
-        $done_button = $this->find('css', self::DONE_BUTTON_LOCATOR);
+        $done_button = $this->find('css', behat_mod_perform::ADMIN_FORM_DONE_BUTTON);
         $done_button->click();
     }
 
@@ -60,6 +73,9 @@ class behat_performelement_multi_choice_single extends behat_base {
 
         $edit_element = $this->find('css', self::EDIT_ELEMENT_LOCATOR);
         $add_button = $edit_element->find('css', self::ADD_OPTION_LOCATOR);
+        if (!$add_button) {
+            throw new ExpectationException('Multiple answers add new option not found!', $this->getSession());
+        }
         $add_button->click();
     }
 
@@ -76,7 +92,7 @@ class behat_performelement_multi_choice_single extends behat_base {
     ): void {
         /** @var behat_mod_perform $behat_mod_perform */
         $behat_mod_perform = behat_context_helper::get('behat_mod_perform');
-        $question = $behat_mod_perform->find_edit_display_question_from_text($question_text);
+        $question = $behat_mod_perform->find_admin_question_from_text($question_text);
         $options = $question->findAll('css', self::QUESTION_DISPLAY_OPTIONS_LOCATOR);
         $expected_options = explode(",", $question_options);
         $actual_options = [];
@@ -96,7 +112,7 @@ class behat_performelement_multi_choice_single extends behat_base {
     public function i_delete_multi_choice_single_question_option(): void {
         behat_hooks::set_step_readonly(false);
 
-        $delete_button = $this->find('css', '.tui-elementEditMultiChoiceSingle .tui-repeater__delete:not([disabled])');
+        $delete_button = $this->find('css', '.tui-multiChoiceSingleAdminEdit .tui-repeater__delete:not([disabled])');
         $delete_button->click();
     }
 }

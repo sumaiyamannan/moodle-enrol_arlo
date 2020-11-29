@@ -64,7 +64,7 @@ class export extends \core\task\scheduled_task {
         try {
             $tenants = [null];
             if ($CFG->tenantsenabled) {
-                $tenants = $DB->get_records('tenant', ['suspended' => 0]);
+                $tenants = array_merge($tenants, $DB->get_records('tenant', ['suspended' => 0]));
             }
 
             $exporter = new exporter($tmp_path);
@@ -100,9 +100,13 @@ class export extends \core\task\scheduled_task {
      * @param bool $all Remove also data path files if true
      */
     public static function cleanup(bool $all = false) {
+        global $CFG;
+
         $data_path = environment::get_data_path();
         $tmp_path = environment::get_temp_path();
         $backup_path = environment::get_backup_path();
+
+        require_once $CFG->libdir . '/filelib.php';
 
         fulldelete($backup_path);
         fulldelete($tmp_path);

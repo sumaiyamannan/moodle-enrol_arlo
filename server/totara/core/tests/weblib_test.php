@@ -138,6 +138,36 @@ class totara_core_weblib_testcase extends advanced_testcase {
 
     }
 
+    public function test_purify_css_color() {
+        $this->assertSame('#ffAAbb', purify_css_color('#ffAAbb'));
+        $this->assertSame('#f0f', purify_css_color('#f0f'));
+        $this->assertSame('rgb(99%,0%,0%)', purify_css_color('rgb(99%, 0%, 0%)'));
+        $this->assertSame('rgb(255,0,0)', purify_css_color('rgb(255,0,0)'));
+        $this->assertSame('rgba(255,0,0,0)', purify_css_color('rgba(255,0,0,0)'));
+        $this->assertSame('hsla(50,80%,50%,0.1)', purify_css_color('hsla(50, 80%, 50%, 0.1)'));
+
+        $this->assertSame('#FF0000', purify_css_color('red'));
+        $this->assertSame('#0f0', purify_css_color('0f0'));
+        $this->assertSame('#ffAAbb', purify_css_color(' #ffAAbb '));
+
+        $this->assertFalse(purify_css_color(''));
+        $this->assertFalse(purify_css_color(' '));
+        $this->assertFalse(purify_css_color('#fxf'));
+        $this->assertFalse(purify_css_color('# f0f'));
+        $this->assertFalse(purify_css_color('opr'));
+        $this->assertFalse(purify_css_color('expression(1)'));
+        $this->assertFalse(purify_css_color('=#f0f'));
+    }
+
+    /**
+     * tests for proprietary CSS allowed in \HTMLPurifier_CSSDefinition::doSetupProprietary()
+     */
+    public function test_purify_html_css_proprietary() {
+        // Include just a few options here to make sure it was enabled.
+        $this->assertSame('<div style="border-radius:5px;"></div>', purify_html('<div style="border-radius: 5px" />'));
+        $this->assertSame('<div style="page-break-before:always;"></div>', purify_html('<div style="page-break-before: always" />'));
+    }
+
     public function test_clean_string() {
         $data = '&amp;&lt;&gt;&quot;&apos;<>"\'{}';
         $expected = '&#38;&#60;&#62;&#34;&#39;&#60;&#62;&#34;&#39;&#123;&#125;';

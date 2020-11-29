@@ -31,7 +31,7 @@
       component="engage_article"
       :show-back="true"
       :submitting="submitting"
-      :selected-access="containerValues.access"
+      :selected-access="containerValues.access || defaultAccess"
       :private-disabled="privateDisabled"
       :restricted-disabled="restrictedDisabled"
       :container="container"
@@ -46,6 +46,7 @@
 <script>
 import ArticleForm from 'engage_article/components/form/ArticleForm';
 import AccessForm from 'totara_engage/components/form/AccessForm';
+import { notify } from 'tui/notifications';
 
 // Graphql queries
 import createArticle from 'engage_article/graphql/create_article';
@@ -62,6 +63,12 @@ export default {
 
   mixins: [ContainerMixin],
 
+  props: {
+    showNotification: {
+      type: Boolean,
+    },
+  },
+
   data() {
     return {
       stage: 0,
@@ -72,6 +79,7 @@ export default {
         itemId: null,
       },
       submitting: false,
+      defaultAccess: 'PRIVATE',
     };
   },
 
@@ -156,9 +164,16 @@ export default {
             this.$emit('done', { resourceId: id });
           },
         })
-        .then(() => {
+        .then(({ data: { article } }) => {
+          if (article && this.showNotification && !this.container) {
+            notify({
+              message: this.$str('created', 'engage_article'),
+              type: 'success',
+            });
+          }
           this.$emit('cancel');
         })
+
         .finally(() => {
           this.submitting = false;
         });
@@ -166,6 +181,14 @@ export default {
   },
 };
 </script>
+
+<lang-strings>
+{
+  "engage_article": [
+    "created"
+  ]
+}
+</lang-strings>
 
 <style lang="scss">
 .tui-engageCreateArticle {

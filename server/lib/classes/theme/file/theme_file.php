@@ -49,9 +49,6 @@ abstract class theme_file {
     /** @var int */
     protected $tenant_id = 0;
 
-    /** @var int */
-    protected $user_id;
-
     /** @var context */
     protected $context;
 
@@ -121,16 +118,19 @@ abstract class theme_file {
     /**
      * Get item ID of the theme plugin.
      *
+     * @param int|null $tenant_id
      * @param string|null $theme
      *
      * @return int
-     *
      */
-    public function get_item_id(?string $theme = null): int {
+    public function get_item_id(?int $tenant_id = null, ?string $theme = null): int {
         global $DB;
 
+        $id = $tenant_id ?? $this->tenant_id;
         $plugin = "theme_" . ($theme ?? $this->theme_config->name);
-        $name = "tenant_{$this->tenant_id}_settings";
+        $name = "tenant_{$id}_settings";
+
+        // Always make sure that there is a record representing this config.
         if (!get_config($plugin, $name)) {
             set_config($name, '{}', $plugin);
         }
@@ -172,16 +172,19 @@ abstract class theme_file {
      * Get file currently overriding the default file.
      *
      * @param int|null $item_id
+     * @param context|null $context
      *
      * @return stored_file|null
      */
-    public function get_current_imagefile(?int $item_id = null): ?stored_file {
+    public function get_current_file(?int $item_id = null, ?context $context = null): ?stored_file {
         $item_id = $item_id ?? $this->get_item_id();
 
         // Get context.
-        $context = $this->get_context();
         if (empty($context)) {
-            return null;
+            $context = $this->get_context();
+            if (empty($context)) {
+                return null;
+            }
         }
 
         // Get files for current component and context.
@@ -193,7 +196,7 @@ abstract class theme_file {
         $file_helper->set_item_id($item_id);
         $files = $file_helper->get_stored_files();
 
-        // If no files found then return default URL.
+        // No files found.
         if (empty($files)) {
             return null;
         }
@@ -206,34 +209,35 @@ abstract class theme_file {
     }
 
     /**
-     * Get the URL to the current file.
+     * Get the URL to the current file. We first check if there is a file set
+     * for the tenant and if not then we fall back on the site file if any.
+     *
+     * @param string|null $theme
      *
      * @return moodle_url|null
      */
-    public function get_current_url(): ?moodle_url {
+    public function get_current_url(?string $theme = null): ?moodle_url {
         // If site has not yet been installed we can return null here as no
-        // image would have been overridden at this point.
+        // file would have been overridden at this point.
         if (during_initial_install()) {
             return null;
         }
 
-        $file = $this->get_current_imagefile();
-        if (empty($file)) {
-            // Check if any parent has this file.
-            $parents = $this->theme_config->parents;
-            foreach ($parents as $parent) {
-                $item_id = $this->get_item_id($parent);
-                $file = $this->get_current_imagefile($item_id);
-                if (!empty($file)) {
-                    break;
-                }
-            }
+        $file = $this->get_current_file($this->get_item_id($this->tenant_id, $theme));
+
+        // If no file found for tenant and theme check if site setting is set for theme.
+        if (empty($file) && $this->tenant_id > 0) {
+            $file = $this->get_current_file(
+                $this->get_item_id(0, $theme),
+                \context_system::instance()
+            );
         }
+
         return !empty($file) ? $this->get_url($file) : null;
     }
 
     /**
-     * Get the current URL or default as fallback.
+     * Get the current URL or theme default as fallback.
      *
      * @return moodle_url
      */
@@ -252,10 +256,10 @@ abstract class theme_file {
      */
     protected function get_url(stored_file $file): moodle_url {
         return moodle_url::make_pluginfile_url(
-            $this->get_context()->id,
-            $this->get_component(),
-            $this->get_area(),
-            $this->get_item_id(),
+            $file->get_contextid(),
+            $file->get_component(),
+            $file->get_filearea(),
+            $file->get_itemid(),
             '/',
             $file->get_filename()
         );
@@ -273,7 +277,8 @@ abstract class theme_file {
                 $this->theme_config->name,
                 $parts[0],
                 $parts[1],
-                theme_get_revision()
+                theme_get_revision(),
+                false
             );
         }
         return null;
@@ -285,29 +290,26 @@ abstract class theme_file {
      * @return file_area
      */
     public function get_file_area(): file_area {
+        global $USER;
+
         $file_helper = new file_helper(
             $this->get_component(),
             $this->get_area(),
             $this->get_context()
         );
-        return $file_helper->create_file_area($this->user_id);
+
+        return $file_helper->create_file_area($USER->id);
     }
 
     /**
-     * Cleans the draft area so that we only end up with the file we want.
+     * Get the files in the draft area.
      *
      * @param int $draft_id
-     * @param string|null $file
      *
-     * @return bool
+     * @return stored_file[]
      */
-    public function clean_draft_file_area(int $draft_id, ?string $file): bool {
+    protected function get_draft_files(int $draft_id): array {
         global $USER;
-
-        // Initially file may be null.
-        if (empty($file)) {
-            return true;
-        }
 
         // Get files in user draft area.
         $file_helper = new file_helper(
@@ -316,19 +318,44 @@ abstract class theme_file {
             \context_user::instance($USER->id)
         );
         $file_helper->set_item_id($draft_id);
-        $files = $file_helper->get_stored_files();
+        $file_helper->set_sort('timecreated desc');
+        return $file_helper->get_stored_files();
+    }
 
-        // Clear out files that match the current selected file to leave us
-        // only with the new one.
-        $files = array_filter($files, function(stored_file $stored_file) use ($file) {
-            if ($file === $stored_file->get_filepath() . $stored_file->get_filename()) {
-                $stored_file->delete();
-                return false;
+    /**
+     * The file area might be polluted with multiple uploaded files or the user
+     * might have uploaded a file with an incorrect extension. We need to clean
+     * the draft area to get rid of such invalid files.
+     *
+     * @param stored_file[] $files
+     *
+     * @return stored_file[]
+     */
+    protected function clean_draft_files(array $files): array {
+        // Get the list of valid file extensions for this theme file.
+        $extensions = $this->get_type()->get_valid_extensions();
+        $mimetypes = [];
+        foreach ($extensions as $extension) {
+            $mimetypes[] = mimeinfo('type', $extension);
+        }
+
+        // The draft area might be polluted with irrelevant files. We are only interested
+        // in the most recent file uploaded with the right extension. The files should be
+        // fetched according to time created so we basically can just use the first file
+        // that is correct and remove the rest.
+        $found = false;
+        foreach ($files as $key => $file) {
+            if (!$found && in_array($file->get_mimetype(), $mimetypes)) {
+                // We found a file and it should stay in the files array.
+                $found = true;
+                continue;
             }
-            return true;
-        });
+            // Delete the files that we don't want.
+            $file->delete();
+            unset($files[$key]);
+        }
 
-        return sizeof($files) >= 1;
+        return $files;
     }
 
     /**
@@ -337,7 +364,7 @@ abstract class theme_file {
      * @param int $draft_id
      */
     public function save_files(int $draft_id): void {
-        // save new files
+        // Get the settings currently used for this theme file.
         $setting = new \admin_setting_configstoredfile(
             $this->get_name(),
             '',
@@ -353,14 +380,27 @@ abstract class theme_file {
         // Get current file name.
         $current = $setting->get_setting();
 
-        // If we have a new file after cleaning the draft area then
-        // we need to change the current file to the new one.
-        if ($this->clean_draft_file_area($draft_id, $current)) {
-            // Write new settings.
+        // Get and clean files in draft area.
+        $files = $this->get_draft_files($draft_id);
+        $files = $this->clean_draft_files($files);
+
+        // If we have any files left after cleaning then we need to save them.
+        if (sizeof($files) > 0) {
             if ($setting->write_setting($draft_id) !== '') {
                 throw new \moodle_exception('themesavefiles', 'error');
             }
             $setting->post_write_settings($current);
+        }
+    }
+
+    /**
+     * Delete the current stored file associated with this theme file
+     * and clean up configuration.
+     */
+    public function delete(): void {
+        if ($current_file = $this->get_current_file()) {
+            unset_config($this->get_area(), $this->get_component());
+            $current_file->delete();
         }
     }
 
@@ -375,15 +415,6 @@ abstract class theme_file {
     }
 
     /**
-     * Get default properties.
-     *
-     * @return array
-     */
-    public function get_default_categories(): array {
-        return [];
-    }
-
-    /**
      * Is this file available. This is different from is_enabled as this
      * function should be used to determine if the file is available based
      * on settings or if the file exists.
@@ -395,19 +426,26 @@ abstract class theme_file {
     }
 
     /**
+     * Get default properties.
+     *
+     * @return array
+     */
+    public function get_default_categories(): array {
+        return [];
+    }
+
+    /**
      * Get the default context for theme file.
      *  - Tenant context to fetch files limited to a specific tenant.
      *  - System context if we don't have tenants.
      *
-     * @param int|null $tenant_id
-     *
      * @return context|null
      */
-    protected function get_default_context(?int $tenant_id = null): ?context {
+    protected function get_default_context(): ?context {
         global $USER;
 
-        if (!empty($tenant_id)) {
-            return \context_tenant::instance($tenant_id);
+        if (!empty($this->tenant_id)) {
+            return \context_tenant::instance($this->tenant_id);
         } elseif (!empty($USER->tenantid)) {
             return \context_tenant::instance($USER->tenantid);
         }

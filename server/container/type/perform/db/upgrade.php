@@ -32,5 +32,12 @@ function xmldb_container_perform_upgrade($oldversion) {
 
     $dbman = $DB->get_manager();
 
+    if ($oldversion < 2020100101) {
+        // Queue the creation of missing container records for the perform container.
+        \core\task\manager::queue_adhoc_task(new \container_perform\task\create_missing_categories());
+
+        upgrade_plugin_savepoint(true, 2020100101, 'container', 'perform');
+    }
+
     return true;
 }

@@ -23,9 +23,9 @@
  * @package totara_competency
  */
 
-use totara_competency\entities\assignment;
+use totara_competency\entity\assignment;
 use totara_competency\user_groups;
-use totara_competency\entities\competency_achievement;
+use totara_competency\entity\competency_achievement;
 use totara_core\advanced_feature;
 use totara_job\rb\source\report_trait;
 
@@ -376,7 +376,7 @@ class rb_source_competency_status extends rb_base_source {
                 new rb_column_option(
                     'assignment',
                     'userid',
-                    get_string('activity_log_link', 'rb_source_competency_status'),
+                    get_string('activity_log_link_text', 'rb_source_competency_status'),
                     'auser.id',
                     [
                         'joins' => 'auser',
@@ -632,14 +632,8 @@ class rb_source_competency_status extends rb_base_source {
             throw new coding_exception('phpunit_column_test_expected_count() cannot be used outside of unit tests');
         }
 
-        // TODO: This needs to be fixed during implementation of TL_19974
-        //       The problem is that during testing of the other reports users are assigned to competencies
-        //       This results in additional records in totara_competency_achievements - the number can not be predicted.
-        //       Therefore retrieving the number here
-
         global $DB;
         return $DB->count_records('totara_competency_achievement');
     }
 
 }
-

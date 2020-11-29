@@ -103,7 +103,7 @@ class totara_engage_webapi_resolver_query_share_totals_testcase extends advanced
                 'totalrecipients' => 1,
                 'recipients' => [
                     [
-                        'area' => 'USER',
+                        'area' => 'user',
                         'label' => 'Users',
                         'total' => 1
                     ]
@@ -131,7 +131,7 @@ class totara_engage_webapi_resolver_query_share_totals_testcase extends advanced
                 'totalrecipients' => 2,
                 'recipients' => [
                     [
-                        'area' => 'USER',
+                        'area' => 'user',
                         'label' => 'Users',
                         'total' => 2
                     ]
@@ -157,7 +157,7 @@ class totara_engage_webapi_resolver_query_share_totals_testcase extends advanced
                 'totalrecipients' => 1,
                 'recipients' => [
                     [
-                        'area' => 'LIBRARY',
+                        'area' => 'library',
                         'label' => 'Workspaces',
                         'total' => 1
                     ]
@@ -186,7 +186,7 @@ class totara_engage_webapi_resolver_query_share_totals_testcase extends advanced
                 'totalrecipients' => 2,
                 'recipients' => [
                     [
-                        'area' => 'LIBRARY',
+                        'area' => 'library',
                         'label' => 'Workspaces',
                         'total' => 2
                     ]
@@ -213,17 +213,17 @@ class totara_engage_webapi_resolver_query_share_totals_testcase extends advanced
                 new \core_user\totara_engage\share\recipient\user($user3->id),
             ]
         );
-        self::assertSame(
+        self::assertEqualsCanonicalizing(
             [
                 'totalrecipients' => 4,
                 'recipients' => [
                     [
-                        'area' => 'LIBRARY',
+                        'area' => 'library',
                         'label' => 'Workspaces',
                         'total' => 2
                     ],
                     [
-                        'area' => 'USER',
+                        'area' => 'user',
                         'label' => 'Users',
                         'total' => 2
                     ]
@@ -280,17 +280,17 @@ class totara_engage_webapi_resolver_query_share_totals_testcase extends advanced
         assign_capability($cap, CAP_ALLOW, get_guest_role()->id, $context);
         self::assertTrue(has_capability($cap, $context, guest_user()->id));
 
-        self::assertSame(
+        self::assertEqualsCanonicalizing(
             [
                 'totalrecipients' => 4,
                 'recipients' => [
                     [
-                        'area' => 'LIBRARY',
+                        'area' => 'library',
                         'label' => 'Workspaces',
                         'total' => 2
                     ],
                     [
-                        'area' => 'USER',
+                        'area' => 'user',
                         'label' => 'Users',
                         'total' => 2
                     ]
@@ -376,7 +376,7 @@ class totara_engage_webapi_resolver_query_share_totals_testcase extends advanced
                 'totalrecipients' => 1,
                 'recipients' => [
                     [
-                        'area' => 'USER',
+                        'area' => 'user',
                         'label' => 'Users',
                         'total' => 1
                     ]
@@ -392,7 +392,7 @@ class totara_engage_webapi_resolver_query_share_totals_testcase extends advanced
                 'totalrecipients' => 1,
                 'recipients' => [
                     [
-                        'area' => 'USER',
+                        'area' => 'user',
                         'label' => 'Users',
                         'total' => 1
                     ]
@@ -428,7 +428,7 @@ class totara_engage_webapi_resolver_query_share_totals_testcase extends advanced
                 'totalrecipients' => 1,
                 'recipients' => [
                     [
-                        'area' => 'USER',
+                        'area' => 'user',
                         'label' => 'Users',
                         'total' => 1
                     ]

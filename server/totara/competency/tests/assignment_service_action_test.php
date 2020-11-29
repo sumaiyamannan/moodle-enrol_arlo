@@ -22,13 +22,19 @@
  * @category test
  */
 
-use totara_competency\entities;
+use totara_competency\entity;
+use totara_competency\entity\assignment;
+use totara_core\basket\session_basket;
+use totara_core\phpunit\webservice_utils;
 
 defined('MOODLE_INTERNAL') || die();
 
+/**
+ * @group totara_competency
+ */
 class totara_competency_assignment_action_service_testcase extends advanced_testcase {
 
-    use \totara_core\phpunit\webservice_utils;
+    use webservice_utils;
 
     protected function setUp(): void {
         parent::setUp();
@@ -62,8 +68,8 @@ class totara_competency_assignment_action_service_testcase extends advanced_test
     public function test_action_archive() {
         ['ass' => $assignments] = $this->generate_competencies();
 
-        $assignment1 = new entities\assignment($assignments[0]);
-        $this->assertEquals(entities\assignment::STATUS_ACTIVE, $assignment1->status);
+        $assignment1 = new assignment($assignments[0]);
+        $this->assertEquals(assignment::STATUS_ACTIVE, $assignment1->status);
 
         $res = $this->call_webservice_api('totara_competency_assignment_action', [
             'action' => 'archive',
@@ -79,25 +85,25 @@ class totara_competency_assignment_action_service_testcase extends advanced_test
 
         $assignment1->refresh();
 
-        $this->assertEquals(entities\assignment::STATUS_ARCHIVED, $assignment1->status);
+        $this->assertEquals(assignment::STATUS_ARCHIVED, $assignment1->status);
     }
 
     public function test_action_archive_via_basket() {
         ['ass' => $assignments] = $this->generate_competencies();
 
-        $assignment1 = new entities\assignment($assignments[0]);
-        $assignment1->status = entities\assignment::STATUS_ACTIVE;
+        $assignment1 = new assignment($assignments[0]);
+        $assignment1->status = assignment::STATUS_ACTIVE;
         $assignment1->save();
 
-        $assignment2 = new entities\assignment($assignments[1]);
-        $assignment2->status = entities\assignment::STATUS_ACTIVE;
+        $assignment2 = new assignment($assignments[1]);
+        $assignment2->status = assignment::STATUS_ACTIVE;
         $assignment2->save();
 
-        $assignment3 = new entities\assignment($assignments[2]);
-        $assignment3->status = entities\assignment::STATUS_ACTIVE;
+        $assignment3 = new assignment($assignments[2]);
+        $assignment3->status = assignment::STATUS_ACTIVE;
         $assignment3->save();
 
-        $basket = new \totara_core\basket\session_basket('mytestbasket');
+        $basket = new session_basket('mytestbasket');
         $basket->add([$assignment1->id, $assignment2->id]);
 
         $res = $this->call_webservice_api('totara_competency_assignment_action', [
@@ -116,28 +122,28 @@ class totara_competency_assignment_action_service_testcase extends advanced_test
         $assignment2->refresh();
         $assignment3->refresh();
 
-        $this->assertEquals(entities\assignment::STATUS_ARCHIVED, $assignment1->status);
-        $this->assertEquals(entities\assignment::STATUS_ARCHIVED, $assignment2->status);
+        $this->assertEquals(assignment::STATUS_ARCHIVED, $assignment1->status);
+        $this->assertEquals(assignment::STATUS_ARCHIVED, $assignment2->status);
         // this one is untouched
-        $this->assertEquals(entities\assignment::STATUS_ACTIVE, $assignment3->status);
+        $this->assertEquals(assignment::STATUS_ACTIVE, $assignment3->status);
     }
 
     public function test_action_archive_via_basket_mix() {
         ['ass' => $assignments] = $this->generate_competencies();
 
-        $assignment1 = new entities\assignment($assignments[0]);
-        $assignment1->status = entities\assignment::STATUS_ACTIVE;
+        $assignment1 = new assignment($assignments[0]);
+        $assignment1->status = assignment::STATUS_ACTIVE;
         $assignment1->save();
 
-        $assignment2 = new entities\assignment($assignments[1]);
-        $assignment2->status = entities\assignment::STATUS_ACTIVE;
+        $assignment2 = new assignment($assignments[1]);
+        $assignment2->status = assignment::STATUS_ACTIVE;
         $assignment2->save();
 
-        $assignment3 = new entities\assignment($assignments[2]);
-        $assignment3->status = entities\assignment::STATUS_DRAFT;
+        $assignment3 = new assignment($assignments[2]);
+        $assignment3->status = assignment::STATUS_DRAFT;
         $assignment3->save();
 
-        $basket = new \totara_core\basket\session_basket('mytestbasket');
+        $basket = new session_basket('mytestbasket');
         $basket->add([$assignment1->id, $assignment2->id, $assignment3->id]);
 
         $res = $this->call_webservice_api('totara_competency_assignment_action', [
@@ -158,17 +164,17 @@ class totara_competency_assignment_action_service_testcase extends advanced_test
         $assignment2->refresh();
         $assignment3->refresh();
 
-        $this->assertEquals(entities\assignment::STATUS_ARCHIVED, $assignment1->status);
-        $this->assertEquals(entities\assignment::STATUS_ARCHIVED, $assignment2->status);
+        $this->assertEquals(assignment::STATUS_ARCHIVED, $assignment1->status);
+        $this->assertEquals(assignment::STATUS_ARCHIVED, $assignment2->status);
         // this one is untouched
-        $this->assertEquals(entities\assignment::STATUS_DRAFT, $assignment3->status);
+        $this->assertEquals(assignment::STATUS_DRAFT, $assignment3->status);
     }
 
     public function test_unknown_action() {
         ['ass' => $assignments] = $this->generate_competencies();
 
-        $assignment1 = new entities\assignment($assignments[0]);
-        $assignment1->status = entities\assignment::STATUS_DRAFT;
+        $assignment1 = new assignment($assignments[0]);
+        $assignment1->status = assignment::STATUS_DRAFT;
         $assignment1->save();
 
         $res = $this->call_webservice_api('totara_competency_assignment_action', [
@@ -185,8 +191,8 @@ class totara_competency_assignment_action_service_testcase extends advanced_test
     public function test_action_activate() {
         ['ass' => $assignments] = $this->generate_competencies();
 
-        $assignment1 = new entities\assignment($assignments[0]);
-        $assignment1->status = entities\assignment::STATUS_DRAFT;
+        $assignment1 = new assignment($assignments[0]);
+        $assignment1->status = assignment::STATUS_DRAFT;
         $assignment1->save();
 
         $res = $this->call_webservice_api('totara_competency_assignment_action', [
@@ -203,25 +209,25 @@ class totara_competency_assignment_action_service_testcase extends advanced_test
 
         $assignment1->refresh();
 
-        $this->assertEquals(entities\assignment::STATUS_ACTIVE, $assignment1->status);
+        $this->assertEquals(assignment::STATUS_ACTIVE, $assignment1->status);
     }
 
     public function test_action_activate_via_basket() {
         ['ass' => $assignments] = $this->generate_competencies();
 
-        $assignment1 = new entities\assignment($assignments[0]);
-        $assignment1->status = entities\assignment::STATUS_DRAFT;
+        $assignment1 = new assignment($assignments[0]);
+        $assignment1->status = assignment::STATUS_DRAFT;
         $assignment1->save();
 
-        $assignment2 = new entities\assignment($assignments[1]);
-        $assignment2->status = entities\assignment::STATUS_DRAFT;
+        $assignment2 = new assignment($assignments[1]);
+        $assignment2->status = assignment::STATUS_DRAFT;
         $assignment2->save();
 
-        $assignment3 = new entities\assignment($assignments[2]);
-        $assignment3->status = entities\assignment::STATUS_ARCHIVED;
+        $assignment3 = new assignment($assignments[2]);
+        $assignment3->status = assignment::STATUS_ARCHIVED;
         $assignment3->save();
 
-        $basket = new \totara_core\basket\session_basket('mytestbasket');
+        $basket = new session_basket('mytestbasket');
         $basket->add([$assignment1->id, $assignment2->id]);
 
         $res = $this->call_webservice_api('totara_competency_assignment_action', [
@@ -240,28 +246,28 @@ class totara_competency_assignment_action_service_testcase extends advanced_test
         $assignment2->refresh();
         $assignment3->refresh();
 
-        $this->assertEquals(entities\assignment::STATUS_ACTIVE, $assignment1->status);
-        $this->assertEquals(entities\assignment::STATUS_ACTIVE, $assignment2->status);
+        $this->assertEquals(assignment::STATUS_ACTIVE, $assignment1->status);
+        $this->assertEquals(assignment::STATUS_ACTIVE, $assignment2->status);
         // this one is untouched
-        $this->assertEquals(entities\assignment::STATUS_ARCHIVED, $assignment3->status);
+        $this->assertEquals(assignment::STATUS_ARCHIVED, $assignment3->status);
     }
 
     public function test_action_activate_via_basket_mix() {
         ['ass' => $assignments] = $this->generate_competencies();
 
-        $assignment1 = new entities\assignment($assignments[0]);
-        $assignment1->status = entities\assignment::STATUS_DRAFT;
+        $assignment1 = new assignment($assignments[0]);
+        $assignment1->status = assignment::STATUS_DRAFT;
         $assignment1->save();
 
-        $assignment2 = new entities\assignment($assignments[1]);
-        $assignment2->status = entities\assignment::STATUS_ACTIVE;
+        $assignment2 = new assignment($assignments[1]);
+        $assignment2->status = assignment::STATUS_ACTIVE;
         $assignment2->save();
 
-        $assignment3 = new entities\assignment($assignments[2]);
-        $assignment3->status = entities\assignment::STATUS_ARCHIVED;
+        $assignment3 = new assignment($assignments[2]);
+        $assignment3->status = assignment::STATUS_ARCHIVED;
         $assignment3->save();
 
-        $basket = new \totara_core\basket\session_basket('mytestbasket');
+        $basket = new session_basket('mytestbasket');
         $basket->add([$assignment1->id, $assignment2->id, $assignment3->id]);
 
         $res = $this->call_webservice_api('totara_competency_assignment_action', [
@@ -280,16 +286,16 @@ class totara_competency_assignment_action_service_testcase extends advanced_test
         $assignment2->refresh();
         $assignment3->refresh();
 
-        $this->assertEquals(entities\assignment::STATUS_ACTIVE, $assignment1->status);
-        $this->assertEquals(entities\assignment::STATUS_ACTIVE, $assignment2->status);
-        $this->assertEquals(entities\assignment::STATUS_ARCHIVED, $assignment3->status);
+        $this->assertEquals(assignment::STATUS_ACTIVE, $assignment1->status);
+        $this->assertEquals(assignment::STATUS_ACTIVE, $assignment2->status);
+        $this->assertEquals(assignment::STATUS_ARCHIVED, $assignment3->status);
     }
 
     public function test_action_delete() {
         ['ass' => $assignments] = $this->generate_competencies();
 
-        $assignment1 = new entities\assignment($assignments[0]);
-        $assignment1->status = entities\assignment::STATUS_DRAFT;
+        $assignment1 = new assignment($assignments[0]);
+        $assignment1->status = assignment::STATUS_DRAFT;
         $assignment1->save();
 
         $res = $this->call_webservice_api('totara_competency_assignment_action', [
@@ -305,25 +311,25 @@ class totara_competency_assignment_action_service_testcase extends advanced_test
         $this->assertEquals([$assignment1->id], $result);
 
         // assignment is gone
-        $this->assertEmpty(entities\assignment::repository()->find($assignment1->id));
+        $this->assertEmpty(assignment::repository()->find($assignment1->id));
     }
 
     public function test_action_delete_via_basket() {
         ['ass' => $assignments] = $this->generate_competencies();
 
-        $assignment1 = new entities\assignment($assignments[0]);
-        $assignment1->status = entities\assignment::STATUS_DRAFT;
+        $assignment1 = new assignment($assignments[0]);
+        $assignment1->status = assignment::STATUS_DRAFT;
         $assignment1->save();
 
-        $assignment2 = new entities\assignment($assignments[1]);
-        $assignment2->status = entities\assignment::STATUS_ACTIVE;
+        $assignment2 = new assignment($assignments[1]);
+        $assignment2->status = assignment::STATUS_ACTIVE;
         $assignment2->save();
 
-        $assignment3 = new entities\assignment($assignments[2]);
-        $assignment3->status = entities\assignment::STATUS_ARCHIVED;
+        $assignment3 = new assignment($assignments[2]);
+        $assignment3->status = assignment::STATUS_ARCHIVED;
         $assignment3->save();
 
-        $basket = new \totara_core\basket\session_basket('mytestbasket');
+        $basket = new session_basket('mytestbasket');
         $basket->add([$assignment1->id, $assignment2->id, $assignment3->id]);
 
         $res = $this->call_webservice_api('totara_competency_assignment_action', [
@@ -339,12 +345,12 @@ class totara_competency_assignment_action_service_testcase extends advanced_test
         $this->assertEqualsCanonicalizing([$assignment1->id, $assignment3->id], $result);
 
         // assignments are gone
-        $this->assertEmpty(entities\assignment::repository()->find($assignment1->id));
-        $this->assertEmpty(entities\assignment::repository()->find($assignment3->id));
+        $this->assertEmpty(assignment::repository()->find($assignment1->id));
+        $this->assertEmpty(assignment::repository()->find($assignment3->id));
 
         // this one is untouched
         $assignment2->refresh();
-        $this->assertEquals(entities\assignment::STATUS_ACTIVE, $assignment2->status);
+        $this->assertEquals(assignment::STATUS_ACTIVE, $assignment2->status);
     }
 
     /**
@@ -401,11 +407,11 @@ class totara_competency_assignment_action_service_testcase extends advanced_test
 
         // Create an assignment for a competency
         $gen = $this->generator()->assignment_generator();
-        $data['ass'][] = $gen->create_user_assignment($one->id, null, ['status' => entities\assignment::STATUS_ACTIVE, 'type' => entities\assignment::TYPE_ADMIN]);
-        $data['ass'][] = $gen->create_user_assignment($two->id, null, ['status' => entities\assignment::STATUS_ACTIVE, 'type' => entities\assignment::TYPE_SELF]);
-        $data['ass'][] = $gen->create_user_assignment($three->id, null, ['status' => entities\assignment::STATUS_ACTIVE, 'type' => entities\assignment::TYPE_SYSTEM]);
-        $data['ass'][] = $gen->create_position_assignment($three->id, $pos1->id, ['status' => entities\assignment::STATUS_ACTIVE, 'type' => entities\assignment::TYPE_ADMIN]);
-        $data['ass'][] = $gen->create_organisation_assignment($three->id, $org1->id, ['status' => entities\assignment::STATUS_ACTIVE, 'type' => entities\assignment::TYPE_ADMIN]);
+        $data['ass'][] = $gen->create_user_assignment($one->id, null, ['status' => assignment::STATUS_ACTIVE, 'type' => assignment::TYPE_ADMIN]);
+        $data['ass'][] = $gen->create_user_assignment($two->id, null, ['status' => assignment::STATUS_ACTIVE, 'type' => assignment::TYPE_SELF]);
+        $data['ass'][] = $gen->create_user_assignment($three->id, null, ['status' => assignment::STATUS_ACTIVE, 'type' => assignment::TYPE_SYSTEM]);
+        $data['ass'][] = $gen->create_position_assignment($three->id, $pos1->id, ['status' => assignment::STATUS_ACTIVE, 'type' => assignment::TYPE_ADMIN]);
+        $data['ass'][] = $gen->create_organisation_assignment($three->id, $org1->id, ['status' => assignment::STATUS_ACTIVE, 'type' => assignment::TYPE_ADMIN]);
 
         return $data;
     }

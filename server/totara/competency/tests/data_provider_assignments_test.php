@@ -25,14 +25,17 @@
 global $CFG;
 
 use core\orm\query\builder;
-use hierarchy_position\entities\position;
-use core\entities\user;
+use hierarchy_position\entity\position;
+use core\entity\user;
 use totara_competency\user_groups;
 use totara_competency\data_providers\assignments;
-use totara_competency\entities\assignment;
+use totara_competency\entity\assignment;
 
 require_once($CFG->dirroot . '/totara/competency/tests/totara_competency_testcase.php');
 
+/**
+ * @group totara_competency
+ */
 class totara_competency_data_provider_assignments_testcase extends totara_competency_testcase {
 
     /**

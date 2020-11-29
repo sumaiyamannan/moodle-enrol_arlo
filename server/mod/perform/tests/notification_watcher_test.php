@@ -26,12 +26,13 @@ use core\collection;
 use core\task\adhoc_task;
 use core\task\manager;
 use mod_perform\constants;
-use mod_perform\entities\activity\participant_instance as participant_instance_entity;
-use mod_perform\entities\activity\subject_instance as subject_instance_entity;
-use mod_perform\entities\activity\track_user_assignment as track_user_assignment_entity;
+use mod_perform\entity\activity\participant_instance as participant_instance_entity;
+use mod_perform\entity\activity\subject_instance as subject_instance_entity;
+use mod_perform\entity\activity\track_user_assignment as track_user_assignment_entity;
 use mod_perform\event\subject_instance_progress_updated;
 use mod_perform\hook\participant_instances_created;
 use mod_perform\models\activity\activity as activity_model;
+use mod_perform\models\activity\notification;
 use mod_perform\models\activity\subject_instance as subject_instance_model;
 use mod_perform\notification\factory;
 use mod_perform\notification\recipient;
@@ -144,8 +145,8 @@ class mod_perform_notification_watcher_testcase extends mod_perform_notification
         $subject_instance->refresh();
 
         $notifications = [
-            $this->create_notification($activity, 'instance_created', true),
-            $this->create_notification($activity, 'completion', true),
+            notification::load_by_activity_and_class_key($activity, 'instance_created')->activate(),
+            notification::load_by_activity_and_class_key($activity, 'completion')->activate(),
         ];
 
         $participant_instances = [];

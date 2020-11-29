@@ -28,7 +28,12 @@
           :label="$str('space_name_label', 'container_workspace')"
           class="tui-workspaceForm__formRow"
         >
-          <InputText :id="id" v-model="name" :disabled="submitting" />
+          <InputText
+            :id="id"
+            v-model="name"
+            :maxlength="75"
+            :disabled="submitting"
+          />
         </FormRow>
 
         <FormRow
@@ -45,6 +50,8 @@
                 :id="id"
                 v-model="description"
                 :aria-disabled="submitting"
+                :instance-id="workspaceId"
+                :context-id="contextId"
                 component="container_workspace"
                 area="description"
                 @ready="editorReady = true"
@@ -246,6 +253,12 @@ export default {
     workspacePrivate: Boolean,
     workspaceHidden: Boolean,
     workspaceId: [String, Number],
+    /**
+     * A fallback props when workspace's id is not provided.
+     * It should either be a workspace's context id or course category context's id.
+     * Do NOT pass user's context id here.
+     */
+    contextId: [String, Number],
     submitButtonLabel: {
       type: String,
       default() {
@@ -445,10 +458,6 @@ export default {
       &:not(:first-child) {
         margin-top: var(--gap-8);
       }
-    }
-
-    .tui-formRow__desc {
-      margin-bottom: var(--gap-2);
     }
   }
 

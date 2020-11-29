@@ -58,14 +58,16 @@ trait webapi_phpunit_helper {
      * @param string $operation_name name of the operation.
      * @param array $variables operation arguments.
      * @param string $type execution mode.
-     *
+     * @param bool $is_multi_part_operation does the operation have more than one query or mutation,
+     *                                      if set to true, each query/mutation result is left in it's key.
      * @return array a (result, error) tuple. Note even if there is an error, the
      *         result may not be null.
      */
     protected function parsed_graphql_operation(
         string $operation_name,
         array $variables = [],
-        string $type = graphql::TYPE_AJAX
+        string $type = graphql::TYPE_AJAX,
+        bool $is_multi_part_operation = false
     ): array {
         $raw = $this->execute_graphql_operation($operation_name, $variables, $type)
             ->toArray(true);
@@ -77,7 +79,11 @@ trait webapi_phpunit_helper {
             $query_name = substr($operation_name, 0, strrpos($operation_name, '_nosession'));
         }
 
-        $result = $raw['data'][$query_name] ?? null;
+        if ($is_multi_part_operation) {
+            $result = $raw['data'];
+        } else {
+            $result = $raw['data'][$query_name] ?? null;
+        }
 
         $errors = $raw['errors'][0] ?? [];
         $error = $errors['debugMessage'] ?? $errors['message'] ?? null;
@@ -97,6 +103,18 @@ trait webapi_phpunit_helper {
     protected function get_webapi_operation_data(array $result_from_parsed_graphql_operation) {
         [$result, ] = $result_from_parsed_graphql_operation;
         return $result;
+    }
+
+    /**
+     * Given a result from a parsed_graphql_operation() call, gets the errors returned by the call.
+     *
+     * @param array $result_from_parsed_graphql_operation the result from the call.
+     *
+     * @return mixed the execution errors.
+     */
+    protected function get_webapi_operation_errors(array $result_from_parsed_graphql_operation) {
+        [, $errors] = $result_from_parsed_graphql_operation;
+        return $errors;
     }
 
     /**
@@ -246,5 +264,32 @@ trait webapi_phpunit_helper {
 
         $resolver = new default_resolver();
         return $resolver($source, $variables, $execution_context, $resolve_info_mock);
+    }
+
+    /**
+     * Given the graphql query/mutation resolver class name, this function will
+     * compute the query/mutation name base on it.
+     *
+     * @param string $class_name
+     * @return string
+     */
+    public function get_graphql_name(string $class_name): string {
+        if (!class_exists($class_name)) {
+            throw new \coding_exception("Class '{$class_name}' does not exist");
+        }
+
+        if (false === stripos($class_name, "\\webapi\\resolver\\")) {
+            throw new \coding_exception(
+                "Your graphql resolver class '{$class_name}' must be in convention class path"
+            );
+        }
+
+        $class_name = ltrim($class_name, "\\");
+        $parts = explode("\\", $class_name);
+
+        $component = reset($parts);
+        $graphql_name = end($parts);
+
+        return "{$component}_{$graphql_name}";
     }
 }

@@ -24,7 +24,7 @@
 
 use mod_perform\data_providers\activity\activity_settings;
 use mod_perform\models\activity\activity_setting;
-use mod_perform\entities\activity\activity_setting as activity_setting_entity;
+use mod_perform\entity\activity\activity_setting as activity_setting_entity;
 
 /**
  * @coversDefaultClass \mod_perform\data_providers\activity\activity_settings
@@ -110,18 +110,6 @@ class mod_perform_activity_settings_data_provider_testcase extends advanced_test
 
         $this->expectExceptionMessageMatches("/$name/");
         $settings->update($updated);
-    }
-
-    /**
-     * Test access control.
-     */
-    public function test_no_permission(): void {
-        $settings = $this->create_test_data();
-
-        $this->setGuestUser();
-
-        $this->expectExceptionMessageMatches("/permission/");
-        $settings->update([activity_setting::MULTISECTION => true]);
     }
 
     /**

@@ -27,13 +27,16 @@ use pathway_manual\models\rateable_competency;
 use pathway_manual\models\roles\appraiser;
 use pathway_manual\models\roles\manager;
 use pathway_manual\models\roles\self_role;
-use totara_competency\entities\competency;
+use totara_competency\entity\competency;
 use totara_competency\expand_task;
 use totara_competency\models\assignment;
 use totara_competency\user_groups;
 
 require_once(__DIR__ . '/pathway_manual_base_testcase.php');
 
+/**
+ * @group totara_competency
+ */
 class pathway_manual_data_provider_user_rateable_competencies_testcase extends pathway_manual_base_testcase {
 
     protected function setUp(): void {

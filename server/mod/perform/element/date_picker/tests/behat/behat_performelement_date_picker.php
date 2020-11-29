@@ -23,12 +23,17 @@
 
 class behat_performelement_date_picker extends behat_base {
 
-    public const DONE_BUTTON_LOCATOR  = '.tui-elementAdminFormActionButtons__done';
-
     /**
      * @When /^I click date picker question element$/
+     * @deprecated since Totara 13.2
      */
     public function i_click_date_picker_question_element(): void {
+        debugging(
+            '\behat_performelement_multi_choice_single::i_save_multi_choice_single_question_element_data() is deprecated and should no longer be used.'
+            . ' Please use behat_mod_perform::i_add_a_custom_element() with "Date picker" as the parameter',
+            DEBUG_DEVELOPER
+        );
+
         behat_hooks::set_step_readonly(false);
 
         $behat_general = behat_context_helper::get('behat_general');
@@ -39,11 +44,18 @@ class behat_performelement_date_picker extends behat_base {
 
     /**
      * @When /^I save date picker question element data$/
+     * @deprecated since Totara 13.2
      */
     public function i_save_date_picker_question_element_data(): void {
+        debugging(
+            '\behat_performelement_multi_choice_single::i_save_multi_choice_single_question_element_data() is deprecated and should no longer be used.'
+            . ' Please use behat_mod_perform::i_save_the_custom_element_settings() with "save" as the parameter',
+            DEBUG_DEVELOPER
+        );
+
         behat_hooks::set_step_readonly(false);
 
-        $done_button = $this->find('css', self::DONE_BUTTON_LOCATOR);
+        $done_button = $this->find('css', behat_mod_perform::ADMIN_FORM_DONE_BUTTON);
         $done_button->click();
     }
 

@@ -22,10 +22,13 @@
  */
 
 use totara_competency\models\activity_log;
-use totara_competency\entities\competency_achievement;
-use totara_competency\entities\scale_value;
-use totara_competency\entities\assignment;
+use totara_competency\entity\competency_achievement;
+use totara_competency\entity\scale_value;
+use totara_competency\entity\assignment;
 
+/**
+ * @group totara_competency
+ */
 class totara_competency_models_activity_log_achievement_testcase extends advanced_testcase {
 
     public function test_no_value() {

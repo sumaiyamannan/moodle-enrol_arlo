@@ -104,6 +104,7 @@ export default {
           workspace_id: this.workspaceId,
           area: 'adder',
           include_footnotes: false,
+          image_preview_mode: 'totara_engage_adder_thumbnail',
         });
       },
       update({ contribution: { cursor, cards } }) {
@@ -181,7 +182,7 @@ export default {
             recipient: {
               instanceid: this.workspaceId,
               component: 'container_workspace',
-              area: 'LIBRARY',
+              area: 'library',
             },
           },
         });

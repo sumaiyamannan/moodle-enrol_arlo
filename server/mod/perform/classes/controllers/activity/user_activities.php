@@ -25,7 +25,7 @@ namespace mod_perform\controllers\activity;
 
 use context;
 use context_coursecat;
-use core\entities\user;
+use core\entity\user;
 use mod_perform\controllers\perform_controller;
 use mod_perform\models\activity\helpers\manual_participant_helper;
 use mod_perform\util;
@@ -55,6 +55,7 @@ class user_activities extends perform_controller {
         $props = [
             'current-user-id' => $current_user_id,
             'view-activity-url' => (string) view_user_activity::get_url(),
+            'print-activity-url' => (string) print_user_activity::get_url(),
             'show-about-others-tab' => (bool) $this->get_optional_param('show_about_others_tab', false, PARAM_BOOL),
             'completion-save-success' => (bool) $this->get_optional_param('completion_save_success', false, PARAM_BOOL),
             'closed-on-completion' => (bool) $this->get_optional_param('closed_on_completion', false, PARAM_BOOL),

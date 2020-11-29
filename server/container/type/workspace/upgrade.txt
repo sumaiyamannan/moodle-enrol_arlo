@@ -1,0 +1,29 @@
+This files describes API changes in /container/type/workspace/*.
+The information here is intended only for developers.
+
+=== 13.2 ===
+
+--- Update to general functionality ---
+* Workspace container categories are now created upon installation, instead of created on-demand
+
+--- Update to graphQL ---
+* Added field "context_id" to type "container_workspace_workspace"
+* Added field "context_id" to type "container_workspace_workspace_category_interactor"
+* Added context_id parameter to the file_area query
+* Changed area variable type from param_text to param_area in graphql schema.
+
+--- Update to API ---
+* Function container_workspace\member\member::get_member_id had been deprecated, please use container_workspace\member\member::get_id instead.
+* Removed unused class container_workspace\webapi\resolver\query\count_members
+
+=== 13.1 ===
+
+--- Update to database schema ---
+* Introduced new field "to_be_deleted" in table "workspace", the field indicates the workspace will be deleted later via cron.
+
+--- Update to graphQL ---
+* Added "image_preview_mode" parameter to "container_workspace_contributions" query
+
+--- Update to API ---
+* Added new parameter "$debug_info" into function container_workspace\exception\discussion_exception::on_create
+* Added new parameter "$debug_info" into function container_workspace\exception\discussion_exception::on_update

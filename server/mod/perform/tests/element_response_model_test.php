@@ -24,10 +24,10 @@
 
 use core\collection;
 
-use mod_perform\entities\activity\element_response as element_response_entity;
-use mod_perform\entities\activity\participant_instance as participant_instance_entity;
-use mod_perform\entities\activity\section as section_entity;
-use mod_perform\entities\activity\section_element as section_element_entity;
+use mod_perform\entity\activity\element_response as element_response_entity;
+use mod_perform\entity\activity\participant_instance as participant_instance_entity;
+use mod_perform\entity\activity\section as section_entity;
+use mod_perform\entity\activity\section_element as section_element_entity;
 use mod_perform\models\activity\participant_instance;
 use mod_perform\models\activity\section_element;
 use mod_perform\models\response\section_element_response;
@@ -184,9 +184,7 @@ class mod_perform_response_model_testcase extends advanced_testcase {
             new collection()
         );
 
-        $response_data = ['answer_text' => 'Hello there.'];
-
-        $element_response->set_response_data(json_encode($response_data));
+        $element_response->set_response_data(json_encode('Hello there.'));
 
         self::assertTrue($element_response->validate_response());
     }
@@ -235,7 +233,7 @@ class mod_perform_response_model_testcase extends advanced_testcase {
         );
 
         // Structurally valid response, but will fail validation for being too long.
-        $response_data = ['answer_text' => str_repeat('x', 1025)];
+        $response_data = str_repeat('x', 1025);
 
         $element_response->set_response_data(json_encode($response_data));
 

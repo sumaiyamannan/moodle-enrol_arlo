@@ -23,9 +23,9 @@
  */
 
 use core\collection;
-use totara_competency\entities\competency_achievement;
-use totara_competency\entities\scale as scale_entity;
-use totara_competency\entities\scale_value;
+use totara_competency\entity\competency_achievement;
+use totara_competency\entity\scale as scale_entity;
+use totara_competency\entity\scale_value;
 use totara_competency\models\scale;
 use totara_core\advanced_feature;
 
@@ -33,6 +33,8 @@ use totara_core\advanced_feature;
  * Class totara_competency_model_scale_testcase
  *
  * @coversDefaultClass \totara_competency\models\scale
+ *
+ * @group totara_competency
  */
 class totara_competency_model_scale_testcase extends advanced_testcase {
 

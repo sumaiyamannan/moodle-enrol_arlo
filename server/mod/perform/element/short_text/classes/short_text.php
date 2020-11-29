@@ -36,20 +36,22 @@ class short_text extends respondable_element_plugin {
     /**
      * @inheritDoc
      */
-    public function validate_response(?string $encoded_response_data, ?element $element): collection {
+    public function validate_response(
+        ?string $encoded_response_data,
+        ?element $element,
+        $is_draft_validation = false
+    ): collection {
         $element_data = $element->data ?? null;
         $answer_text = $this->decode_response($encoded_response_data, $element_data);
 
         $errors = new collection();
-
-        if ((string)$answer_text === '' && $element->is_required) {
+        if ($this->fails_required_validation(trim($answer_text) === '', $element, $is_draft_validation)) {
             $errors->append(new answer_required_error());
         }
 
         if (core_text::strlen($answer_text) > self::MAX_ANSWER_LENGTH) {
             $errors->append(new answer_length_exceeded_error());
         }
-
         return $errors;
     }
 
@@ -58,41 +60,16 @@ class short_text extends respondable_element_plugin {
      *
      * @param string|null $encoded_response_data
      * @param string|null $encoded_element_data
-     * @return string|string[]
-     * @throws coding_exception
+     * @return string|null
      */
-    public function decode_response(?string $encoded_response_data, ?string $encoded_element_data) {
-        $response_data = json_decode($encoded_response_data, true);
-
-        if ($response_data === null) {
-            return null;
-        }
-
-        if (!is_array($response_data) || !array_key_exists('answer_text', $response_data)) {
-            throw new coding_exception('Invalid response data format, expected "answer_text" field');
-        }
-
-        return $response_data['answer_text'];
-    }
-
-    /**
-     * @return string
-     */
-    public function get_example_response_data(): string {
-        return '{"answer_text": ""}';
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function get_group(): int {
-        return self::GROUP_QUESTION;
+    public function decode_response(?string $encoded_response_data, ?string $encoded_element_data): ?string {
+        return $this->decode_simple_string_response($encoded_response_data);
     }
 
     /**
      * @inheritDoc
      */
     public function get_sortorder(): int {
-        return 70;
+        return 20;
     }
 }

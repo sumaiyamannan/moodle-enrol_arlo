@@ -24,13 +24,13 @@
 namespace totara_competency;
 
 use context_system;
-use core\entities\expandable;
+use core\entity\expandable;
 use core\orm\collection;
 use core\orm\entity\entity;
 use core\orm\query\builder;
-use totara_competency\entities\assignment;
-use totara_competency\entities\competency_assignment_user;
-use totara_competency\entities\competency_assignment_user_repository;
+use totara_competency\entity\assignment;
+use totara_competency\entity\competency_assignment_user;
+use totara_competency\entity\competency_assignment_user_repository;
 use totara_competency\event\assignment_user_assigned_bulk;
 use totara_competency\event\assignment_user_unassigned;
 use totara_competency\models\assignment as assignment_model;
@@ -125,29 +125,11 @@ class expand_task {
         $assignment->expand = false;
         $assignment->save();
 
-        $assignment_id = (int) $assignment->id;
-
         // load all current source targets relations of the assignment
         // to avoid more requests to the database when checking if entry
         // already exists.
         $current_entries = $this->load_current_entries($assignment->id);
 
-        // TODO performance - it might be possible to do an INSERT SELECT
-        /*
-         * DELETE FROM {totara_competency_assignment_users}
-         * WHERE assignment_id = :assignment_id
-         *      AND user_id NOT IN (
-         *          SELECT ...
-         *      )
-         *
-         * INSERT INTO {totara_competency_assignment_users}
-         *      (assignment_id, user_id, competency_id, created_at, updated_at)
-         * SELECT :assignment_id, user_id, :competency_id, :created_at, :updated_at
-         * FROM (
-         *      SELECT user_id
-         *      FROM ...
-         * )
-         */
         $user_ids = $this->get_expanded_users($assignment->user_group_type, $assignment->user_group_id);
 
         $new_user_ids = array_diff($user_ids, $current_entries->pluck('user_id'));
@@ -183,7 +165,6 @@ class expand_task {
                 if (!empty($to_create)) {
                     $this->assign_bulk($assignment, $to_create);
                 }
-
             });
         }
 

@@ -23,12 +23,12 @@
  */
 
 use core\collection;
-use core\entities\user;
-use mod_perform\entities\activity\participant_section as participant_section_entity;
-use mod_perform\entities\activity\participant_instance as participant_instance_entity;
+use core\entity\user;
+use mod_perform\entity\activity\participant_section as participant_section_entity;
+use mod_perform\entity\activity\participant_instance as participant_instance_entity;
 use mod_perform\models\activity\activity;
 use mod_perform\models\activity\activity_setting;
-use mod_perform\entities\activity\activity as activity_entity;
+use mod_perform\entity\activity\activity as activity_entity;
 use mod_perform\models\response\section_element_response;
 use mod_perform\models\response\participant_section;
 use mod_perform\state\invalid_state_switch_exception;
@@ -243,7 +243,7 @@ class mod_perform_participant_section_availability_testcase extends state_testca
                 return $this;
             }
 
-            public function validate_response(): bool {
+            public function validate_response($is_draft_validation = false): bool {
                 $this->validation_errors = new collection();
                 return true;
             }

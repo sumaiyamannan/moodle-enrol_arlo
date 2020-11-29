@@ -22,6 +22,9 @@ const hasOwnProperty = Object.prototype.hasOwnProperty;
 
 export default {
   install(Vue) {
+    // Remove unneccesary production mode note in console
+    Vue.config.productionTip = false;
+
     Object.defineProperties(Vue.prototype, {
       /**
        * Get a unique ID for the current component instance
@@ -96,6 +99,14 @@ export default {
         }
         let hasFocusWithin = false;
         const inHandler = () => {
+          let olds = document.getElementsByClassName(focusHandlerClass);
+
+          Array.prototype.forEach.call(olds, old => {
+            if (!el.contains(old)) {
+              focusHandlers.get(old).hasFocusWithin = false;
+              old.classList.remove(focusHandlerClass);
+            }
+          });
           el.classList.add(focusHandlerClass);
           focusHandlers.get(el).hasFocusWithin = true;
         };

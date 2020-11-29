@@ -25,8 +25,8 @@ namespace mod_perform\notification;
 
 use coding_exception;
 use core\orm\collection;
-use mod_perform\entities\activity\manual_relationship_selection_progress;
-use mod_perform\entities\activity\subject_instance as subject_instance_entity;
+use mod_perform\entity\activity\manual_relationship_selection_progress;
+use mod_perform\entity\activity\subject_instance as subject_instance_entity;
 use mod_perform\models\activity\activity as activity_model;
 use mod_perform\models\activity\notification as notification_model;
 use mod_perform\models\activity\notification_recipient as notification_recipient_model;
@@ -77,7 +77,7 @@ class dealer_participant_selection extends dealer {
             /** @var relationship[] $relationships */
             $relationships = [];
             foreach ($recipients as $recipient) {
-                $relationships[$recipient->relationship_id] = $recipient->relationship;
+                $relationships[$recipient->core_relationship_id] = $recipient->relationship;
             }
             foreach ($instance->manual_relationship_selection_progress as $progress) {
                 // Don't send out notification for users who already selected

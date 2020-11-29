@@ -33,7 +33,7 @@ use external_single_structure;
 use external_value;
 use totara_competency\assignment_create_exception;
 use totara_competency\baskets\competency_basket;
-use totara_competency\entities;
+use totara_competency\entity;
 use totara_competency\models;
 use totara_core\advanced_feature;
 use totara_core\basket\session_basket;
@@ -100,7 +100,7 @@ class assignment extends \external_api {
 
         $order_dir = (strtolower($order_dir) == 'asc') ? 'ASC' : 'DESC';
 
-        $repository = entities\assignment::repository()
+        $repository = entity\assignment::repository()
             ->select('*')
             ->with_names()
             ->set_filters($filters);
@@ -126,7 +126,7 @@ class assignment extends \external_api {
 
         $assignments = $repository->paginate($page);
 
-        return $assignments->transform(function (entities\assignment $assignment) {
+        return $assignments->transform(function (entity\assignment $assignment) {
             $assignment = models\assignment::load_by_entity($assignment);
             return self::prepare_assignment_response($assignment);
         })->to_array();
@@ -183,7 +183,7 @@ class assignment extends \external_api {
             $assignments = (new models\assignment_actions())->create_from_competencies(
                 $basket->load(),
                 $user_groups,
-                entities\assignment::TYPE_ADMIN,
+                entity\assignment::TYPE_ADMIN,
                 $status
             );
         } catch (assignment_create_exception $exception) {
@@ -271,7 +271,7 @@ class assignment extends \external_api {
             $assignments = (new models\assignment_actions())->create_from_competencies(
                 $competency_ids,
                 $resolved_ids,
-                entities\assignment::TYPE_ADMIN,
+                entity\assignment::TYPE_ADMIN,
                 $status
             );
         } catch (assignment_create_exception $exception) {
@@ -464,11 +464,7 @@ class assignment extends \external_api {
         ];
 
         $formatter = new string_field_formatter(format::FORMAT_HTML, context_system::instance());
-
-        // TODO Previously we showed the competency name only in certain conditions, this will likely be replaced by GrpahQL
         $response['competency_name'] = $formatter->format($assignment->get_competency()->display_name);
-
-        // TODO Previously we showed the user group name only in certain conditions, this will likely be replaced by GrpahQL
         $response['user_group_name'] = $formatter->format($assignment->get_user_group_name());
 
         return $response;

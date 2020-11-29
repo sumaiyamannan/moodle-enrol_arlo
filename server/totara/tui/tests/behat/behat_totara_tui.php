@@ -1,24 +1,31 @@
 <?php
-/*
- * This file is part of Totara LMS
+/**
+ * This file is part of Totara Core
  *
  * Copyright (C) 2020 onwards Totara Learning Solutions LTD
  *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 3 of the License, or
- * (at your option) any later version.
+ * MIT License
  *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
  *
  * @author Jaron Steenson <jaron.steenson@totaralearning.com>
- * @package totara_core
+ * @package totara_tui
  */
 require_once(__DIR__ . '/../../../../lib/behat/behat_base.php');
 
@@ -44,7 +51,7 @@ class behat_totara_tui extends behat_base {
     private const DATA_TABLE_ROW_LOCATOR = '.tui-dataTableRow';
     private const DATA_TABLE_CELL_LOCATOR = '.tui-dataTableCell';
     private const DATA_TABLE_CELL_CONTENT_LOCATOR = '.tui-dataTableCell__content';
-    private const DATA_TABLE_EXPAND_CLOSE_LOCATOR = '.tui-dataTableExpandableRow__close';
+    private const DATA_TABLE_EXPAND_CLOSE_LOCATOR = '.tui-dataTableRow--expanded .tui-dataTableExpandCell > button';
     private const DATA_TABLE_SELECT_ALL_CHECKBOX_LOCATOR = '.tui-dataTableSelectVisibleRowsCell label';
 
     private const MULTI_SELECT_FILTER_LOCATOR = '.tui-multiSelectFilter';
@@ -341,6 +348,7 @@ class behat_totara_tui extends behat_base {
     private function get_dropdown_menu_option(string $option_text): ?NodeElement {
         $menu = $this->find_visible_dropdown();
         $menu_options = $menu->findAll('css', '.tui-dropdownItem');
+        $menu_options = array_merge($menu_options, $menu->findAll('css', '.tui-dropdownButton'));
         foreach ($menu_options as $menu_option) {
             if (strtolower($menu_option->getText()) === strtolower($option_text)) {
                 return $menu_option;
@@ -465,16 +473,18 @@ class behat_totara_tui extends behat_base {
     }
 
     /**
-     * @Then /^I should see "([^"]*)" under the expanded row of the tui datatable$/
-     * @Then /^I should see "([^"]*)" under the expanded row of the tui datatable in the "([^"]*)" "([^"]*)"$/
-     * @Then /^I should see "([^"]*)" under the expanded row of the tui datatable in the "([^"]*)" "([^"]*)" in the "([^"]*)" tui collapsible$/
-     * @param $expected_text string The expected text in the cell identified by the column header and row
+     * @Then /^I (should|should not) see "([^"]*)" under the expanded row of the tui datatable$/
+     * @Then /^I (should|should not) see "([^"]*)" under the expanded row of the tui datatable in the "([^"]*)" "([^"]*)"$/
+     * @Then /^I (should|should not) see "([^"]*)" under the expanded row of the tui datatable in the "([^"]*)" "([^"]*)" in the "([^"]*)" tui collapsible$/
+     * @param string $not
+     * @param string $expected_text The expected text in the cell identified by the column header and row
      * @param string $table_locator '.my-table' etc
      * @param string|null $table_selector_type css, xpath etc
      * @param string|null $collapsible_label_text
      * @throws ExpectationException
      */
     public function i_should_see_under_the_expanded_row_of_datatable(
+        string $not,
         string $expected_text,
         string $table_locator = self::DATA_TABLE_DEFAULT_LOCATOR,
         string $table_selector_type = self::DATA_TABLE_DEFAULT_SELECTOR_TYPE,
@@ -495,38 +505,52 @@ class behat_totara_tui extends behat_base {
             throw new ExpectationException('Expandable row is not visible in the tui datatable', $this->getSession());
         }
 
+        $expected = $not === 'should';
         $row_text = $row->getText();
-        if (strpos($row_text, $expected_text) === false) {
-            throw new ExpectationException("\"{$expected_text}\" text was not found in the tui datatable", $this->getSession());
+        $actual = strpos($row_text, $expected_text) !== false;
+        if ($expected !== $actual) {
+            $msg_expected = $expected ? 'not ' : '';
+            throw new ExpectationException("\"{$expected_text}\" text was {$msg_expected}found in the tui datatable", $this->getSession());
         }
     }
 
     /**
-     * @Then /^I should not see "([^"]*)" under the expanded row of the tui datatable$/
-     * @Then /^I should not see "([^"]*)" under the expanded row of the tui datatable in the "([^"]*)" "([^"]*)"$/
-     * @param $expected_text string The expected text in the cell identified by the column header and row
+     * @Then /^I click on "([^"]*)" "([^"]*)" in the expanded row of the tui datatable$/
+     * @Then /^I click on "([^"]*)" "([^"]*)" in the expanded row of the tui datatable in the "([^"]*)" "([^"]*)"$/
+     * @Then /^I click on "([^"]*)" "([^"]*)" in the expanded row of the tui datatable in the "([^"]*)" "([^"]*)" in the "([^"]*)" tui collapsible$/
+     * @param string $element Element we look for
+     * @param string $selector_type The type of what we look for
      * @param string $table_locator '.my-table' etc
      * @param string|null $table_selector_type css, xpath etc
+     * @param string|null $collapsible_label_text
      * @throws ExpectationException
      */
-    public function i_should_not_see_under_the_expanded_row_of_datatable(
-        string $expected_text,
+    public function i_click_under_the_expanded_row_of_datatable(
+        string $element,
+        string $selector_type,
         string $table_locator = self::DATA_TABLE_DEFAULT_LOCATOR,
-        string $table_selector_type = self::DATA_TABLE_DEFAULT_SELECTOR_TYPE
+        string $table_selector_type = self::DATA_TABLE_DEFAULT_SELECTOR_TYPE,
+        string $collapsible_label_text = null
     ): void {
-        $table = $this->find_data_table($table_selector_type, $table_locator);
+        behat_hooks::set_step_readonly(false);
+
+        /** @var NodeElement $top */
+        $root = false;
+        if ($collapsible_label_text !== null) {
+            $root = $this->find_collapsible($collapsible_label_text);
+        }
+
+        $table = $this->find_data_table($table_selector_type, $table_locator, $root);
 
         $row = $table->find('css', '.tui-dataTableExpandableRow');
         if ($row === null || !$row->isVisible()) {
             throw new ExpectationException('Expandable row is not visible in the tui datatable', $this->getSession());
         }
 
-        $row_text = $row->getText();
-        if (strpos($row_text, $expected_text) !== false) {
-            throw new ExpectationException(
-                "\"{$expected_text}\" text was found in the tui datatable but shouldn't be there",
-                $this->getSession()
-            );
+        list($selector, $locator) = $this->transform_selector($selector_type, $element);
+        $node = $row->find($selector, $locator);
+        if ($node !== null) {
+            $node->click();
         }
     }
 
@@ -1051,6 +1075,10 @@ class behat_totara_tui extends behat_base {
         ];
 
         foreach ($selections as $key => $selection) {
+            if ($selection === '') {
+                continue;
+            }
+
             /** @var NodeElement $select_node */
             $select_node = $date_selector->find('css', ".tui-dateSelector__date-$key select");
             $select_node->selectOption($selection);
@@ -1676,7 +1704,7 @@ class behat_totara_tui extends behat_base {
         // We also check the element visibility when running JS tests. Using microsleep as this
         // is a repeated step and global performance is important.
         $this->spin(
-            function($context, $args) {
+            function ($context, $args) {
 
                 foreach ($args['nodes'] as $node) {
                     if ($node->isVisible()) {
@@ -1731,7 +1759,7 @@ class behat_totara_tui extends behat_base {
 
         // We need to ensure all the found nodes are hidden.
         $this->spin(
-            function($context, $args) {
+            function ($context, $args) {
 
                 foreach ($args['nodes'] as $node) {
                     if ($node->isVisible()) {
@@ -1852,12 +1880,17 @@ class behat_totara_tui extends behat_base {
                 }
                 return null;
             },
+            'card' => function () use ($label, $container) {
+                $locator = ".//div[contains(concat(' ', normalize-space(@class), ' '), ' tui-card ') and contains(., " . behat_context_helper::escape($label) . ")]";
+                return $this->find('xpath', $locator, false, $container);
+            },
 
             'text' => $find_default,
             'link' => $find_default,
             'link_or_button' => $find_default,
             'button' => $find_default,
             'checkbox' => $find_default,
+
         ];
 
         if (isset($finders[$tui_selector])) {

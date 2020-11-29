@@ -50,6 +50,7 @@
           <WorkspacePrimaryAction
             :workspace-id="workspace.id"
             :workspace-name="workspace.name"
+            :workspace-access="workspace.access"
             class="tui-workspacePage__primaryAction-action"
             @update-workspace="updateWorkspace"
             @request-to-join-workspace="reloadWorkspace"
@@ -80,6 +81,7 @@
                   :workspace-total-discussions="workspace.total_discussions"
                   :selected-sort="discussionSortOption"
                   :workspace-id="workspaceId"
+                  :workspace-context-id="workspace.context_id"
                   @add-discussion="addDiscussion"
                 />
 

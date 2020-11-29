@@ -22,11 +22,13 @@
       :profile-url="avatarImageUrl"
       :image-alt="avatarImageAlt"
       :image-src="avatarImageSrc"
+      class="tui-workspacePostDiscussionForm__avatar"
     />
 
     <WorkspaceDiscussionForm
       :submitting="submitting"
       :show-cancel-button="false"
+      :workspace-context-id="workspaceContextId"
       class="tui-workspacePostDiscussionForm__form"
       @submit="$emit('submit', $event)"
     />
@@ -59,6 +61,15 @@ export default {
       required: true,
     },
 
+    /**
+     * Requiring a workspace's context id when we are creating a new discussion
+     * within a workspace.
+     */
+    workspaceContextId: {
+      type: [Number, String],
+      required: true,
+    },
+
     submitting: Boolean,
   },
 };
@@ -67,6 +78,11 @@ export default {
 <style lang="scss">
 .tui-workspacePostDiscussionForm {
   display: flex;
+  &__avatar {
+    @media (max-width: $tui-screen-sm) {
+      display: none;
+    }
+  }
   &__form {
     flex-grow: 1;
     width: 100%;

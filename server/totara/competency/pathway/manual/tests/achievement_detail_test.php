@@ -28,12 +28,15 @@ use pathway_manual\models\roles\self_role;
 use pathway_manual\userdata\manual_rating_other;
 use totara_competency\aggregation_task;
 use totara_competency\aggregation_users_table;
-use totara_competency\entities\pathway_achievement;
+use totara_competency\entity\pathway_achievement;
 use totara_job\job_assignment;
 use totara_userdata\userdata\target_user;
 
 require_once(__DIR__ . '/pathway_manual_base_testcase.php');
 
+/**
+ * @group totara_competency
+ */
 class pathway_manual_achievement_detail_testcase extends pathway_manual_base_testcase {
 
     private $manual;

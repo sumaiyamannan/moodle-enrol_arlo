@@ -22,8 +22,8 @@
  * @category test
  */
 
-use totara_competency\entities\assignment;
-use totara_competency\entities\competency_assignment_user;
+use totara_competency\entity\assignment;
+use totara_competency\entity\competency_assignment_user;
 use totara_competency\expand_task;
 use totara_competency\models\assignment as assignment_model;
 use totara_competency\user_groups;
@@ -31,6 +31,9 @@ use totara_job\job_assignment;
 
 defined('MOODLE_INTERNAL') || die();
 
+/**
+ * @group totara_competency
+ */
 class totara_competency_expand_task_testcase extends advanced_testcase {
 
     /**

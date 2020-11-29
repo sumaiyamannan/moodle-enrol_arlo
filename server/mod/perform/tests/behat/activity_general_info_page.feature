@@ -15,9 +15,10 @@ Feature: Create and update activity general info fields
     And I navigate to the manage perform activities page
     And I click on "Add activity" "button"
     And I set the following fields to these values:
-      | Title | My Test Activity #3             |
-      | Description    | My Test Activity #3 description |
-      | Type  | Feedback                        |
+      | Title       | My Test Activity #3             |
+      | Description | My Test Activity #3 description |
+    # Set the 'Type' field to 'Feedback'
+    And I set the field with css ".tui-modalContent .tui-formRow:last-child select" to "Feedback"
 
     When I click on "Create" "button"
     Then the "Content" tui tab should be active
@@ -29,6 +30,7 @@ Feature: Create and update activity general info fields
     And I should see "Feedback" in the ".tui-select" "css_element"
 
     When I navigate to the manage perform activities page
+    And I set the field "Sort by" to "Name"
     Then I should see the tui datatable contains:
       | Name                | Type     | Status |
       | My Test Activity #1 | Check-in | Active |
@@ -55,14 +57,15 @@ Feature: Create and update activity general info fields
     Then the following fields match these values:
       | Activity title | My Test Activity #2             |
       | Description    | My Test Activity #2 description |
-      | Activity type  | Check-in                        |
+      | Type           | Check-in                        |
 
     When I set the following fields to these values:
       | Activity title | My Test Activity #2             |
       | Description    | My Test Activity #2 description |
-      | Activity type  | Feedback                        |
+      | Type           | Feedback                        |
     And I click on "Save changes" "button"
     And I navigate to the manage perform activities page
+    And I set the field "Sort by" to "Name"
     Then I should see the tui datatable contains:
       | Name                | Type     | Status |
       | My Test Activity #1 | Check-in | Active |
@@ -120,9 +123,10 @@ Feature: Create and update activity general info fields
     And I navigate to the manage perform activities page
     And I click on "Add activity" "button"
     And I set the following fields to these values:
-      | Title | My Test Activity #3             |
-      | Description    | My Test Activity #3 description |
-      | Type  | Feedback                        |
+      | Title       | My Test Activity #3             |
+      | Description | My Test Activity #3 description |
+    # Set the 'Type' field to 'Feedback'
+    And I set the field with css ".tui-modalContent .tui-formRow:last-child select" to "Feedback"
 
     When I click on "Create" "button"
     Then the "Content" tui tab should be active
@@ -131,9 +135,9 @@ Feature: Create and update activity general info fields
     And I set the following fields to these values:
       | Activity title | My Test Activity |
       | Description    | My Test Activity |
-      | Activity type  | Check-in         |
+      | Type           | Check-in         |
     And I click on "Cancel" "button"
     Then the following fields match these values:
       | Activity title | My Test Activity #3             |
       | Description    | My Test Activity #3 description |
-      | Activity type  | Feedback                        |
+      | Type           | Feedback                        |

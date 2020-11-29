@@ -28,20 +28,19 @@ use mod_perform\models\activity\element as element_model;
 use performelement_static_content\local\helper;
 
 class static_content extends element_plugin {
-    /**
-     * This method return element's user form vue component name
-     * @return string
-     */
-    public function get_participant_form_component(): string {
-        return $this->get_component_path('Participant');
-    }
 
     /**
      * This method return element's user form vue component name
      * @return string
+     * @deprecated since Totara 13.2
      */
     public function get_participant_response_component(): string {
-        return $this->get_component_path('Participant');
+        debugging(
+            '\performelement_static_content\static_content::get_participant_response_component() is deprecated and should no longer be used.'
+            . 'Only classes expending \mod_perform\models\activity\respondable_element_plugin should implement this method',
+            DEBUG_DEVELOPER
+        );
+        return $this->get_component_path('ElementParticipant');
     }
 
     /**
@@ -119,4 +118,26 @@ class static_content extends element_plugin {
         // Follow same process as post_create.
         $this->post_create($element);
     }
+
+    /**
+     * @inheritDoc
+     */
+    public function has_title(): bool {
+        return true;
+    }
+
+    /**
+     * @return string
+     */
+    public function get_title_text():string {
+        return get_string('title', 'performelement_static_content');
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function is_title_required(): bool {
+        return false;
+    }
+
 }

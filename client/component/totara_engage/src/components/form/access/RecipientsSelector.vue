@@ -97,7 +97,6 @@ import engageAdvancedFeatures from 'totara_engage/graphql/advanced_features';
 
 // Mixin
 import ContainerMixin from 'totara_engage/mixins/container_mixin';
-import RecipientMixin from 'totara_engage/mixins/recipient_mixin';
 
 export default {
   components: {
@@ -156,20 +155,11 @@ export default {
       result({ data: { recipients } }) {
         let tmp_recipients = [];
 
-        // If containerRecipient then we need to remove it from the options.
-        if (this.containerRecipient) {
-          tmp_recipients = recipients.filter(recipient => {
-            return !RecipientMixin.compareRecipients(
-              recipient,
-              this.containerRecipient
-            );
-          });
-        } else {
-          tmp_recipients = recipients;
-        }
+        // As preventing a tag from being manually removed isn't currently possible
+        // we do not filter the this.containerRecipient item out.
 
         // ID is not enough to uniquely identify a specific recipient.
-        tmp_recipients = tmp_recipients.map(recipient => {
+        tmp_recipients = recipients.map(recipient => {
           return Object.assign({}, recipient, {
             id:
               recipient.component +
@@ -182,12 +172,12 @@ export default {
 
         // Filter the null value users
         tmp_recipients = tmp_recipients.filter(recipient => {
-          if (recipient.area === 'USER') {
+          if (recipient.area === 'user') {
             return recipient.user.card_display.display_fields.some(
               field => field.value != null
             );
           }
-          // Returen all workspaces as true
+          // Return all workspaces as true
           return true;
         });
 
@@ -213,7 +203,7 @@ export default {
 
     items() {
       return this.recipients.filter(
-        recipient => !this.tags.some(tag => recipient.instanceid === tag.id)
+        recipient => !this.tags.some(tag => recipient.id === tag.id)
       );
     },
 
@@ -349,8 +339,8 @@ export default {
           return recipient.summary;
       }
 
-      // User specific. equal to recipient.area === 'USER' && type === 'fullname'
-      if (recipient.area === 'USER') {
+      // User specific. equal to recipient.area === 'user' && type === 'fullname'
+      if (recipient.area === 'user') {
         const displayField =
           recipient.user.card_display.display_fields.find(
             field => field.label === 'Full name'
@@ -370,13 +360,17 @@ export default {
     },
 
     /**
-     *
      * @param {Object} recipient
      */
     createTag(recipient) {
       return {
         text: this.getRecipientDetails(recipient, 'fullname'),
-        id: recipient.instanceid,
+        id:
+          recipient.component +
+          '/' +
+          recipient.area +
+          '/' +
+          recipient.instanceid,
         instanceid: recipient.instanceid,
         area: recipient.area,
         component: recipient.component,
@@ -444,11 +438,14 @@ export default {
   &__profileContainer {
     position: relative;
     &-badge {
-      position: absolute;
-      right: 0;
-      bottom: 0;
+      display: flex;
+      align-items: flex-end;
+      justify-content: flex-end;
+
       > :last-child {
         @include tui-font-body-small();
+
+        padding-left: var(--gap-1);
       }
     }
   }

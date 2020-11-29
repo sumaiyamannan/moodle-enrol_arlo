@@ -24,17 +24,17 @@
 namespace totara_competency\models;
 
 use coding_exception;
-use core\entities\cohort;
-use core\entities\user;
+use core\entity\cohort;
+use core\entity\user;
 use core\orm\collection;
 use core\orm\entity\entity;
 use core\orm\entity\filter\hierarchy_item_visible;
-use hierarchy_organisation\entities\organisation;
-use hierarchy_position\entities\position;
+use hierarchy_organisation\entity\organisation;
+use hierarchy_position\entity\position;
 use totara_competency\assignment_create_exception;
-use totara_competency\entities\assignment as assignment_entity;
-use totara_competency\entities\competency;
-use totara_competency\entities\competency_assignment_user;
+use totara_competency\entity\assignment as assignment_entity;
+use totara_competency\entity\competency;
+use totara_competency\entity\competency_assignment_user;
 use totara_competency\event\assignment_activated;
 use totara_competency\event\assignment_archived;
 use totara_competency\event\assignment_created;
@@ -44,7 +44,7 @@ use totara_competency\helpers\capability_helper;
 use totara_competency\models\profile\proficiency_value;
 use totara_competency\task\expand_assignment_task;
 use totara_competency\user_groups;
-use totara_hierarchy\entities\hierarchy_item;
+use totara_hierarchy\entity\hierarchy_item;
 
 class assignment {
 
@@ -57,6 +57,13 @@ class assignment {
      * @var competency
      */
     private $competency;
+
+    /**
+     * User group entity.
+     *
+     * @var entity
+     */
+    private $user_group_entity;
 
     private function __construct(assignment_entity $entity) {
         $this->entity = $entity;
@@ -244,7 +251,6 @@ class assignment {
         $repo = $repo = $class::repository()
             ->where('id', $user_group_id);
 
-        // TODO: Cover the following condition with tests
         if ($class == user::class) {
             $repo->filter_by_not_deleted();
         } else if (is_subclass_of($class, hierarchy_item::class)) {
@@ -370,8 +376,6 @@ class assignment {
     /**
      * Returns the associated competency entity
      *
-     * TODO return model instead of entity?
-     *
      * @return competency
      */
     public function get_competency(): competency {
@@ -436,7 +440,25 @@ class assignment {
      * @return user_group
      */
     public function get_user_group(): user_group {
-        return user_group_factory::create($this->entity);
+        return user_group_factory::create($this);
+    }
+
+    /**
+     * Set user group entity
+     *
+     * @param entity $user_group
+     */
+    public function set_user_group_entity(entity $user_group): void {
+        $this->user_group_entity = $user_group;
+    }
+
+    /**
+     * Return user group entity (An abstract of user groups entities, i.e. position, cohort, user, organization)
+     *
+     * @return entity|null
+     */
+    public function get_user_group_entity(): ?entity {
+        return $this->user_group_entity;
     }
 
     /**
@@ -617,7 +639,6 @@ class assignment {
 
     /**
      * Convert model to array, this currently converts only an entity to array
-     * TODO consider wrapping it into whatever that might want to convert it to array differently.
      *
      * @return array
      */
@@ -652,7 +673,7 @@ class assignment {
         }
 
         if (!class_exists($class_name)) {
-            throw new \coding_exception('Invalid entity found!');
+            throw new coding_exception('Invalid entity found!');
         }
 
         return $class_name;

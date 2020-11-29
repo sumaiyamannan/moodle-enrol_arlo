@@ -32,6 +32,8 @@ defined('MOODLE_INTERNAL') || die();
  */
 class state_helper {
 
+    private static $get_all_cache = [];
+
     /**
      * Get all state classes for the given object type.
      *
@@ -39,11 +41,17 @@ class state_helper {
      * @return state[]
      */
     public static function get_all(string $object_type): array {
-        return \core_component::get_namespace_classes(
+        if (isset(static::$get_all_cache[$object_type])) {
+            return static::$get_all_cache[$object_type];
+        }
+
+        static::$get_all_cache[$object_type] = \core_component::get_namespace_classes(
             'state\\' . $object_type,
             'mod_perform\state\state',
             'mod_perform'
         );
+
+        return static::$get_all_cache[$object_type];
     }
 
     /**
@@ -84,4 +92,26 @@ class state_helper {
         }
         throw new coding_exception("Cannot find state with code: $code");
     }
+
+    /**
+     * Get state class from the name.
+     *
+     * @param string $name The name to create a state of.
+     * @param string $object_type
+     * @param string $state_type The status type. e.g progress, availability.
+     * @return string|state
+     */
+    public static function from_name(string $name, string $object_type, string $state_type): string {
+        $all_states = static::get_all($object_type);
+        foreach ($all_states as $state_class) {
+            if ($state_class::get_type() !== $state_type) {
+                continue;
+            }
+            if ($state_class::get_name() === $name) {
+                return $state_class;
+            }
+        }
+        throw new coding_exception("Cannot find state with name: $name");
+    }
+
 }

@@ -21,18 +21,20 @@
  * @package pathway_manual
  */
 
-
 use pathway_manual\manual;
 use pathway_manual\manual_evaluator_user_source;
 use pathway_manual\models\roles\appraiser;
 use pathway_manual\models\roles\manager;
 use pathway_manual\models\roles\self_role;
 use totara_competency\aggregation_users_table;
-use totara_competency\entities\competency;
-use totara_competency\entities\pathway_achievement;
-use totara_competency\entities\scale_value;
+use totara_competency\entity\competency;
+use totara_competency\entity\pathway_achievement;
+use totara_competency\entity\scale_value;
 use totara_job\job_assignment;
 
+/**
+ * @group totara_competency
+ */
 class pathway_manual_evaluator_testcase extends advanced_testcase {
 
     private function setup_data() {
@@ -229,7 +231,7 @@ class pathway_manual_evaluator_testcase extends advanced_testcase {
      */
     private function create_rating_records(int $competency_id, array $ratings) {
         foreach ($ratings as $to_create) {
-            $rating = new \pathway_manual\entities\rating();
+            $rating = new \pathway_manual\entity\rating();
             $rating->competency_id = $competency_id;
             $rating->user_id = $to_create['subject'];
             $rating->scale_value_id = $to_create['scalevalue'];

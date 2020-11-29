@@ -26,17 +26,19 @@ use core\orm\query\table;
 use criteria_linkedcourses\linkedcourses;
 use totara_competency\linked_courses;
 use totara_criteria\criterion;
-use totara_competency\entities\competency as competency_entity;
-use totara_criteria\entities\criterion as criterion_entity;
-use totara_criteria\entities\criteria_item as item_entity;
-use totara_criteria\entities\criteria_item_record as item_record_entity;
-use totara_criteria\entities\criteria_metadata as metadata_entity;
+use totara_competency\entity\competency as competency_entity;
+use totara_criteria\entity\criterion as criterion_entity;
+use totara_criteria\entity\criteria_item as item_entity;
+use totara_criteria\entity\criteria_item_record as item_record_entity;
+use totara_criteria\entity\criteria_metadata as metadata_entity;
 
 /**
  * Class criteria_linkedcourses_observer_testcase tests the observers
  * The tests are very similar to the ones defined in items_processor_test.php, but here we don't sink the events.
  * We basically test that by relying on the observers we get the same results as we got when calling the item_processor
  * manually
+ *
+ * @group totara_competency
  */
 class criteria_linkedcourses_linked_courses_observer_testcase extends advanced_testcase {
 

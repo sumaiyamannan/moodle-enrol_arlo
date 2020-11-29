@@ -24,8 +24,12 @@ namespace container_workspace\webapi\resolver\mutation;
 
 use container_workspace\discussion\discussion;
 use container_workspace\discussion\discussion_helper;
+use container_workspace\exception\discussion_exception;
+use container_workspace\webapi\middleware\workspace_availability_check;
 use container_workspace\workspace;
+use core\json_editor\helper\document_helper;
 use core\webapi\execution_context;
+use core\webapi\middleware\clean_content_format;
 use core\webapi\middleware\require_advanced_feature;
 use core\webapi\middleware\require_login;
 use core\webapi\mutation_resolver;
@@ -50,10 +54,6 @@ final class create_discussion implements mutation_resolver, has_middleware {
         /** @var workspace $workspace */
         $workspace = factory::from_id($args['workspace_id']);
 
-        if (!$workspace->is_typeof(workspace::get_type())) {
-            throw new \coding_exception("Invalid container type");
-        }
-
         if (!$ec->has_relevant_context()) {
             $context = $workspace->get_context();
             $ec->set_relevant_context($context);
@@ -70,17 +70,22 @@ final class create_discussion implements mutation_resolver, has_middleware {
             $draft_id = (int) $args['draft_id'];
         }
 
-        $discussion = discussion_helper::create_discussion(
+        $content = $args['content'];
+
+        if (
+            (FORMAT_JSON_EDITOR == $content_format && document_helper::is_document_empty($content)) ||
+            empty($content)
+        ) {
+            throw discussion_exception::on_create("Discussion content is empty");
+        }
+
+        return discussion_helper::create_discussion(
             $workspace,
             $args['content'],
             $draft_id,
             $content_format,
             $USER->id
         );
-
-        // We need to update
-
-        return $discussion;
     }
 
     /**
@@ -90,7 +95,11 @@ final class create_discussion implements mutation_resolver, has_middleware {
         return [
             new require_login(),
             new require_advanced_feature('container_workspace'),
-            new clean_editor_content('content', 'content_format')
+            new clean_editor_content('content', 'content_format'),
+            new workspace_availability_check('workspace_id'),
+
+            // For now, we are only supporting FORMAT_JSON_EDITOR via graphql mutation.
+            new clean_content_format('content_format', FORMAT_JSON_EDITOR, [FORMAT_JSON_EDITOR])
         ];
     }
 }

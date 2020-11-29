@@ -24,8 +24,8 @@
 
 use core\webapi\execution_context;
 use pathway_manual\models\roles\manager;
-use totara_competency\entities\assignment;
-use totara_competency\entities\pathway;
+use totara_competency\entity\assignment;
+use totara_competency\entity\pathway;
 use totara_competency\expand_task;
 use totara_competency\webapi\resolver\query\achievement_paths;
 use totara_criteria\criterion;
@@ -35,6 +35,8 @@ defined('MOODLE_INTERNAL') || die();
 
 /**
  * Tests the query to fetch all available achievement paths (grouped by pathway types and in specific order)
+ *
+ * @group totara_competency
  */
 class totara_competency_webapi_resolver_query_achievement_paths_testcase extends advanced_testcase {
 

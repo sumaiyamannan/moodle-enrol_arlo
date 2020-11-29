@@ -40,7 +40,7 @@ final class update_theme_settings implements mutation_resolver, has_middleware {
      * @inheritDoc
      */
     public static function resolve(array $args, execution_context $ec) {
-        global $USER, $CFG;
+        global $CFG;
 
         // Get parameters.
         $theme = $args['theme'];
@@ -59,10 +59,10 @@ final class update_theme_settings implements mutation_resolver, has_middleware {
         $theme_settings = new theme_settings($theme_config, $tenant_id);
         $theme_settings->validate_categories($categories);
         $theme_settings->update_categories($categories);
-        $theme_settings->update_files($files, $USER->id);
+        $theme_settings->update_files($files);
 
-        // Bump the revision so that styles gets new values.
-        set_config('themerev', ++$CFG->themerev);
+        // Clear theme caches so that updated styles are served to the client.
+        theme_reset_all_caches();
 
         // Return updated settings.
         return helper::output_theme_settings($theme_settings);

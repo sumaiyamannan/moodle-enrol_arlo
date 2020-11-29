@@ -27,17 +27,19 @@ $string['answer_output'] = '{$a->label} (score: {$a->count})';
 $string['answer_score'] = 'Score {$a->index}';
 $string['answer_text'] = 'Text {$a->index}';
 $string['custom_rating_options'] = 'Custom rating options';
-$string['name'] = 'Custom rating scale';
-$string['no_response_submitted'] = 'No response submitted';
+$string['name'] = 'Rating scale: Custom';
 $string['pluginname'] = 'Custom rating scale element';
-$string['question_title'] = 'Question';
-$string['required'] = 'Required';
 $string['score'] = 'Score';
 $string['text'] = 'Text';
 
 // Help messages
-$string['custom_values_help'] = 'Enter the custom text label and the corresponding score rating. The score rating values are unlimited and can be entered in any order. Both the text and the score rating will be displayed to the participant';
+$string['custom_values_help'] = 'Enter a custom text label and a corresponding numeric score that combined represent a selectable value on the rating scale. The scores must be whole numbers, but do not have to be unique or in numeric order.';
 
 // Errors
 $string['error:answer_required'] = 'Answer is required';
 $string['error:question_required'] = 'Question is required';
+
+// Deprecated in 13
+$string['question_title'] = 'Question';
+$string['required'] = 'Required';
+$string['no_response_submitted'] = 'No response submitted';

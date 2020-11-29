@@ -26,16 +26,19 @@ namespace mod_perform\data_providers\activity;
 use core\collection;
 use core\orm\entity\repository;
 use core\orm\query\builder;
+use core\pagination\cursor;
+use core\pagination\cursor_paginator;
+use mod_perform\data_providers\cursor_paginator_trait;
 use mod_perform\data_providers\provider;
-use mod_perform\entities\activity\activity as activity_entity;
-use mod_perform\entities\activity\filters\subject_instance_id;
-use mod_perform\entities\activity\filters\subject_instances_about;
-use mod_perform\entities\activity\participant_instance;
-use mod_perform\entities\activity\subject_instance;
-use mod_perform\entities\activity\subject_instance as subject_instance_entity;
-use mod_perform\entities\activity\subject_instance_repository;
-use mod_perform\entities\activity\track as track_entity;
-use mod_perform\entities\activity\track_user_assignment as track_user_assignment_entity;
+use mod_perform\entity\activity\activity as activity_entity;
+use mod_perform\entity\activity\filters\subject_instance_id;
+use mod_perform\entity\activity\filters\subject_instances_about;
+use mod_perform\entity\activity\participant_instance;
+use mod_perform\entity\activity\subject_instance;
+use mod_perform\entity\activity\subject_instance as subject_instance_entity;
+use mod_perform\entity\activity\subject_instance_repository;
+use mod_perform\entity\activity\track as track_entity;
+use mod_perform\entity\activity\track_user_assignment as track_user_assignment_entity;
 use mod_perform\models\activity\subject_instance as subject_instance_model;
 use mod_perform\models\response\subject_sections;
 use mod_perform\state\subject_instance\active;
@@ -48,6 +51,7 @@ use mod_perform\state\subject_instance\active;
  * @method collection|subject_instance_model[] get
  */
 class subject_instance_for_participant extends provider {
+    use cursor_paginator_trait;
 
     /**
      * @var int
@@ -108,13 +112,36 @@ class subject_instance_for_participant extends provider {
         return subject_instance_entity::repository()
             ->as('si')
             ->with('subject_user')
-            ->with('track.activity.settings')
+            ->with([
+                'track.activity' => function (repository $repository) {
+                    $repository
+                        ->with('settings')
+                        ->with('type');
+                }
+            ])
+            ->with('job_assignment')
             ->with([
                 'participant_instances' => function (repository $repository) {
-                    $repository->with('participant_sections.section')
-                        ->with('core_relationship.resolvers')
+                    $repository
+                        ->with([
+                            'participant_sections' => function (repository $repository) {
+                                $repository
+                                    ->with('section.section_relationships.core_relationship')
+                                    ->with([
+                                        'participant_instance' => function (repository $repository) {
+                                            $repository
+                                                ->with('core_relationship')
+                                                ->with('participant_user')
+                                                ->with('external_participant')
+                                                ->with('subject_instance.track.activity');
+                                        }
+                                    ]);
+                            }
+                        ])
+                        ->with('core_relationship')
                         ->with('subject_instance.track.activity')
-                        ->with('participant_user');
+                        ->with('participant_user')
+                        ->with('external_participant');
                 }
             ])
             ->join([track_user_assignment_entity::TABLE, 'tua'], 'track_user_assignment_id', 'id')
@@ -126,10 +153,11 @@ class subject_instance_for_participant extends provider {
             ->where_raw($totara_visibility_sql, $totara_visibility_params)
             ->where_exists($this->get_target_participant_exists())
             ->where('status', active::get_code())
+            // Cursors don't work when aliases are included in the order by
             // Newest subject instances at the top of the list
-            ->order_by('si.created_at', 'desc')
+            ->order_by('created_at', 'desc')
             // Order by id as well is so that tests wont fail if two rows are inserted within the same second
-            ->order_by('si.id', 'desc');
+            ->order_by('id', 'desc');
     }
 
     /**
@@ -159,6 +187,27 @@ class subject_instance_for_participant extends provider {
     public function get_subject_sections(): collection {
         $subject_instances = $this->get();
         return subject_sections::create_from_subject_instances($subject_instances);
+    }
+
+    /**
+     * Returns next page of sections and their participants related to the current set of
+     * subject instances.
+     *
+     * @param string $cursor
+     * @param int $page_size
+     * @return \stdClass
+     */
+    public function get_subject_sections_page(string $cursor = '', int $page_size = cursor_paginator::DEFAULT_ITEMS_PER_PAGE): \stdClass {
+        $cursor = !empty($cursor) ? cursor::decode($cursor) : cursor::create()->set_limit($page_size);
+        $paginator = $this->get_next($cursor, true);
+        $items = $paginator->get_items()->map_to(subject_instance_model::class);
+
+        $next_cursor = $paginator->get_next_cursor();
+        return (object)[
+            'items' => subject_sections::create_from_subject_instances($items),
+            'total' => $paginator->get_total(),
+            'next_cursor' => $next_cursor === null ? '' : $next_cursor->encode(),
+        ];
     }
 
     /**

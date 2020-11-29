@@ -24,10 +24,10 @@
 use pathway_learning_plan\learning_plan;
 use pathway_manual\manual;
 use pathway_manual\models\roles\manager;
-use totara_competency\entities\competency_achievement;
-use totara_competency\entities\configuration_change;
-use totara_competency\entities\pathway as pathway_entity;
-use totara_competency\entities\pathway_achievement as pathway_achievement_entity;
+use totara_competency\entity\competency_achievement;
+use totara_competency\entity\configuration_change;
+use totara_competency\entity\pathway as pathway_entity;
+use totara_competency\entity\pathway_achievement as pathway_achievement_entity;
 use totara_competency\expand_task;
 use totara_competency\linked_courses;
 use totara_competency\pathway;
@@ -39,6 +39,8 @@ require_once($CFG->dirroot . '/totara/competency/tests/integration_aggregation.p
 /**
  * This class contains the simple integration test cases
  * Integration test file is split because of the sheer size of the file if all integration tests were to be placed in the same file
+ *
+ * @group totara_competency
  */
 class totara_competency_integration_aggregation_simple_testcase extends totara_competency_integration_aggregation {
 

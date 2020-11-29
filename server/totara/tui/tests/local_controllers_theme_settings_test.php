@@ -31,14 +31,17 @@
 use totara_tui\controllers\theme_settings;
 
 defined('MOODLE_INTERNAL') || die();
+global $CFG;
+require_once($CFG->libdir . '/adminlib.php');
 
 class totara_tui_local_controllers_theme_settings_testcase extends advanced_testcase {
 
     public function test_happy_path() {
         $this->setAdminUser();
+        admin_get_root(true); // Fix random errors depending on test order.
 
         $controller = new theme_settings();
-        $_POST['theme'] = 'ventura';
+        $_POST['theme_name'] = 'ventura';
 
         ob_start();
         $controller->process();
@@ -51,11 +54,12 @@ class totara_tui_local_controllers_theme_settings_testcase extends advanced_test
 
     public function test_happy_path_with_tenant() {
         $this->setAdminUser();
+        admin_get_root(true); // Fix random errors depending on test order.
 
         set_config('tenantsenabled', true);
 
         $controller = new theme_settings();
-        $_POST['theme'] = 'ventura';
+        $_POST['theme_name'] = 'ventura';
         $_POST['tenant_id'] = $this->getDataGenerator()->get_plugin_generator('totara_tenant')->create_tenant()->id;
 
         ob_start();
@@ -70,7 +74,7 @@ class totara_tui_local_controllers_theme_settings_testcase extends advanced_test
     public function test_theme_is_required_arg() {
         $this->setAdminUser();
         self::expectException(moodle_exception::class);
-        self::expectExceptionMessage('A required parameter (theme) was missing');
+        self::expectExceptionMessage('A required parameter (theme_name) was missing');
         (new theme_settings())->process();
     }
 
@@ -92,7 +96,7 @@ class totara_tui_local_controllers_theme_settings_testcase extends advanced_test
         self::assertTrue(has_capability('totara/core:appearance', \context_system::instance(), $user2));
         self::assertTrue(has_capability('totara/tui:themesettings', \context_system::instance(), $user2));
 
-        $_POST['theme'] = 'ventura';
+        $_POST['theme_name'] = 'ventura';
         $this->setUser($user1);
 
         try {
@@ -131,7 +135,7 @@ class totara_tui_local_controllers_theme_settings_testcase extends advanced_test
 
         self::assertTrue(has_capability('totara/tui:themesettings', \context_system::instance(), $user1));
 
-        $_POST['theme'] = 'ventura';
+        $_POST['theme_name'] = 'ventura';
         $this->setUser($user1);
 
         $_POST['tenant_id'] = $tenant1->id;
@@ -147,7 +151,7 @@ class totara_tui_local_controllers_theme_settings_testcase extends advanced_test
             self::fail('Exception expected. User who is a member of tenant1 accessed theme settings for tenant2');
         } catch (moodle_exception $ex) {
             self::assertStringContainsString(
-                'Access denied',
+                'Unsupported redirect detected, script execution terminated',
                 $ex->getMessage()
             );
         }
@@ -157,7 +161,7 @@ class totara_tui_local_controllers_theme_settings_testcase extends advanced_test
         $this->setAdminUser();
 
         $controller = new theme_settings();
-        $_POST['theme'] = 'ventura';
+        $_POST['theme_name'] = 'ventura';
         $_POST['tenant_id'] = 7;
 
         try {

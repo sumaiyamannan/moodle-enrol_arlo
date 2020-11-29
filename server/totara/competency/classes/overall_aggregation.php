@@ -24,8 +24,8 @@
 namespace totara_competency;
 
 use core\orm\collection;
-use totara_competency\entities\pathway_achievement;
-use totara_competency\entities\scale_value;
+use totara_competency\entity\pathway_achievement;
+use totara_competency\entity\scale_value;
 
 abstract class overall_aggregation {
 
@@ -84,7 +84,6 @@ abstract class overall_aggregation {
             $this->do_aggregation($user_id);
         }
 
-        // TODO: can possibly make use of a separate class, but seems like an overkill at this point
         return empty($this->user_achievement[$user_id])
             ? ['scale_value' => null, 'achieved_via' => []]
             : $this->user_achievement[$user_id];

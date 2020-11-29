@@ -21,13 +21,13 @@
  * @package pathway_manual
  */
 
-use core\entities\user;
+use core\entity\user;
 use core\orm\query\builder;
 use pathway_manual\data_providers\user_rateable_competencies;
 use pathway_manual\models\rateable_competency;
 use pathway_manual\models\roles\self_role;
-use totara_competency\entities\assignment;
-use totara_competency\entities\competency_type;
+use totara_competency\entity\assignment;
+use totara_competency\entity\competency_type;
 use totara_competency\expand_task;
 use totara_competency\models\assignment_reason;
 use totara_competency\user_groups;
@@ -35,6 +35,9 @@ use totara_job\job_assignment;
 
 require_once(__DIR__ . '/pathway_manual_base_testcase.php');
 
+/**
+ * @group totara_competency
+ */
 class pathway_manual_data_provider_filters_testcase extends pathway_manual_base_testcase {
 
     /**

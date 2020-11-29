@@ -28,6 +28,7 @@
       :grid-direction="gridDirection"
       :show-footnotes="includeFootnotes"
       :is-load-more-visible="isLoadMoreVisible"
+      :from-library="true"
       @scrolled-to-bottom="scrolledToBottom"
       @load-more="loadMore"
     >
@@ -120,7 +121,7 @@ export default {
           include_footnotes: true,
           footnotes_type: 'shared',
           footnotes_item_id: this.workspaceId,
-          footnotes_area: 'LIBRARY',
+          footnotes_area: 'library',
           footnotes_component: 'container_workspace',
           source: UrlSourceType.workspace(this.workspaceId),
         });

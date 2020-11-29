@@ -25,10 +25,10 @@ use core\orm\collection;
 use core\orm\query\builder;
 use core\webapi\query_resolver;
 use criteria_childcompetency\webapi\resolver\query\achievements;
-use totara_competency\entities\assignment;
-use totara_competency\entities\assignment_availability;
-use totara_competency\entities\competency;
-use totara_competency\entities\competency_assignment_user_log;
+use totara_competency\entity\assignment;
+use totara_competency\entity\assignment_availability;
+use totara_competency\entity\competency;
+use totara_competency\entity\competency_assignment_user_log;
 use totara_competency\expand_task;
 use totara_competency\user_groups;
 use totara_criteria\criterion;
@@ -38,6 +38,8 @@ require_once $CFG->dirroot . '/totara/criteria/tests/competency_achievements_tes
 
 /**
  * Tests the query to fetch data for child competency achievements
+ *
+ * @group totara_competency
  */
 class criteria_childcompetency_webapi_query_achievements_testcase extends totara_criteria_competency_achievements_testcase {
     /**

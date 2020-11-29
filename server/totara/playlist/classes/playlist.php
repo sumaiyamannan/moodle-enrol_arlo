@@ -44,6 +44,7 @@ use totara_playlist\event\playlist_updated;
 use totara_playlist\exception\playlist_exception;
 use totara_playlist\local\helper;
 use totara_playlist\local\image_processor;
+use totara_playlist\local\image_processor\contract as image_processor_contract;
 use totara_playlist\repository\playlist_resource_repository;
 use totara_engage\resource\resource_item;
 use totara_topic\provider\topic_provider;
@@ -92,6 +93,13 @@ final class playlist implements accessible, shareable {
     private $user;
 
     /**
+     * The processor used to generate playlist images
+     *
+     * @var image_processor
+     */
+    private $image_processor;
+
+    /**
      * playlist constructor.
      * @param playlist_entity $entity
      */
@@ -99,6 +107,7 @@ final class playlist implements accessible, shareable {
         $this->playlist = $entity;
         $this->resources = [];
         $this->user = null;
+        $this->image_processor = image_processor::make();
     }
 
     /**
@@ -172,7 +181,9 @@ final class playlist implements accessible, shareable {
         } else if (!access::is_valid($access)) {
             debugging("Access value is invalid with value '{$access}'", DEBUG_DEVELOPER);
             $access = access::PRIVATE;
-        } else if (empty($name)) {
+        }
+
+        if (empty(trim($name)) || \core_text::strlen(trim($name)) > 75) {
             throw playlist_exception::create('create');
         }
 
@@ -276,7 +287,7 @@ final class playlist implements accessible, shareable {
         share_manager::delete($this->playlist->id, static::get_resource_type());
 
         // Delete the banner image.
-        $processor = image_processor::make();
+        $processor = $this->image_processor;
         $images = [
             $processor->get_image_for_playlist($this),
             $processor->get_image_for_playlist($this, true)
@@ -416,10 +427,15 @@ final class playlist implements accessible, shareable {
         $this->playlist->update();
 
         // Update the image
-        $processor = image_processor::make();
-        $processor->update_playlist_images($this);
+        $this->image_processor->update_playlist_images($this);
     }
 
+    /**
+     * Remove a resource from the playlist
+     *
+     * @param resource_item $resource
+     * @param int|null $user_id
+     */
     public function remove_resource(resource_item $resource, ?int $user_id = null): void {
         global $USER;
 
@@ -438,6 +454,9 @@ final class playlist implements accessible, shareable {
 
         // Decrease resource usage.
         $resource->decrease_resource_usage();
+
+        // Update the image
+        $this->image_processor->update_playlist_images($this);
     }
 
     /**
@@ -547,10 +566,7 @@ final class playlist implements accessible, shareable {
         $context = $this->get_context();
 
         if (CONTEXT_USER == $context->contextlevel) {
-            // Only owner can contribute so far, if the original context is a user context.
-            if ($this->playlist->userid != $userid) {
-                return false;
-            }
+            return $this->can_update($userid);
         } else {
             if (CONTEXT_COURSE == $context->contextlevel) {
                 $container = factory::from_id($context->instanceid);
@@ -673,6 +689,14 @@ final class playlist implements accessible, shareable {
      */
     public function get_access(): int {
         return $this->playlist->access;
+    }
+
+    /**
+     * @return string
+     */
+    public function get_access_code(): string {
+        $access_value = $this->get_access();
+        return access::get_code($access_value);
     }
 
     /**
@@ -864,7 +888,7 @@ final class playlist implements accessible, shareable {
         }
 
         $context = \context_user::instance($sharer_id);
-        return has_capability('engage/article:unshare', $context, $sharer_id);
+        return has_capability('totara/playlist:unshare', $context, $sharer_id);
     }
 
     /**
@@ -891,5 +915,14 @@ final class playlist implements accessible, shareable {
         /** @var playlist_resource_repository $repository */
         $repository = playlist_resource::repository();
         return $repository->has_non_public_resources($this->playlist->id);
+    }
+
+    /**
+     * Override the used image processor.
+     *
+     * @param image_processor_contract $image_processor
+     */
+    public function set_image_processor(image_processor_contract $image_processor): void {
+        $this->image_processor = $image_processor;
     }
 }

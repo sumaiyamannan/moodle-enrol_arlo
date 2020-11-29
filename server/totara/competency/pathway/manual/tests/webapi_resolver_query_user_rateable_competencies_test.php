@@ -25,6 +25,7 @@ use core\orm\query\builder;
 use core\webapi\execution_context;
 use pathway_manual\models\framework_group;
 use pathway_manual\models\rateable_competency;
+use pathway_manual\models\roles\appraiser;
 use pathway_manual\models\roles\manager;
 use pathway_manual\models\roles\self_role;
 use pathway_manual\webapi\resolver\query\user_rateable_competencies;
@@ -36,6 +37,9 @@ use totara_job\job_assignment;
 
 require_once(__DIR__ . '/pathway_manual_base_testcase.php');
 
+/**
+ * @group totara_competency
+ */
 class pathway_manual_webapi_resolver_query_user_rateable_competencies_testcase extends pathway_manual_base_testcase {
 
     /**
@@ -64,26 +68,6 @@ class pathway_manual_webapi_resolver_query_user_rateable_competencies_testcase e
      */
     private function execution_context(): execution_context {
         return execution_context::create('dev', null);
-    }
-
-    /**
-     * Make sure the user must be logged in to resolve the query.
-     */
-    public function test_capability_logged_in() {
-        $this->setUser($this->user1->id);
-
-        user_rateable_competencies::resolve(
-            ['user_id' => $this->user1->id, 'role' => self_role::class],
-            $this->execution_context()
-        );
-
-        $this->setUser(null);
-        $this->expectException(require_login_exception::class);
-
-        user_rateable_competencies::resolve(
-            ['user_id' => $this->user1->id, 'role' => self_role::class],
-            $this->execution_context()
-        );
     }
 
     /**
@@ -134,7 +118,25 @@ class pathway_manual_webapi_resolver_query_user_rateable_competencies_testcase e
         );
     }
 
-    // TODO: Test that Appraisers can execute the query with correct permissions handling in TL-23002
+    public function test_appraiser_can_resolve() {
+        $this->generator->create_manual($this->competency1, [appraiser::class]);
+
+        $appraiser_ja = job_assignment::create_default($this->user1->id, ['appraiserid' => $this->user2->id]);
+        $this->setUser($this->user2->id);
+
+        user_rateable_competencies::resolve(
+            ['user_id' => $this->user1->id, 'role' => appraiser::class],
+            $this->execution_context()
+        );
+
+        job_assignment::delete($appraiser_ja);
+
+        $this->expectException(moodle_exception::class);
+        user_rateable_competencies::resolve(
+            ['user_id' => $this->user1->id, 'role' => appraiser::class],
+            $this->execution_context()
+        );
+    }
 
     /**
      * Sanity check to make sure the count can be resolved.

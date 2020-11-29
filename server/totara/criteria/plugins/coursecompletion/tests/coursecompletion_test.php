@@ -25,8 +25,11 @@
 use criteria_coursecompletion\coursecompletion;
 use criteria_linkedcourses\linkedcourses;
 use totara_criteria\criterion;
-use totara_criteria\entities\criterion as criterion_entity;
+use totara_criteria\entity\criterion as criterion_entity;
 
+/**
+ * @group totara_competency
+ */
 class criteria_coursecompletion_testcase extends advanced_testcase {
 
     private function setup_data() {

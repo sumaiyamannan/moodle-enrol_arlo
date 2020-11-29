@@ -25,14 +25,17 @@ use core\orm\collection;
 use core\orm\query\table;
 use criteria_childcompetency\childcompetency;
 use pathway_manual\models\roles\manager;
-use totara_competency\entities\scale;
+use totara_competency\entity\scale;
 use totara_criteria\competency_item_helper;
 use totara_criteria\criterion;
-use totara_criteria\entities\criteria_item as item_entity;
-use totara_criteria\entities\criteria_metadata as metadata_entity;
+use totara_criteria\entity\criteria_item as item_entity;
+use totara_criteria\entity\criteria_metadata as metadata_entity;
 use totara_criteria\hook\criteria_achievement_changed;
 use totara_criteria\hook\criteria_validity_changed;
 
+/**
+ * @group totara_competency
+ */
 class totara_criteria_competency_item_helper_testcase extends advanced_testcase {
 
     public function test_achievement_updated() {

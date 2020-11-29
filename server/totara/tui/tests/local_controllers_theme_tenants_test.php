@@ -31,13 +31,16 @@
 use totara_tui\controllers\theme_tenants;
 
 defined('MOODLE_INTERNAL') || die();
+global $CFG;
+require_once($CFG->libdir . '/adminlib.php');
 
 class totara_tui_local_controllers_theme_tenants_testcase extends advanced_testcase {
 
     public function test_happy_path_without_tenant() {
         $this->setAdminUser();
+        admin_get_root(true); // Fix random errors depending on test order.
 
-        $_POST['theme'] = 'ventura';
+        $_POST['theme_name'] = 'ventura';
 
         self::expectException(moodle_exception::class);
         self::expectExceptionMessage('Unsupported redirect detected, script execution terminated');
@@ -46,11 +49,12 @@ class totara_tui_local_controllers_theme_tenants_testcase extends advanced_testc
 
     public function test_happy_path_with_tenant() {
         $this->setAdminUser();
+        admin_get_root(true); // Fix random errors depending on test order.
 
         set_config('tenantsenabled', true);
 
         $controller = new theme_tenants();
-        $_POST['theme'] = 'ventura';
+        $_POST['theme_name'] = 'ventura';
         $_POST['tenant_id'] = $this->getDataGenerator()->get_plugin_generator('totara_tenant')->create_tenant()->id;
 
         ob_start();
@@ -65,7 +69,7 @@ class totara_tui_local_controllers_theme_tenants_testcase extends advanced_testc
     public function test_theme_is_required_arg() {
         $this->setAdminUser();
         self::expectException(moodle_exception::class);
-        self::expectExceptionMessage('A required parameter (theme) was missing');
+        self::expectExceptionMessage('A required parameter (theme_name) was missing');
         (new theme_tenants())->process();
     }
 
@@ -88,7 +92,7 @@ class totara_tui_local_controllers_theme_tenants_testcase extends advanced_testc
         self::assertTrue(has_capability('totara/core:appearance', \context_system::instance(), $user2));
         self::assertTrue(has_capability('totara/tui:themesettings', \context_system::instance(), $user2));
 
-        $_POST['theme'] = 'ventura';
+        $_POST['theme_name'] = 'ventura';
         $this->setUser($user1);
 
         try {
@@ -123,7 +127,7 @@ class totara_tui_local_controllers_theme_tenants_testcase extends advanced_testc
         self::assertTrue(has_capability('totara/tui:themesettings', \context_system::instance(), $user1));
         self::assertTrue(has_capability('totara/tui:themesettings', \context_system::instance(), $user2));
 
-        $_POST['theme'] = 'ventura';
+        $_POST['theme_name'] = 'ventura';
 
         // User 1 should only see tenant 1.
         $this->setUser($user1);
@@ -157,7 +161,7 @@ class totara_tui_local_controllers_theme_tenants_testcase extends advanced_testc
         set_config('tenantsenabled', true);
 
         $controller = new theme_tenants();
-        $_POST['theme'] = 'ventura';
+        $_POST['theme_name'] = 'ventura';
         $_POST['tenant_id'] = 7;
 
         ob_start();

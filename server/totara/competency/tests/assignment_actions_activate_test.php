@@ -22,28 +22,31 @@
  * @category test
  */
 
-use totara_competency\entities;
+use totara_competency\entity\assignment;
 use totara_competency\models\assignment_actions;
 
 defined('MOODLE_INTERNAL') || die();
 
 require_once(__DIR__.'/assignment_actions_testcase.php');
 
+/**
+ * @group totara_competency
+ */
 class totara_competency_actions_activate_testcase extends totara_competency_assignment_actions_testcase {
 
     public function test_activate_multiple() {
         ['assignments' => $assignments] = $this->generate_assignments();
 
-        $assignment1 = new entities\assignment($assignments[0]);
-        $assignment1->status = entities\assignment::STATUS_DRAFT;
+        $assignment1 = new assignment($assignments[0]);
+        $assignment1->status = assignment::STATUS_DRAFT;
         $assignment1->save();
 
-        $assignment2 = new entities\assignment($assignments[1]);
-        $assignment2->status = entities\assignment::STATUS_DRAFT;
+        $assignment2 = new assignment($assignments[1]);
+        $assignment2->status = assignment::STATUS_DRAFT;
         $assignment2->save();
 
-        $assignment3 = new entities\assignment($assignments[2]);
-        $assignment3->status = entities\assignment::STATUS_ARCHIVED;
+        $assignment3 = new assignment($assignments[2]);
+        $assignment3->status = assignment::STATUS_ARCHIVED;
         $assignment3->save();
 
         $model = new assignment_actions();
@@ -54,21 +57,21 @@ class totara_competency_actions_activate_testcase extends totara_competency_assi
         $assignment2->refresh();
         $assignment3->refresh();
 
-        $this->assertEquals(entities\assignment::STATUS_ACTIVE, $assignment1->status);
-        $this->assertEquals(entities\assignment::STATUS_ACTIVE, $assignment2->status);
-        $this->assertEquals(entities\assignment::STATUS_ARCHIVED, $assignment3->status);
+        $this->assertEquals(assignment::STATUS_ACTIVE, $assignment1->status);
+        $this->assertEquals(assignment::STATUS_ACTIVE, $assignment2->status);
+        $this->assertEquals(assignment::STATUS_ARCHIVED, $assignment3->status);
     }
 
     public function test_activating_sets_expand_flag() {
         ['assignments' => $assignments] = $this->generate_assignments();
 
-        $assignment1 = new entities\assignment($assignments[0]);
-        $assignment1->status = entities\assignment::STATUS_DRAFT;
+        $assignment1 = new assignment($assignments[0]);
+        $assignment1->status = assignment::STATUS_DRAFT;
         $assignment1->expand = false;
         $assignment1->save();
 
-        $assignment2 = new entities\assignment($assignments[1]);
-        $assignment2->status = entities\assignment::STATUS_DRAFT;
+        $assignment2 = new assignment($assignments[1]);
+        $assignment2->status = assignment::STATUS_DRAFT;
         $assignment1->expand = false;
         $assignment2->save();
 
@@ -85,12 +88,12 @@ class totara_competency_actions_activate_testcase extends totara_competency_assi
     public function test_activate_single() {
         ['assignments' => $assignments] = $this->generate_assignments();
 
-        $assignment1 = new entities\assignment($assignments[0]);
-        $assignment1->status = entities\assignment::STATUS_DRAFT;
+        $assignment1 = new assignment($assignments[0]);
+        $assignment1->status = assignment::STATUS_DRAFT;
         $assignment1->save();
 
-        $assignment2 = new entities\assignment($assignments[1]);
-        $assignment2->status = entities\assignment::STATUS_ARCHIVED;
+        $assignment2 = new assignment($assignments[1]);
+        $assignment2->status = assignment::STATUS_ARCHIVED;
         $assignment2->save();
 
         $model = new assignment_actions();
@@ -100,24 +103,24 @@ class totara_competency_actions_activate_testcase extends totara_competency_assi
         $assignment1->refresh();
         $assignment2->refresh();
 
-        $this->assertEquals(entities\assignment::STATUS_ACTIVE, $assignment1->status);
+        $this->assertEquals(assignment::STATUS_ACTIVE, $assignment1->status);
         // this one is untouched
-        $this->assertEquals(entities\assignment::STATUS_ARCHIVED, $assignment2->status);
+        $this->assertEquals(assignment::STATUS_ARCHIVED, $assignment2->status);
     }
 
     public function test_activate_mix() {
         ['assignments' => $assignments] = $this->generate_assignments();
 
-        $assignment1 = new entities\assignment($assignments[0]);
-        $assignment1->status = entities\assignment::STATUS_DRAFT;
+        $assignment1 = new assignment($assignments[0]);
+        $assignment1->status = assignment::STATUS_DRAFT;
         $assignment1->save();
 
-        $assignment2 = new entities\assignment($assignments[1]);
-        $assignment2->status = entities\assignment::STATUS_ACTIVE;
+        $assignment2 = new assignment($assignments[1]);
+        $assignment2->status = assignment::STATUS_ACTIVE;
         $assignment2->save();
 
-        $assignment3 = new entities\assignment($assignments[2]);
-        $assignment3->status = entities\assignment::STATUS_ARCHIVED;
+        $assignment3 = new assignment($assignments[2]);
+        $assignment3->status = assignment::STATUS_ARCHIVED;
         $assignment3->save();
 
         $model = new assignment_actions();
@@ -128,9 +131,9 @@ class totara_competency_actions_activate_testcase extends totara_competency_assi
         $assignment2->refresh();
         $assignment3->refresh();
 
-        $this->assertEquals(entities\assignment::STATUS_ACTIVE, $assignment1->status);
-        $this->assertEquals(entities\assignment::STATUS_ACTIVE, $assignment2->status);
-        $this->assertEquals(entities\assignment::STATUS_ARCHIVED, $assignment3->status);
+        $this->assertEquals(assignment::STATUS_ACTIVE, $assignment1->status);
+        $this->assertEquals(assignment::STATUS_ACTIVE, $assignment2->status);
+        $this->assertEquals(assignment::STATUS_ARCHIVED, $assignment3->status);
     }
 
 }

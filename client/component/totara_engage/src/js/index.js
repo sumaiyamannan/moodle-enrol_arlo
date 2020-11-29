@@ -17,6 +17,7 @@
  */
 
 import cardMixin from './mixins/card_mixin';
+import imageMixin from './mixins/image_mixin';
 import AccessManager from './access_manager';
 import AnswerType from './answer_type';
 import TimeViewType from './time_view_type';
@@ -25,6 +26,7 @@ import { calculateRow, engageGrid } from './grid';
 
 export {
   cardMixin,
+  imageMixin,
   AccessManager,
   AnswerType,
   TimeViewType,

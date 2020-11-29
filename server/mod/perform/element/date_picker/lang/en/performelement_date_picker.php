@@ -21,12 +21,16 @@
  * @package performelement_date_picker
  */
 
-$string['answer_text'] = 'Answer text';
-$string['date'] = 'Date';
-$string['error_invalid_date'] = 'Invalid date. Select day, month and year';
-$string['error_you_must_answer_this_question'] = 'Required';
+$string['error_iso_required'] = 'Invalid response data format, expected "date" field to contain "iso" property';
+$string['error_iso_date']     = 'Invalid response data format, could not parse ISO date';
 $string['name'] = 'Date picker';
-$string['no_response_submitted'] = 'No response submitted';
 $string['pluginname'] = 'Date picker';
-$string['question_title'] = 'Question';
 
+
+// Deprecated in 13
+$string['date'] = 'Date';
+$string['question_title'] = 'Question';
+$string['error_invalid_date'] = 'Invalid date. Select day, month and year';
+$string['answer_text'] = 'Answer text';
+$string['no_response_submitted'] = 'No response submitted';
+$string['error_you_must_answer_this_question'] = 'Required';

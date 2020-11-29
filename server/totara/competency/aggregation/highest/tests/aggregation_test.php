@@ -25,12 +25,15 @@ use aggregation_highest\highest;
 use core\orm\collection;
 use totara_competency\aggregation_users_table;
 use totara_competency\base_achievement_detail;
-use totara_competency\entities\pathway_achievement;
-use totara_competency\entities\scale_value;
+use totara_competency\entity\pathway_achievement;
+use totara_competency\entity\scale_value;
 use totara_competency\pathway;
 use totara_competency\pathway_evaluator;
 use totara_competency\pathway_evaluator_user_source;
 
+/**
+ * @group totara_competency
+ */
 class aggregation_highest_aggregation_testcase extends advanced_testcase {
 
     public function test_aggregation_type() {

@@ -48,6 +48,16 @@ final class chartjs extends base {
     protected function init(): void {
         parent::init();
 
+        if ($this->graphrecord->type === '') {
+            return;
+        }
+
+        $this->usersettings = settings\chartjs::create($this->usersettings);
+
+        // Set up colours.
+        $this->colors = $this->usersettings['colors'];
+        unset($this->usersettings['colors']);
+
         // We turn off most of the responsive settings in progress charts so that
         // we can more easily control the graph layouts with css
         $this->chartsettings = [
@@ -88,15 +98,6 @@ final class chartjs extends base {
         }
 
         $this->labels = [];
-        $this->colors = [
-            '#3869B1',
-            '#DA7E31',
-            '#3F9852',
-            '#CC2428',
-            '#958C3D',
-            '#6B4C9A',
-            '#8C8C8C',
-        ];
 
         //Create an array entry for each series
         foreach ($this->series as $k => $item) {
@@ -121,12 +122,6 @@ final class chartjs extends base {
                     $this->values[$k]['borderColor'] = $this->colors[$k % count($this->colors)];
                 }
             }
-        }
-
-        if (!empty($this->usersettings)) {
-            $this->usersettings = settings\chartjs::create($this->usersettings);
-        } else {
-            $this->usersettings = [];
         }
     }
 
@@ -204,7 +199,32 @@ final class chartjs extends base {
         } else {
             if ($this->is_pie_chart()) {
                 $this->fix_pie_colors();
+            } else {
+                if (!empty($this->usersettings['colorRanges']) && count($this->values) === 1) {
+                    // Use colorRanges only for non-pie charts with one data series.
+                    $colorranges = $this->usersettings['colorRanges'];
+                    $this->values[0]['backgroundColor'] = [];
+                    foreach ($this->values[0]['data'] as $k => $v) {
+                        $ci = 0;
+                        foreach ($colorranges as $boundary) {
+                            if ($v < $boundary) {
+                                break;
+                            }
+                            $ci++;
+                        }
+                        $ci = $ci % count($this->colors);
+                        $this->values[0]['backgroundColor'][$k] = $this->colors[$ci];
+                    }
+                    // Hide legend if not explicitly shown because it cannot show the correct colur box.
+                    if (!isset($this->usersettings['legend']['display'])) {
+                        $this->usersettings['legend']['display'] = false;
+                    }
+                }
             }
+
+            // Get final options.
+            $options = settings\chartjs::merge($this->chartsettings, $this->usersettings);
+            unset($options['type']);
 
             // Since we're using the ChartJS responsive setting, we ignore $width so it will grow correctly
             $context = [
@@ -217,7 +237,7 @@ final class chartjs extends base {
                             'labels' => $this->labels,
                             'datasets' => $this->values,
                         ],
-                        'options' => settings\chartjs::merge($this->chartsettings, $this->usersettings),
+                        'options' => $options,
                     ])
                 ]
             ];
@@ -248,16 +268,59 @@ final class chartjs extends base {
 
         $charts = [];
 
+        $totalssupplied = (!empty($this->usersettings['type']['progress']['totalsSupplied']) && count($this->values) > 1);
+        $percentagevalues = ($totalssupplied && !empty($this->usersettings['type']['progress']['percentageValues']));
+        if (!empty($this->usersettings['colorRanges'])) {
+            $colorranges = $this->usersettings['colorRanges'];
+        } else {
+            $colorranges = [];
+        }
+
         // For progress charts, we have to reprocess them because we need to know the total of the entire dataset
         // before we can split these out into their own charts
         foreach ($this->values as $i => $dataset) {
+            if ($totalssupplied && $i > 0) {
+                // only one series is accepted if totals are expected in second series.
+                break;
+            }
             $data = $dataset['data'];
 
             foreach ($data as $k => $val) {
                 $chart = $dataset; // clone default settings
 
-                $chart['data'] = [$val, $dataset['total'] - $val];
-                $chart['backgroundColor'] = [$this->colors[0], '#8C8C8C'];
+                if ($totalssupplied) {
+                    $chart['total'] = $this->values[1]['data'][$k];
+                    if ($percentagevalues) {
+                        $percentage = $val;
+                        $val = round(($val / 100) * $chart['total'], 2);
+                        $percentage = round($percentage, 1);
+                    } else {
+                        $percentage = round($val / $chart['total'] * 100, 1);
+                    }
+                } else {
+                    $percentage = round($val / $chart['total'] * 100, 0);
+                }
+
+                $chart['data'] = [$val, $chart['total'] - $val];
+                if ($colorranges) {
+                    $ci = 0;
+                    foreach ($colorranges as $boundary) {
+                        if ($percentage < $boundary) {
+                            break;
+                        }
+                        $ci++;
+                    }
+                    $ci = $ci % count($this->colors);
+                    $colour = $this->colors[$ci];
+                } else {
+                    $colour = $this->colors[0];
+                }
+                if (!empty($this->usersettings['type']['progress']['backgroundColor'])) {
+                    $bgcolour = $this->usersettings['type']['progress']['backgroundColor'];
+                } else {
+                    $bgcolour = '#8C8C8C';
+                }
+                $chart['backgroundColor'] = [$colour, $bgcolour];
 
                 $settings = $this->chartsettings;
                 $settings['title'] = [
@@ -268,7 +331,7 @@ final class chartjs extends base {
                     'doughnutlabel' => [
                         'labels' => [
                             [
-                                'text' => round($val / $chart['total'] * 100, 0) . '%',
+                                'text' => $percentage . '%',
                                 'font' => [
                                     'size' => 100 // this doesn't reflect actual size, but a ratio -- it get scaled down
                                 ]

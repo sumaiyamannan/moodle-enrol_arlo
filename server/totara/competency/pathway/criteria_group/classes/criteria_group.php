@@ -29,12 +29,12 @@ use core\orm\collection;
 use core\orm\query\builder;
 use \core\orm\entity\repository;
 use criteria_onactivate\onactivate;
-use pathway_criteria_group\entities\criteria_group as criteria_group_entity;
-use pathway_criteria_group\entities\criteria_group_criterion as criteria_group_criterion_entity;
+use pathway_criteria_group\entity\criteria_group as criteria_group_entity;
+use pathway_criteria_group\entity\criteria_group_criterion as criteria_group_criterion_entity;
 use stdClass;
 use totara_competency\base_achievement_detail;
-use totara_competency\entities\pathway as pathway_entity;
-use totara_competency\entities\scale_value;
+use totara_competency\entity\pathway as pathway_entity;
+use totara_competency\entity\scale_value;
 use totara_competency\pathway;
 use totara_competency\pathway_factory;
 use totara_competency\plugin_types;
@@ -220,7 +220,6 @@ class criteria_group extends pathway {
         }
 
         // Delete removed criteria
-        // TODO: Whenever criteria are used in other modules, we should no longer delete the actual criteria, just the pathway_criteria_group_criterion
         if (!empty($critrows)) {
             foreach ($critrows as $id => $type) {
                 $criterion = criterion_factory::fetch($type, $id);
@@ -417,8 +416,6 @@ class criteria_group extends pathway {
      * @return array
      */
     public static function export_criteria_types(): array {
-        // TODO: Get a more generic way of ordering
-        // For now hardcoding the order or known plugins.
         $display_order = array_flip(['onactivate', 'linkedcourses', 'coursecompletion', 'childcompetency', 'othercompetency']);
 
         $types = plugin_types::get_enabled_plugins('criteria', 'totara_criteria');

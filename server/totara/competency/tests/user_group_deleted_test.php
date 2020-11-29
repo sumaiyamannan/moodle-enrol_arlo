@@ -24,12 +24,15 @@
 
 
 use totara_competency\admin_setting_continuous_tracking;
-use totara_competency\entities\assignment;
+use totara_competency\entity\assignment;
 use totara_competency\expand_task;
 use totara_competency\user_groups;
 
 defined('MOODLE_INTERNAL') || die();
 
+/**
+ * @group totara_competency
+ */
 class totara_competency_user_group_deleted_testcase extends advanced_testcase {
 
     public function test_it_deletes_user_assignments_tracking_enabled() {

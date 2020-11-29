@@ -28,6 +28,7 @@ use container_workspace\notification\workspace_notification;
 use container_workspace\tracker\tracker;
 use container_workspace\workspace;
 use core_container\factory;
+use totara_engage\engage_core;
 
 /**
  * A helper class that is constructed with workspace's id and the user's id, which helps to fetch
@@ -92,8 +93,13 @@ final class interactor {
      * @return bool
      */
     public function can_manage(): bool {
-        // If you can administrate, you can manage
+        if ($this->workspace->is_to_be_deleted()) {
+            // No one can manage this workspace anymore.
+            return false;
+        }
+
         if ($this->can_administrate()) {
+            // If you can administrate, you can manage.
             return true;
         }
 
@@ -132,7 +138,9 @@ final class interactor {
     }
 
     /**
-     * Like manage, but across the whole category/site. Super admin privilege
+     * Like manage, but across the whole category/site. Super admin privilege.
+     * Note that this does not check the workplace status intentionally.
+     *
      * @return bool
      */
     public function can_administrate(): bool {
@@ -163,11 +171,20 @@ final class interactor {
      * @return bool
      */
     public function can_update(): bool {
+        if ($this->workspace->is_to_be_deleted()) {
+            // Workspace has been deleted - hence no one is able to update the workspace.
+            return false;
+        }
+
         $context = $this->workspace->get_context();
         return has_capability('container/workspace:update', $context, $this->user_id);
     }
 
     /**
+     * A helper check function to check whether user actor is able to delete the workspace or not.
+     * Note that this function will not check for the deleted status of workspace, as we don't want to add more
+     * or modified any contents to/of the workspace, but only removing from it.
+     *
      * @return bool
      */
     public function can_delete(): bool {
@@ -279,6 +296,9 @@ final class interactor {
     public function can_decline_member_request(): bool {
         if ($this->workspace->is_public()) {
             return false;
+        } else if ($this->workspace->is_to_be_deleted()) {
+            // Workspace is deleted - hence no-one can make any changes to the workspace.
+            return false;
         }
 
         if (is_siteadmin($this->user_id)) {
@@ -301,6 +321,12 @@ final class interactor {
      * @return bool
      */
     public function can_view_workspace(): bool {
+        if ($this->workspace->is_to_be_deleted()) {
+            // Workspace has been flagged to be deleted - hence all the user should not be able
+            // to see this workspace at all.
+            return false;
+        }
+
         if ($this->can_administrate()) {
             return true;
         }
@@ -328,10 +354,18 @@ final class interactor {
     }
 
     /**
+     * A function to check whether the workspace is available for user when multi tenancy is on.
+     *
      * @return bool
      */
     public function can_view_workspace_with_tenant_check(): bool {
-        global $CFG, $DB;
+        global $CFG;
+        if ($this->workspace->is_to_be_deleted()) {
+            // Workspace has been flagged to be deleted - hence all the user should not be able
+            // to see this workspace at all.
+            return false;
+        }
+
         if (!$CFG->tenantsenabled || $this->can_administrate()) {
             // Multi tenancy is not enabled - so we skip the rest.
             return true;
@@ -345,46 +379,24 @@ final class interactor {
             return false;
         }
 
-        // Workspace extended logic rule.
-        $tenant_id = $context->tenantid;
-
-        if (null !== $tenant_id) {
-            // Check if the user is in the same tenant with the workspace or not.
-            $check_sql = '
-                    SELECT 1 FROM "ttr_cohort_members" cm
-                    INNER JOIN "ttr_tenant" t ON t.cohortid = cm.cohortid
-                    WHERE t.id = :tenant_id
-                    AND cm.userid = :user_id
-                ';
-
-            $result = $DB->record_exists_sql(
-                $check_sql,
-                [
-                    'tenant_id' => $tenant_id,
-                    'user_id' => $this->user_id
-                ]
-            );
-
-            if (!$result) {
-                return false;
-            }
-        } else if ($CFG->tenantsisolated) {
-            // Isolation mode is on - we just need to check if user is a part of tenant or not.
-            $result = $DB->record_exists_sql(
-                'SELECT 1 FROM "ttr_user" WHERE id = :user_id AND tenantid IS NOT NULL',
-                ['user_id' => $this->user_id]
-            );
-
-            if ($result) {
-                // This user is within a tenant - hence false to be returned.
-                return false;
-            }
+        // Workspace extended logic rule. The rule is simple, we prevent any access from
+        // system user to tenant workspace. But we do not prevent any access
+        // from tenant user to system workspace.
+        if (!empty($context->tenantid)) {
+            // Target context is within tenant. Hence check for whether the user actor is
+            // able to access to this tenant, despite of isolation mode is on/off.
+            return engage_core::is_user_part_of_tenant($context->tenantid, $this->user_id);
         }
 
+        // Yes. You are allow to see the workspace.
         return true;
     }
 
     /**
+     * This is only a function to check the state of user against the workspace.
+     * Note that we do not check for workspace's deleted here, because
+     * workspace's deleted will not affected the state check at all.
+     *
      * @return bool
      */
     public function has_requested_to_join(): bool {
@@ -404,6 +416,7 @@ final class interactor {
      */
     public function can_view_discussions(): bool {
         if (!$this->can_view_workspace()) {
+            // Checking whether the user actor is able to view the workspace or not.
             return false;
         }
 
@@ -426,6 +439,11 @@ final class interactor {
      * @return bool
      */
     public function can_create_discussions(): bool {
+        if ($this->workspace->is_to_be_deleted()) {
+            // Workspace has already been deleted - no user should be able to create any new discussion.
+            return false;
+        }
+
         // You can create if you can see them + have the create capability.
         if (!$this->can_view_discussions()) {
             return false;
@@ -440,6 +458,7 @@ final class interactor {
      */
     public function can_view_library(): bool {
         if (!$this->can_view_workspace()) {
+            // Checking whether the user actor is able to view the workspace or not.
             return false;
         }
 
@@ -458,7 +477,8 @@ final class interactor {
      */
     public function can_view_members(): bool {
         if (!$this->can_view_workspace()) {
-            // Safety checks for multi-tenancy.
+            // Safety checks for multi-tenancy, plus whether the user actor is
+            // able to view the workspace or not.
             return false;
         }
 
@@ -473,11 +493,25 @@ final class interactor {
      * @return bool
      */
     public function can_share_resources(): bool {
+        if (!$this->can_view_workspace()) {
+            // Either workspace has been deleted, or user has been moved to different tenant.
+            // Hence this user cannot see the workspace, and it means that the user cannot
+            // share the resources to library.
+            return false;
+        }
+
         $context = $this->workspace->get_context();
         return has_capability('container/workspace:libraryadd', $context, $this->user_id);
     }
 
     /**
+     * A helper check, to check whether user actor is able to unshare the resources.
+     * Note that this was not checking whether the workspace has been deleted or not, this
+     * is because we do not want to add anything more to the workspace, but only remove from it.
+     *
+     * This function will be less likely called somewhere else from the user interfaces, as the
+     * workspace record will be hidden when it is deleted.
+     *
      * @return bool
      */
     public function can_unshare_resources(): bool {

@@ -30,10 +30,22 @@ use core\orm\entity\entity;
  * @property int        $id
  * @property bool       $private
  * @property int        $timestamp
+ * @property bool       $to_be_deleted
  */
 final class workspace extends entity {
     /**
      * @var string
      */
     public const TABLE = 'workspace';
+
+    /**
+     * This function is to cast any boolean-like value such as zero/one into an actual boolean.
+     * The reason why we use this is because the value we store in database is actual zero/one.
+     *
+     * @param bool $value
+     * @return bool
+     */
+    protected function get_to_be_deleted_attribute(bool $value): bool {
+        return $value;
+    }
 }

@@ -22,12 +22,12 @@
  */
 
 use mod_perform\constants;
-use mod_perform\entities\activity\activity;
-use mod_perform\entities\activity\manual_relationship_selection;
-use mod_perform\entities\activity\manual_relationship_selection_progress;
-use mod_perform\entities\activity\manual_relationship_selector;
-use mod_perform\entities\activity\subject_instance;
-use mod_perform\entities\activity\track as track_entity;
+use mod_perform\entity\activity\activity;
+use mod_perform\entity\activity\manual_relationship_selection;
+use mod_perform\entity\activity\manual_relationship_selection_progress;
+use mod_perform\entity\activity\manual_relationship_selector;
+use mod_perform\entity\activity\subject_instance;
+use mod_perform\entity\activity\track as track_entity;
 use mod_perform\expand_task;
 use mod_perform\models\activity\notification;
 use mod_perform\models\activity\notification_recipient;
@@ -36,7 +36,7 @@ use mod_perform\state\activity\active;
 use mod_perform\state\activity\draft;
 use mod_perform\task\service\manual_participant_progress;
 use mod_perform\task\service\subject_instance_creation;
-use totara_core\entities\relationship;
+use totara_core\entity\relationship;
 use totara_core\relationship\relationship as relationship_model;
 use totara_job\job_assignment;
 
@@ -98,7 +98,7 @@ class mod_perform_manual_participant_progress_service_testcase extends advanced_
     public function test_generate_without_multiple_jobs() {
         $data = $this->create_data();
 
-        $notification = notification::create($data->activity1, 'participant_selection', true);
+        $notification = notification::load_by_activity_and_class_key($data->activity1, 'participant_selection');
         $this->toggle_recipients($notification, [
             constants::RELATIONSHIP_MANAGER => true,
         ]);
@@ -306,6 +306,7 @@ class mod_perform_manual_participant_progress_service_testcase extends advanced_
             'create_section' => false,
             'activity_status' => draft::get_code()
         ]);
+        notification::load_by_activity_and_class_key($data->activity1, 'participant_selection')->activate();
         $manual_relationships = $data->activity1->manual_relationships->all();
         // Update manual relationships to manager.
         $updated_manual_relationships = [];
@@ -436,10 +437,10 @@ class mod_perform_manual_participant_progress_service_testcase extends advanced_
         foreach ($relationships as $idnumber => $active) {
             $relationship = $this->generator()->get_core_relationship($idnumber);
             $rel_id = $relationship->id;
-            $recipient = $recipients->find('relationship_id', $rel_id);
+            $recipient = $recipients->find('core_relationship_id', $rel_id);
             /** @var notification_recipient $recipient */
-            if ($recipient->get_recipient_id()) {
-                $recipient->activate($active);
+            if ($recipient->id) {
+                $recipient->toggle($active);
             } else {
                 notification_recipient::create($notification, $relationship, $active);
             }

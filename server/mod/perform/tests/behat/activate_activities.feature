@@ -45,9 +45,9 @@ Feature: Activation of activities
     When I navigate to the manage perform activities page
     Then I should see the tui datatable contains:
       | Name                    | Type      | Status |
-      | Active activity         | Check-in  | Active |
-      | Empty draft activity    | Appraisal | Draft  |
       | Complete draft activity | Feedback  | Draft  |
+      | Empty draft activity    | Appraisal | Draft  |
+      | Active activity         | Check-in  | Active |
 
     When I open the dropdown menu in the tui datatable row with "Empty draft activity" "Name"
     Then I should see "Activate" option in the dropdown menu
@@ -73,9 +73,9 @@ Feature: Activation of activities
     Then I should see " was successfully activated." in the tui success notification toast
     And I should see the tui datatable contains:
       | Name                    | Type      | Status |
-      | Active activity         | Check-in  | Active |
-      | Empty draft activity    | Appraisal | Draft  |
       | Complete draft activity | Feedback  | Active |
+      | Empty draft activity    | Appraisal | Draft  |
+      | Active activity         | Check-in  | Active |
 
   @javascript @vuejs
   Scenario: Activating activities on the manage activity page
@@ -104,7 +104,7 @@ Feature: Activation of activities
     And I confirm the tui confirmation modal
     Then I should see " was successfully activated." in the tui success notification toast
     And I should see "This activity is active." in the tui action card
-    And I should see "Any changes made will be applied to future subject instances only, except for title and description, which apply to all." in the tui action card
+    And I should see "Changes can be applied that will affect future and, in some cases, existing instances." in the tui action card
     And I should not see "Activate" in the tui action card
 
   @javascript @vuejs
@@ -117,8 +117,8 @@ Feature: Activation of activities
     Then I should see "Multiple sections"
     Then "Edit section" "button" in the "1" activity section should exist
     And "Section dropdown menu" "button" in the "1" activity section should exist
-    And "Edit content elements" "button" in the "1" activity section should exist
-    And "View content elements" "button" in the "1" activity section should not exist
+    And "Edit content elements" "link_or_button" in the "1" activity section should exist
+    And "View content elements" "link_or_button" in the "1" activity section should not exist
 
     When I click on the "On completion" tui toggle button
     Then I should see "Activity saved" in the tui success notification toast
@@ -132,8 +132,8 @@ Feature: Activation of activities
     Then I should not see "Multiple sections"
     And "Edit section" "button" in the "1" activity section should not exist
     And "Section dropdown menu" "button" in the "1" activity section should not exist
-    And "Edit content elements" "button" in the "1" activity section should not exist
-    And "View content elements" "button" in the "1" activity section should exist
+    And "Edit content elements" "link_or_button" in the "1" activity section should not exist
+    And "View content elements" "link_or_button" in the "1" activity section should exist
     And I should see "Subject" in the "1" activity section
 
     # On completion setting has a confirm modal when in archived state

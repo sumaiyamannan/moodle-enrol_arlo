@@ -26,14 +26,14 @@ use core\orm\query\builder;
 use degeneration\App;
 use degeneration\items\item;
 use mod_perform\constants;
-use mod_perform\entities\activity\activity_setting as activity_setting_entity;
-use mod_perform\entities\activity\element as element_entity;
-use mod_perform\entities\activity\manual_relationship_selection;
-use mod_perform\entities\activity\section as section_entity;
-use mod_perform\entities\activity\section_element as section_element_entity;
-use mod_perform\entities\activity\section_relationship as section_relationship_entity;
-use mod_perform\entities\activity\track as track_entity;
-use mod_perform\entities\activity\track_assignment as track_assignment_entity;
+use mod_perform\entity\activity\activity_setting as activity_setting_entity;
+use mod_perform\entity\activity\element as element_entity;
+use mod_perform\entity\activity\manual_relationship_selection;
+use mod_perform\entity\activity\section as section_entity;
+use mod_perform\entity\activity\section_element as section_element_entity;
+use mod_perform\entity\activity\section_relationship as section_relationship_entity;
+use mod_perform\entity\activity\track as track_entity;
+use mod_perform\entity\activity\track_assignment as track_assignment_entity;
 use mod_perform\models\activity\activity as activity_model;
 use mod_perform\models\activity\activity_setting;
 use mod_perform\models\activity\section;
@@ -220,6 +220,14 @@ class activity extends item {
             $activity_setting->save();
         }
 
+        if (!empty($config['multisection'])) {
+            $activity_setting = new activity_setting_entity();
+            $activity_setting->activity_id = $this->data->id;
+            $activity_setting->name = 'multisection';
+            $activity_setting->value = $config['multisection'];
+            $activity_setting->save();
+        }
+
         if (!empty($config['manual_relationships'])) {
             foreach ($config['manual_relationships'] as $manual_relationship => $selector_relationship) {
                 manual_relationship_selection::repository()
@@ -244,6 +252,7 @@ class activity extends item {
         }
 
         if (!empty($config['sections'])) {
+            $this->set_general_settings(['multisection' => 1]);
             $this->create_section_details($config['sections']);
         }
     }

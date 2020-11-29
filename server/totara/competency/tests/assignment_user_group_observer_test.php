@@ -21,7 +21,7 @@
  * @package totara_competency
  */
 
-use totara_competency\entities\assignment;
+use totara_competency\entity\assignment;
 use totara_competency\expand_task;
 use totara_competency\models\assignment_actions;
 use totara_competency\user_groups;
@@ -30,6 +30,8 @@ use totara_job\job_assignment;
 
 /**
  * Tests covering the user group observer making sure the events do the right thing
+ *
+ * @group totara_competency
  */
 class totara_competency_assignment_user_group_observer_testcase extends advanced_testcase {
 

@@ -91,9 +91,9 @@ class rb_source_perform_response_base extends rb_base_source {
                 ON ps.section_id = se.section_id AND ps.participant_instance_id = es.participant_instance_id
                     AND ps.progress = ".complete::get_code()."
             JOIN {perform_participant_instance} ppi ON es.participant_instance_id = ppi.id
-            LEFT JOIN {user} u ON ppi.participant_id = u.id 
+            LEFT JOIN {user} u ON ppi.participant_id = u.id
                 AND ppi.participant_source = " . participant_source::INTERNAL . "
-            WHERE ppi.participant_source = " . participant_source::EXTERNAL . " 
+            WHERE ppi.participant_source = " . participant_source::EXTERNAL . "
                 OR u.deleted = 0
         )";
         $this->columnoptions = $this->define_columnoptions();
@@ -148,16 +148,6 @@ class rb_source_perform_response_base extends rb_base_source {
         $this->paramoptions = $this->define_paramoptions();
         $this->defaultcolumns = $this->define_defaultcolumns();
         $this->defaultfilters = $this->define_defaultfilters();
-
-        // TODO remove this from this source once non-respondable elements are no longer generating response records.
-        //      still used in element source.
-        $non_respondable_elements = array_keys(element_plugin::get_element_plugins(false));
-        if (!empty($non_respondable_elements)) {
-            $sql = $DB->sql_not_in($non_respondable_elements);
-            $this->sourcewhere = 'perform_element.plugin_name ' . $sql->get_sql();
-            $this->sourceparams = $sql->get_params();
-            $this->sourcejoins = ['perform_element'];
-        }
 
         parent::__construct();
     }
@@ -416,7 +406,7 @@ class rb_source_perform_response_base extends rb_base_source {
         $si = (new mod_perform_generator(new testing_data_generator()))->create_subject_instance([
             'activity_name' => 'Weekly catchup',
             'subject_is_participating' => true,
-            'subject_user_id' => \core\entities\user::repository()->get()->last()->id,
+            'subject_user_id' => \core\entity\user::repository()->get()->last()->id,
             'include_questions' => true,
             'update_participant_sections_status' => 'complete',
         ]);

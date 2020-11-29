@@ -28,10 +28,10 @@ namespace totara_competency;
 use coding_exception;
 use ReflectionClass;
 use stdClass;
-use totara_competency\entities\competency;
-use totara_competency\entities\pathway as pathway_entity;
-use totara_competency\entities\pathway_achievement;
-use totara_competency\entities\scale_value;
+use totara_competency\entity\competency;
+use totara_competency\entity\pathway as pathway_entity;
+use totara_competency\entity\pathway_achievement;
+use totara_competency\entity\scale_value;
 
 /**
  * Base class for pathway plugins
@@ -165,8 +165,6 @@ abstract class pathway {
                       FROM {totara_competency_pathway}
                      WHERE competency_id = :competency_id
                        AND status = :active";
-            // Todo: Once we're properly implementing sortorder, we'll need to consider whether draft should be
-            // included as well or instead of.
             $highest_current = $DB->get_field_sql(
                 $sql,
                 ['competency_id' => $this->get_competency()->id, 'active' => static::PATHWAY_STATUS_ACTIVE]

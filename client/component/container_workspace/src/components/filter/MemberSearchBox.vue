@@ -21,6 +21,9 @@
     v-model="innerSearchTerm"
     :label-visible="false"
     :aria-label="$str('search_members', 'container_workspace')"
+    :placeholder="$str('search_members', 'container_workspace')"
+    :enable-clear-icon="true"
+    @clear="clearSearchTerm"
     @submit="$emit('submit', innerSearchTerm)"
   />
 </template>
@@ -54,6 +57,13 @@ export default {
      */
     searchTerm(value) {
       this.innerSearchTerm = value;
+    },
+  },
+
+  methods: {
+    clearSearchTerm() {
+      this.innerSearchTerm = '';
+      this.$emit('clear', this.innerSearchTerm);
     },
   },
 };

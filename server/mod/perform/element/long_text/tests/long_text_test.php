@@ -28,34 +28,19 @@ use performelement_long_text\long_text;
 
 /**
  * @group perform
+ * @group perform_element
  */
 class mod_perform_element_long_text_testcase extends advanced_testcase {
 
-    /**
-     * @dataProvider invalid_response_data_format_provider
-     * @param array|null $response_data
-     * @throws coding_exception
-     */
-    public function test_validate_response_invalid_format(array $response_data): void {
+    public function test_validate_response_invalid_format(): void {
         /** @var long_text $long_text */
         $long_text = element_plugin::load_by_plugin('long_text');
 
         $this->expectException(coding_exception::class);
-        $this->expectExceptionMessage('Invalid response data format, expected "answer_text" field');
+        $this->expectExceptionMessage('Invalid response data format, expected a string');
 
         $element = $this->perform_generator()->create_element(['title' => 'element one', 'is_required' => true]);
-        $long_text->validate_response(json_encode($response_data), $element);
-    }
-
-    public function invalid_response_data_format_provider(): array {
-        return [
-            'missing key' => [
-                ['irrelevant_key' => 1]
-            ],
-            'answer_text' => [
-                ['something_here', '']
-            ],
-        ];
+        $long_text->validate_response(json_encode(['key']), $element);
     }
 
     /**
@@ -69,7 +54,7 @@ class mod_perform_element_long_text_testcase extends advanced_testcase {
         $long_text = element_plugin::load_by_plugin('long_text');
 
         $element = $this->perform_generator()->create_element(['title' => 'element one', 'is_required' => true]);
-        $errors = $long_text->validate_response(json_encode(['answer_text' => $answer_text]), $element);
+        $errors = $long_text->validate_response(json_encode($answer_text), $element);
 
         self::assertEquals($expected_errors, $errors);
     }
@@ -82,8 +67,38 @@ class mod_perform_element_long_text_testcase extends advanced_testcase {
             'missing answer' => [
                 new collection([new answer_required_error()]), '',
             ],
-            'missing answer' => [
+            'missing answer (whitespace only)' => [
                 new collection([new answer_required_error()]), '             ',
+            ],
+        ];
+    }
+
+    /**
+     * @dataProvider draft_validation_provider
+     * @param collection $expected_errors
+     * @param string $answer_text
+     * @throws coding_exception
+     */
+    public function test_draft_validation(collection $expected_errors, string $answer_text): void {
+        /** @var long_text $long_text */
+        $long_text = element_plugin::load_by_plugin('long_text');
+
+        $element = $this->perform_generator()->create_element(['title' => 'element one', 'is_required' => true]);
+        $errors = $long_text->validate_response(json_encode($answer_text), $element, true);
+
+        self::assertEquals($expected_errors, $errors);
+    }
+
+    public function draft_validation_provider(): array {
+        return [
+            'no errors' => [
+                new collection(), 'A long answer'
+            ],
+            'missing answer' => [
+                new collection(), '',
+            ],
+            'missing answer (whitespace only)' => [
+                new collection(), '             ',
             ],
         ];
     }

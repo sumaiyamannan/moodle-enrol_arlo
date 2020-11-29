@@ -25,7 +25,7 @@ namespace core\theme\file;
 
 use context;
 use core\files\type\file_type;
-use core\files\type\image;
+use core\files\type\icon;
 use core\theme\settings;
 use theme_config;
 
@@ -53,7 +53,7 @@ class favicon_image extends theme_file {
      */
     public function __construct(?theme_config $theme_config = null, ?string $theme = null) {
         parent::__construct($theme_config, $theme);
-        $this->type = new image();
+        $this->type = new icon();
     }
 
     /**
@@ -75,13 +75,6 @@ class favicon_image extends theme_file {
      */
     public function get_area(): string {
         return 'favicon';
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function get_context(): ?context {
-        return $this->get_default_context($this->tenant_id);
     }
 
     /**

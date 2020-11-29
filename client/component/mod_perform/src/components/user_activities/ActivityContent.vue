@@ -17,32 +17,22 @@
   @module mod_perform
 -->
 <template>
-  <Loader :loading="$apollo.loading">
-    <div class="tui-participantContent">
-      <ConfirmationModal
-        :open="modalOpen"
-        :confirm-button-text="$str('submit', 'core')"
-        :title="
-          $str('user_activities_submit_confirmation_title', 'mod_perform')
-        "
-        @confirm="confirmModal"
-        @cancel="cancelModal"
-      >
-        <p>
-          {{
-            $str('user_activities_submit_confirmation_message', 'mod_perform')
-          }}
-        </p>
-        <p v-if="activity.settings.close_on_completion">
-          {{
-            $str(
-              'user_activities_close_on_completion_submit_confirmation_message',
-              'mod_perform'
-            )
-          }}
-        </p>
-      </ConfirmationModal>
+  <Component
+    :is="showSidePanel ? 'LayoutSidePanel' : 'Layout'"
+    class="tui-participantContent"
+    :loading="$apollo.loading"
+    :title="activity.name"
+    :outer-first-loader="true"
+  >
+    <template v-slot:content-nav>
+      <PageBackLink
+        v-if="!isExternalParticipant && !viewOnlyReportMode"
+        :link="$url(userActivitiesUrl)"
+        :text="$str('back_to_user_activities', 'mod_perform')"
+      />
+    </template>
 
+    <template v-slot:user-overview>
       <ParticipantGeneralInformation
         v-if="subjectUser.card_display && !viewOnlyReportMode"
         :subject-user="subjectUser"
@@ -71,256 +61,254 @@
           </h4>
         </div>
       </div>
+    </template>
 
-      <PageHeading :title="activity.name" />
-
-      <Responsive
-        class="tui-participantContent__body"
-        :breakpoints="[
-          { name: 'small', boundaries: [0, 764] },
-          { name: 'medium', boundaries: [765, 1192] },
-          { name: 'large', boundaries: [1193, 1672] },
-        ]"
-        @responsive-resize="resize"
-      >
-        <Grid
-          :class="showSidePanel ? 'tui-participantContent__layout' : ''"
-          :direction="gridDirection"
-          :stack-at="764"
+    <template v-slot:side-panel>
+      <SidePanelNav v-model="navModel" :aria-label="false" @change="navChange">
+        <SidePanelNavGroup
+          v-if="viewOnlyReportMode"
+          :title="$str('sections_header', 'mod_perform')"
         >
-          <GridItem
-            v-if="showSidePanel"
-            :units="gridUnitsLeft"
-            class="tui-participantContent__sidePanel"
-          >
-            <SidePanel
-              :initially-open="true"
-              :show-button-control="false"
-              :sticky="false"
+          <SidePanelNavButtonItem
+            v-for="siblingSection in siblingSections"
+            :id="siblingSection.id"
+            :key="siblingSection.id"
+            :text="siblingSection.display_title"
+          />
+        </SidePanelNavGroup>
+        <SidePanelNavGroup
+          v-else
+          :title="$str('sections_header', 'mod_perform')"
+        >
+          <SidePanelNavButtonItem
+            v-for="participantSection in participantSections"
+            :id="participantSection.id"
+            :key="participantSection.id"
+            :text="participantSection.section.display_title"
+          />
+        </SidePanelNavGroup>
+      </SidePanelNav>
+    </template>
+
+    <template v-slot:content>
+      <Uniform
+        v-if="initialValues"
+        :key="activeParticipantSection.id"
+        v-slot="{ getSubmitting }"
+        class="tui-participantContent__form"
+        :initial-values="initialValues"
+        @submit="handleSubmit"
+        @change="handleChange"
+      >
+        <!-- Section -->
+        <div class="tui-participantContent__section">
+          <div class="tui-participantContent__sectionHeading">
+            <h3
+              v-if="activity.settings.multisection"
+              class="tui-participantContent__sectionHeading-title"
             >
-              <SidePanelNav
-                v-model="navModel"
-                :aria-label="false"
-                @change="navChange"
+              {{ section.display_title }}
+            </h3>
+            <div
+              v-if="!viewOnlyReportMode"
+              class="tui-participantContent__infoBar"
+            >
+              <ResponsesAreVisibleToDescription
+                class="tui-participantContent__sectionHeadingOtherResponsesDescription"
+                :current-user-is-subject="currentUserIsSubject"
+                :visible-to-relationships="responsesAreVisibleTo"
+                :activity="activity"
+                :participant-section="activeParticipantSection"
+              />
+              <div
+                class="tui-participantContent__sectionHeading-otherResponseSwitch"
               >
-                <SidePanelNavGroup
-                  v-if="viewOnlyReportMode"
-                  :title="$str('sections_header', 'mod_perform')"
-                >
-                  <SidePanelNavButtonItem
-                    v-for="siblingSection in siblingSections"
-                    :id="siblingSection.id"
-                    :key="siblingSection.id"
-                    :text="siblingSection.display_title"
-                  />
-                </SidePanelNavGroup>
-                <SidePanelNavGroup
-                  v-else
-                  :title="$str('sections_header', 'mod_perform')"
-                >
-                  <SidePanelNavButtonItem
-                    v-for="participantSection in participantSections"
-                    :id="participantSection.id"
-                    :key="participantSection.id"
-                    :text="participantSection.section.display_title"
-                  />
-                </SidePanelNavGroup>
-              </SidePanelNav>
-            </SidePanel>
-          </GridItem>
-          <GridItem :units="gridUnitsRight">
-            <Uniform
-              v-if="initialValues"
-              :key="activeParticipantSection.id"
-              v-slot="{ getSubmitting }"
-              :initial-values="initialValues"
-              @submit="handleSubmit"
-              @change="handleChange"
+                <ToggleSwitch
+                  v-if="hasOtherResponse && participantCanAnswer"
+                  v-model="showOtherResponse"
+                  :text="
+                    $str('user_activities_other_response_show', 'mod_perform')
+                  "
+                />
+              </div>
+            </div>
+            <!-- In view only report mode and relationship not in section -->
+            <div
+              v-else-if="noParticipantForRelationshipFilter"
+              class="tui-participantContent__sectionHeading-relationshipNotInSection"
             >
-              <div class="tui-participantContent__section">
-                <div class="tui-participantContent__sectionHeading">
-                  <h3
-                    v-if="activity.settings.multisection"
-                    class="tui-participantContent__sectionHeading-title"
-                  >
-                    {{ section.display_title }}
-                  </h3>
-                  <div
-                    v-if="!viewOnlyReportMode"
-                    class="tui-participantContent__infoBar"
-                  >
-                    <ResponsesAreVisibleToDescription
-                      class="tui-participantContent__sectionHeadingOtherResponsesDescription"
-                      :current-user-is-subject="currentUserIsSubject"
-                      :visible-to-relationships="responsesAreVisibleTo"
-                      :activity="activity"
-                      :participant-section="activeParticipantSection"
-                    />
-                    <div
-                      class="tui-participantContent__sectionHeading-otherResponseSwitch"
-                    >
-                      <ToggleSwitch
-                        v-if="hasOtherResponse && participantCanAnswer"
-                        v-model="showOtherResponse"
-                        :text="
-                          $str(
-                            'user_activities_other_response_show',
-                            'mod_perform'
-                          )
-                        "
-                      />
-                    </div>
-                  </div>
-                </div>
-                <div
-                  v-if="noParticipantForRelationshipFilter"
-                  class="tui-participantContent__infoBar"
+              {{ $str('selected_relationship_not_in_section', 'mod_perform') }}
+            </div>
+          </div>
+          <template v-if="!noParticipantForRelationshipFilter">
+            <div class="tui-participantContent__section-requiredContainer">
+              <span
+                class="tui-participantContent__section-responseRequired"
+                v-text="'*'"
+              />
+              {{ $str('section_element_response_required', 'mod_perform') }}
+            </div>
+
+            <div class="tui-participantContent__sectionItems">
+              <div
+                v-for="sectionElement in cleanedSectionElements"
+                :key="sectionElement.id"
+                class="tui-participantContent__sectionItem"
+              >
+                <h3
+                  v-if="sectionElement.element.title"
+                  :id="$id('title')"
+                  class="tui-participantContent__sectionItem-contentHeader"
                 >
-                  <em>
-                    {{
-                      $str(
-                        'selected_relationship_not_in_section',
-                        'mod_perform'
-                      )
-                    }}
-                  </em>
-                </div>
-                <template v-else>
-                  <div
-                    class="tui-participantContent__section-requiredContainer"
-                  >
-                    <span
-                      class="tui-participantContent__section-responseRequired"
-                      v-text="'*'"
-                    />
-                    {{
-                      $str('section_element_response_required', 'mod_perform')
-                    }}
-                  </div>
+                  {{ sectionElement.element.title }}
 
-                  <div
-                    v-for="sectionElement in cleanedSectionElements"
-                    :key="sectionElement.id"
-                    class="tui-participantContent__sectionItem"
-                  >
-                    <h3
-                      v-if="sectionElement.element.title"
-                      :id="$id('title')"
-                      class="tui-participantContent__sectionItem-contentHeader"
-                    >
-                      {{ sectionElement.element.title }}
-                    </h3>
+                  <RequiredOptionalIndicator
+                    v-if="sectionElement.is_respondable"
+                    :is-required="sectionElement.element.is_required"
+                  />
+                </h3>
 
-                    <RequiredOptionalIndicator
-                      v-if="sectionElement.is_respondable"
-                      :is-required="sectionElement.element.is_required"
-                    />
-
-                    <div class="tui-participantContent__sectionItem-content">
-                      <ElementParticipantForm
-                        v-if="
-                          sectionElement.is_respondable &&
-                            participantCanAnswer &&
-                            !viewOnlyReportMode
-                        "
-                        :accessible-label="sectionElement.element.title"
-                        :required="sectionElement.element.is_required"
-                      >
-                        <template v-slot:content>
-                          <component
-                            :is="sectionElement.component"
-                            v-bind="loadUserSectionElementProps(sectionElement)"
-                          />
-                        </template>
-                      </ElementParticipantForm>
-                      <div
-                        v-else-if="!sectionElement.is_respondable"
-                        class="tui-participantContent__staticElement"
-                      >
-                        <component
-                          :is="sectionElement.component"
-                          v-bind="loadUserSectionElementProps(sectionElement)"
-                        />
-                      </div>
-                      <OtherParticipantResponses
-                        v-show="showOtherResponse"
-                        :view-only="viewOnlyReportMode"
-                        :section-element="sectionElement"
-                        :anonymous-responses="activity.anonymous_responses"
-                      />
-                    </div>
-                  </div>
-                </template>
-              </div>
-
-              <FormRow>
-                <ButtonGroup
-                  v-if="
-                    !activeSectionIsClosed &&
-                      participantCanAnswer &&
-                      !viewOnlyReportMode
-                  "
-                  class="tui-participantContent__buttons"
-                >
-                  <ButtonSubmit @click="fullSubmit(getSubmitting)" />
-                  <Button
-                    v-if="hasSaveDraft"
-                    :text="
-                      $str('participant_section_button_draft', 'mod_perform')
+                <div class="tui-participantContent__sectionItem-content">
+                  <ElementParticipantForm
+                    v-if="
+                      sectionElement.is_respondable &&
+                        participantCanAnswer &&
+                        !viewOnlyReportMode
                     "
-                    type="submit"
-                    @click="draftSubmit(getSubmitting)"
-                  />
-                  <ButtonCancel
-                    v-if="!isExternalParticipant"
-                    @click="goBackToListCancel"
-                  />
-                </ButtonGroup>
-              </FormRow>
-
-              <div class="tui-participantContent__navigation">
-                <Grid
-                  v-if="
-                    activeSectionIsClosed ||
-                      !participantCanAnswer ||
-                      viewOnlyReportMode
-                  "
-                >
-                  <GridItem :units="6">
-                    <Button
-                      v-if="previousNavSectionModel"
-                      :text="$str('previous_section', 'mod_perform')"
-                      @click="loadPreviousSection"
+                    :accessible-label="sectionElement.element.title"
+                    :required="sectionElement.element.is_required"
+                  >
+                    <template v-slot:content="{ labelId }">
+                      <component
+                        :is="sectionElement.responseDisplayComponent"
+                        v-if="activeSectionIsClosed"
+                        :element="sectionElement.element"
+                        :data="sectionElement.response_data"
+                        :response-lines="
+                          sectionElement.response_data_formatted_lines
+                        "
+                        :aria-labelledby="labelId"
+                      />
+                      <component
+                        :is="sectionElement.formComponent"
+                        v-else
+                        :is-draft="isDraft"
+                        :element="sectionElement.element"
+                        :path="['sectionElements', sectionElement.id]"
+                        :error="errors && errors[sectionElement.id]"
+                        :aria-labelledby="labelId"
+                      />
+                    </template>
+                  </ElementParticipantForm>
+                  <div
+                    v-else-if="!sectionElement.is_respondable"
+                    class="tui-participantContent__staticElement"
+                  >
+                    <component
+                      :is="sectionElement.formComponent"
+                      :is-draft="isDraft"
+                      :element="sectionElement.element"
+                      :path="['sectionElements', sectionElement.id]"
+                      :error="errors && errors[sectionElement.id]"
                     />
-                  </GridItem>
-                  <GridItem :units="6">
-                    <div class="tui-participantContent__navigation-buttons">
-                      <Button
-                        v-if="nextNavSectionModel"
-                        :styleclass="{ primary: 'true' }"
-                        :text="$str('next_section', 'mod_perform')"
-                        @click="loadNextSection"
-                      />
-                      <Button
-                        v-if="!isExternalParticipant && !viewOnlyReportMode"
-                        :text="$str('button_close', 'mod_perform')"
-                        @click="goBackToListCancel"
-                      />
-                      <ActionLink
-                        v-if="viewOnlyReportMode"
-                        :text="$str('button_close', 'mod_perform')"
-                        :href="backToUserReportHref"
-                      />
-                    </div>
-                  </GridItem>
-                </Grid>
+                  </div>
+                  <OtherParticipantResponses
+                    v-show="showOtherResponse"
+                    :view-only="viewOnlyReportMode"
+                    :section-element="sectionElement"
+                    :anonymous-responses="activity.anonymous_responses"
+                  />
+                </div>
               </div>
-            </Uniform>
-          </GridItem>
-        </Grid>
-      </Responsive>
-    </div>
-  </Loader>
+            </div>
+          </template>
+        </div>
+
+        <FormRow>
+          <ButtonGroup
+            v-if="
+              !activeSectionIsClosed &&
+                participantCanAnswer &&
+                !viewOnlyReportMode
+            "
+            class="tui-participantContent__buttons"
+          >
+            <ButtonSubmit @click="fullSubmit(getSubmitting)" />
+            <Button
+              v-if="hasSaveDraft"
+              :text="$str('participant_section_button_draft', 'mod_perform')"
+              type="submit"
+              @click="draftSubmit(getSubmitting)"
+            />
+            <ButtonCancel
+              v-if="!isExternalParticipant"
+              @click="goBackToListCancel"
+            />
+          </ButtonGroup>
+        </FormRow>
+
+        <div
+          v-if="
+            activeSectionIsClosed || !participantCanAnswer || viewOnlyReportMode
+          "
+          class="tui-participantContent__navigation"
+        >
+          <div>
+            <Button
+              v-if="previousNavSectionModel"
+              :text="$str('previous_section', 'mod_perform')"
+              @click="loadPreviousSection"
+            />
+          </div>
+
+          <div class="tui-participantContent__navigation-buttons">
+            <Button
+              v-if="nextNavSectionModel"
+              :styleclass="{ primary: 'true' }"
+              :text="$str('next_section', 'mod_perform')"
+              @click="loadNextSection"
+            />
+            <Button
+              v-if="!isExternalParticipant && !viewOnlyReportMode"
+              :text="$str('button_close', 'mod_perform')"
+              @click="goBackToListCancel"
+            />
+            <ActionLink
+              v-if="viewOnlyReportMode"
+              :text="$str('button_close', 'mod_perform')"
+              :href="backToUserReportHref"
+            />
+          </div>
+        </div>
+      </Uniform>
+    </template>
+
+    <template v-slot:modals>
+      <ConfirmationModal
+        :open="modalOpen"
+        :confirm-button-text="$str('submit', 'core')"
+        :title="
+          $str('user_activities_submit_confirmation_title', 'mod_perform')
+        "
+        @confirm="confirmModal"
+        @cancel="cancelModal"
+      >
+        <p>
+          {{
+            $str('user_activities_submit_confirmation_message', 'mod_perform')
+          }}
+        </p>
+        <p v-if="activity.settings.close_on_completion">
+          {{
+            $str(
+              'user_activities_close_on_completion_submit_confirmation_message',
+              'mod_perform'
+            )
+          }}
+        </p>
+      </ConfirmationModal>
+    </template>
+  </Component>
 </template>
 
 <script>
@@ -340,17 +328,16 @@ import Collapsible from 'tui/components/collapsible/Collapsible';
 import ConfirmationModal from 'tui/components/modal/ConfirmationModal';
 import ElementParticipantForm from 'mod_perform/components/element/ElementParticipantForm';
 import FormRow from 'tui/components/form/FormRow';
-import Grid from 'tui/components/grid/Grid';
-import GridItem from 'tui/components/grid/GridItem';
+import Layout from 'tui/components/layouts/LayoutOneColumn';
+import LayoutSidePanel from 'mod_perform/components/user_activities/layout/LayoutOneColumnSidePanelActivities';
 import Loader from 'tui/components/loading/Loader';
 import OtherParticipantResponses from 'mod_perform/components/user_activities/participant/OtherParticipantResponses';
+import PageBackLink from 'tui/components/layouts/PageBackLink';
 import PageHeading from 'tui/components/layouts/PageHeading';
 import ParticipantUserHeader from 'mod_perform/components/user_activities/participant/ParticipantUserHeader';
 import RequiredOptionalIndicator from 'mod_perform/components/user_activities/RequiredOptionalIndicator';
 import ResponsesAreVisibleToDescription from 'mod_perform/components/user_activities/participant/ResponsesAreVisibleToDescription';
 import ResponseRelationshipSelector from 'mod_perform/components/user_activities/ResponseRelationshipSelector';
-import Responsive from 'tui/components/responsive/Responsive';
-import SidePanel from 'tui/components/sidepanel/SidePanel';
 import SidePanelNav from 'tui/components/sidepanel/SidePanelNav';
 import SidePanelNavButtonItem from 'tui/components/sidepanel/SidePanelNavButtonItem';
 import SidePanelNavGroup from 'tui/components/sidepanel/SidePanelNavGroup';
@@ -381,16 +368,15 @@ export default {
     ConfirmationModal,
     ElementParticipantForm,
     FormRow,
-    Grid,
-    GridItem,
+    Layout,
+    LayoutSidePanel,
     Loader,
     OtherParticipantResponses,
+    PageBackLink,
     PageHeading,
     ParticipantUserHeader,
     ResponsesAreVisibleToDescription,
     ResponseRelationshipSelector,
-    Responsive,
-    SidePanel,
     SidePanelNav,
     SidePanelNavButtonItem,
     SidePanelNavGroup,
@@ -427,6 +413,13 @@ export default {
      */
     currentUserId: {
       type: Number,
+    },
+
+    /**
+     * The url enables user navigate back to user activity list
+     */
+    userActivitiesUrl: {
+      type: String,
     },
 
     /**
@@ -476,25 +469,7 @@ export default {
       answerableParticipantInstances: null,
       answeringAsParticipantId: this.participantInstanceId,
       activeParticipantSection: {},
-      boundaryDefaults: {
-        small: {
-          gridDirection: 'vertical',
-          gridUnitsLeft: 12,
-          gridUnitsRight: 12,
-        },
-        medium: {
-          gridDirection: 'horizontal',
-          gridUnitsLeft: 3,
-          gridUnitsRight: 9,
-        },
-        large: {
-          gridDirection: 'horizontal',
-          gridUnitsLeft: 2,
-          gridUnitsRight: 10,
-        },
-      },
       completionSaveSuccess: false,
-      currentBoundaryName: null,
       errors: null,
       hasOtherResponse: false,
       hasUnsavedChanges: false,
@@ -520,46 +495,6 @@ export default {
     };
   },
   computed: {
-    /**
-     * Return the grid direction
-     *
-     * @return {Number}
-     */
-    gridDirection() {
-      if (!this.currentBoundaryName) {
-        return;
-      }
-      return this.boundaryDefaults[this.currentBoundaryName].gridDirection;
-    },
-
-    /**
-     * Return the number of grid units for side panel
-     *
-     * @return {Number}
-     */
-    gridUnitsLeft() {
-      if (!this.currentBoundaryName || !this.showSidePanel) {
-        return;
-      }
-
-      return this.boundaryDefaults[this.currentBoundaryName].gridUnitsLeft;
-    },
-
-    /**
-     * Return the number of grid units for main content
-     *
-     * @return {Number}
-     */
-    gridUnitsRight() {
-      if (!this.currentBoundaryName) {
-        return;
-      } else if (!this.showSidePanel) {
-        return 12;
-      }
-
-      return this.boundaryDefaults[this.currentBoundaryName].gridUnitsRight;
-    },
-
     /**
      * Are we showing view-only (report) version,
      * this is the form not from perspective of any one participant, but as someone reviewing all other responses.
@@ -796,6 +731,7 @@ export default {
           token: this.token,
         };
       },
+      fetchPolicy: 'network-only',
       update(data) {
         if (this.viewOnlyReportMode) {
           return data.mod_perform_view_only_section_responses.section;
@@ -815,8 +751,9 @@ export default {
           result = this.isExternalParticipant
             ? data.mod_perform_participant_section_external_participant
             : data.mod_perform_participant_section;
-
-          this.selectedParticipantSectionId = result.id;
+          if (result.id != this.selectedParticipantSectionId) {
+            this.selectedParticipantSectionId = result.id;
+          }
           this.answerableParticipantInstances =
             result.answerable_participant_instances;
           this.activeParticipantSection = result;
@@ -830,14 +767,22 @@ export default {
         this.initialValues = {
           sectionElements: {},
         };
+
         this.sectionElements = result.section_element_responses.map(item => {
-          let component = this.activeSectionIsClosed
-            ? item.element.element_plugin.participant_response_component
-            : item.element.element_plugin.participant_form_component;
+          let responseDisplayComponent = null;
+          if (item.element.is_respondable) {
+            responseDisplayComponent = tui.asyncComponent(
+              item.element.element_plugin.participant_response_component
+            );
+          }
+
           return {
             id: item.section_element_id,
             clientId: uniqueId(),
-            component: tui.asyncComponent(component),
+            formComponent: tui.asyncComponent(
+              item.element.element_plugin.participant_form_component
+            ),
+            responseDisplayComponent,
             element: {
               type: item.element.element_plugin,
               title: item.element.title,
@@ -848,7 +793,15 @@ export default {
             },
             sort_order: item.sort_order,
             is_respondable: item.element.is_respondable,
-            response_data: item.response_data,
+            // We need to handle the absence of response data in the view-only report mode
+            // in this mode the actor doesn't have "response_data" directly,
+            // all responses are grouped under "other_responder_groups".
+            response_data: this.viewOnlyReportMode
+              ? null
+              : JSON.parse(item.response_data),
+            response_data_formatted_lines: this.viewOnlyReportMode
+              ? []
+              : item.response_data_formatted_lines,
             other_responder_groups: item.other_responder_groups,
           };
         });
@@ -861,9 +814,10 @@ export default {
         result.section_element_responses
           .filter(item => item.element.is_respondable)
           .forEach(item => {
-            this.initialValues.sectionElements[
-              item.section_element_id
-            ] = JSON.parse(item.response_data_raw);
+            this.initialValues.sectionElements[item.section_element_id] = {
+              response: JSON.parse(item.response_data_raw),
+            };
+
             this.hasOtherResponse = item.other_responder_groups.length > 0;
             item.other_responder_groups.forEach(group => {
               if (group.responses.length > 0 && item.response_data) {
@@ -876,15 +830,6 @@ export default {
   },
   methods: {
     /**
-     * Handles responsive resizing which wraps the grid layout for this page
-     *
-     * @param {String} boundaryName
-     */
-    resize(boundaryName) {
-      this.currentBoundaryName = boundaryName;
-    },
-
-    /**
      * Sort all missing responses to the end in a responder group.
      */
     sortMissingAnswersToEnd(responderGroup) {
@@ -895,28 +840,6 @@ export default {
         .sort(response => (response.response_data === null ? 1 : -1));
 
       return groupClone;
-    },
-
-    /**
-     * Creates user section element component props
-     *
-     * @param {Object} sectionElement
-     * @return {Object}
-     */
-    loadUserSectionElementProps(sectionElement) {
-      let props = {
-        element: sectionElement.element,
-      };
-      if (this.activeSectionIsClosed) {
-        props.data = JSON.parse(sectionElement.response_data);
-        props.class = 'tui-participantContent__readonly';
-      } else {
-        props.isDraft = this.isDraft;
-        props.path = ['sectionElements', sectionElement.id];
-        props.error = this.errors && this.errors[sectionElement.id];
-      }
-
-      return props;
     },
 
     /**
@@ -1285,6 +1208,7 @@ export default {
 <lang-strings>
   {
     "mod_perform": [
+      "back_to_user_activities",
       "button_close",
       "next_section",
       "previous_section",
@@ -1315,22 +1239,6 @@ export default {
 .tui-participantContent {
   @include tui-font-body();
 
-  & > * + * {
-    margin-top: var(--gap-6);
-  }
-
-  &__body {
-    margin-top: 0;
-  }
-
-  &__layout.tui-grid {
-    margin-top: var(--gap-6);
-  }
-
-  &__buttons {
-    margin-top: var(--gap-4);
-  }
-
   &__user {
     display: flex;
     flex-direction: column;
@@ -1356,25 +1264,37 @@ export default {
   }
 
   &__navigation {
-    margin-top: var(--gap-4);
+    display: flex;
 
     &-buttons {
-      text-align: right;
+      margin-left: auto;
 
-      :not(:first-child) {
+      & > * + * {
         margin-left: var(--gap-4);
       }
     }
   }
 
   &__sectionHeading {
-    justify-content: flex-end;
-    margin-top: var(--gap-6);
+    & > * + * {
+      margin-top: var(--gap-8);
+    }
 
     &-title {
       flex: 1;
       margin: auto 0;
       @include tui-font-heading-small();
+    }
+
+    &-relationshipNotInSection {
+      font-style: italic;
+    }
+  }
+
+  &__form {
+    padding-bottom: var(--gap-12);
+    & > * + * {
+      margin-top: var(--gap-8);
     }
   }
 
@@ -1382,8 +1302,7 @@ export default {
     display: flex;
     flex-wrap: wrap;
     justify-content: space-between;
-    padding-top: var(--gap-6);
-    padding-bottom: var(--gap-6);
+    padding: var(--gap-4) 0;
     border-top: solid var(--color-neutral-5) var(--border-width-thin);
     border-bottom: solid var(--color-neutral-5) var(--border-width-thin);
   }
@@ -1398,8 +1317,8 @@ export default {
   }
 
   &__section {
-    &-requiredContainer {
-      margin-top: var(--gap-2);
+    & > * + * {
+      margin-top: var(--gap-8);
     }
 
     &-responseRequired {
@@ -1409,31 +1328,26 @@ export default {
     }
   }
 
-  &__sectionItem {
+  &__sectionItems {
     margin-top: var(--gap-4);
 
+    & > * + * {
+      margin-top: var(--gap-12);
+    }
+  }
+
+  &__sectionItem {
     &-content {
-      & > * {
-        margin-top: var(--gap-4);
+      margin-top: var(--gap-8);
+
+      & > * + * {
+        margin-top: var(--gap-8);
       }
     }
     &-contentHeader {
-      display: inline-flex;
+      margin: 0;
       @include tui-font-heading-x-small();
-      margin-left: 0;
     }
-  }
-
-  &__staticElement {
-    display: flex;
-    &__name {
-      @include tui-font-body();
-      margin-left: var(--gap-3);
-    }
-  }
-
-  &__readonly {
-    padding-top: var(--gap-1);
   }
 }
 
@@ -1465,7 +1379,6 @@ export default {
 
     &__infoBar {
       flex-wrap: nowrap;
-      margin-top: var(--gap-6);
     }
 
     &__sectionHeading-otherResponseSwitch {

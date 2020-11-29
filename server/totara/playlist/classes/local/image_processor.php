@@ -30,9 +30,15 @@ use stdClass;
 use stored_file;
 use totara_engage\entity\engage_resource;
 use totara_playlist\entity\playlist_resource;
+use totara_playlist\local\image_processor\contract as image_processor_contract;
 use totara_playlist\playlist;
 
-final class image_processor {
+/**
+ * Class image_processor
+ *
+ * @package totara_playlist\local
+ */
+final class image_processor implements image_processor_contract {
     /**
      * RGB colour code of the background (stripe) of the image
      *
@@ -102,7 +108,7 @@ final class image_processor {
      * @param bool $squared If true, the square version of the image should be returned
      * @return stored_file|null
      */
-    public function get_image_for_playlist(playlist $playlist, $squared = false): ?stored_file {
+    public function get_image_for_playlist(playlist $playlist, bool $squared = false): ?stored_file {
         /** @var stored_file[] $images */
         $images = $this->get_images_for_playlist($playlist);
 
@@ -316,10 +322,10 @@ final class image_processor {
         [$cell_w, $cell_h] = $is_square ? static::CELL_SQUARE_SIZE : static::CELL_SIZE;
         $cell_s = static::CELL_SPACING;
 
-        $canvas = imagecreatetruecolor($image_w, $image_h);
+        $canvas = imagecreatetransparent($image_w, $image_h);
         $colour_default = imagecolorallocatealpha($canvas, ...static::IMAGE_DEFAULT);
-        imagefill($canvas, 0, 0, $colour_default);
-        unset($colour_default);
+        imagefilledrectangle($canvas, 0, 0, $image_w, $image_h, $colour_default);
+        imagecolordeallocate($canvas, $colour_default);
 
         $colour_image_background = imagecolorallocate($canvas, ...static::IMAGE_BACKGROUND);
 
@@ -357,7 +363,6 @@ final class image_processor {
                 $cell_w + static::CELL_SPACING,
                 $cell_h + static::CELL_SPACING
             );
-            imagedestroy($source_image);
             $cropped_image = imagecreatefromstring($cropped_image);
 
             // X/Y starts at the top-left corner of the canvas
@@ -384,7 +389,7 @@ final class image_processor {
             $corner++;
         }
 
-        unset($colour_image_background);
+        imagecolordeallocate($canvas, $colour_image_background);
 
         // Draw a cross over top
         // Technically we're covering a couple of pixels of content, but it hides
@@ -392,7 +397,7 @@ final class image_processor {
         $colour_cross = imagecolorallocate($canvas, ...static::IMAGE_BACKGROUND);
         imagefilledrectangle($canvas, $cell_w, 0, $cell_w + $cell_s, $image_h, $colour_cross);
         imagefilledrectangle($canvas, 0, $cell_h, $image_w, $cell_h + $cell_s, $colour_cross);
-        unset($colour_cross);
+        imagecolordeallocate($canvas, $colour_cross);
 
         imagesavealpha($canvas, true);
 
@@ -404,21 +409,5 @@ final class image_processor {
 
         imagedestroy($canvas);
         return $image_data;
-    }
-
-    /**
-     * Helper method to test generating images. Will throw an exception if a unit test is not active.
-     *
-     * @param array $images
-     * @param bool $square
-     * @return string|null
-     */
-    public static function test_generate_image(array $images, $square = false): ?string {
-        if (!(defined('PHPUNIT_TEST') && PHPUNIT_TEST)) {
-            throw new \coding_exception('Cannot call test_generate_image from outside a unit test.', DEBUG_DEVELOPER);
-        }
-
-        $processor = static::make();
-        return $processor->generate_image($images, $square);
     }
 }

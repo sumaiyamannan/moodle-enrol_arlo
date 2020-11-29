@@ -2544,6 +2544,14 @@ class mod_facetoface_lib_testcase extends mod_facetoface_facetoface_testcase {
             // up those times within alldates.
             $noticebody .= $key.' '.$field . ' ';
         }
+        $noticebody .= "<a href='https://docs.google.com/a/example.com/forms/d/e/2GRStFENt3YkpRvng/viewform?entry.345654021=[seminarname]'>Give a feedback</a>";
+
+        $context = context_system::instance();
+        $editoroptions = ['context'  => $context];
+        $data = (object)['noticebody' => $noticebody, 'noticebodyformat' => FORMAT_HTML];
+        $data = file_prepare_standard_editor($data, 'noticebody', $editoroptions, $context, 'mod_facetoface', 'notification');
+
+        $this->assertStringContainsString("<a href=\"https://docs.google.com/a/example.com/forms/d/e/2GRStFENt3YkpRvng/viewform?entry.345654021=%5Bseminarname%5D\">Give a feedback</a>", $data->noticebody);
 
         // Translation problems hack.
         $strmanager = get_string_manager();
@@ -2567,7 +2575,7 @@ class mod_facetoface_lib_testcase extends mod_facetoface_facetoface_testcase {
         $notification->ccmanager = 0;
         $notification->status = 1;
         $notification->title = 'Confirmation';
-        $notification->body = $noticebody;
+        $notification->body = $data->noticebody;
         $notification->managerprefix = '';
         $notification->type = MDL_F2F_NOTIFICATION_MANUAL;
         $notification->save();
@@ -2607,6 +2615,10 @@ class mod_facetoface_lib_testcase extends mod_facetoface_facetoface_testcase {
         $this->assertStringContainsString('lastname '.$user1->lastname, $fullmessagehtml);
         $this->assertStringContainsString('cost '.$seminarevent->get_normalcost(), $fullmessage);
         $this->assertStringContainsString('cost '.$seminarevent->get_normalcost(), $fullmessagehtml);
+        $this->assertStringContainsString(
+            '<a href="https://docs.google.com/a/example.com/forms/d/e/2GRStFENt3YkpRvng/viewform?entry.345654021='.$facetoface->name.'">Give a feedback</a>',
+            $fullmessagehtml
+        );
 
         $assertions = function ($sessiondate, $session, $duration) use ($fullmessage, $fullmessagehtml) {
             $timestart = $session->get_timestart();
@@ -3803,7 +3815,7 @@ class mod_facetoface_lib_testcase extends mod_facetoface_facetoface_testcase {
         $sessiondata1 = array(
             'facetoface' => $facetoface->id,
             'capacity' => 10,
-            'sessiondates' => [(object) ['timestart' => $now + 1000, 'timefinish' => $now - 1200]],
+            'sessiondates' => [(object) ['timestart' => $now + 1000, 'timefinish' => $now + 1200]],
         );
         $sessionid1 = $facetofacegenerator->add_session($sessiondata1);
         $sessiondata1['datetimeknown'] = '1';
@@ -3831,8 +3843,7 @@ class mod_facetoface_lib_testcase extends mod_facetoface_facetoface_testcase {
             array('coursemoduleid' => $cminfo->id, 'userid' => $this->user1->id)));
 
         // We can't process attendance for future sessions, so move it to the past.
-        $DB->execute('UPDATE {facetoface_sessions_dates} SET timestart = 1000 WHERE sessionid = :sid', ['sid' => $seminarevent->get_id()]);
-        $DB->execute('UPDATE {facetoface_sessions_dates} SET timefinish = 1200 WHERE sessionid = :sid', ['sid' => $seminarevent->get_id()]);
+        $seminarevent->get_sessions(true)->current()->set_timestart(1000)->set_timefinish(1200)->save();
 
         // Check the signup can transition as expected.
         $this->assertTrue($signup11->can_switch(fully_attended::class));
@@ -3893,13 +3904,12 @@ class mod_facetoface_lib_testcase extends mod_facetoface_facetoface_testcase {
         );
         $facetoface = $facetofacegenerator->create_instance($f2fdata, $f2foptions);
 
-        $sessiondate1 = (object)($this->facetoface_sessions_dates_data);
+        $now = time();
         $sessiondata1 = array(
             'facetoface' => $facetoface->id,
             'capacity' => 10,
-            'sessiondates' => array($sessiondate1),
+            'sessiondates' => [(object) ['timestart' => $now + 1000, 'timefinish' => $now + 1200]],
         );
-        $this->markTestSkipped('FIXME: $sessiondata1 containing invalid format');
         $sessionid1 = $facetofacegenerator->add_session($sessiondata1);
         $sessiondata1['datetimeknown'] = '1';
 

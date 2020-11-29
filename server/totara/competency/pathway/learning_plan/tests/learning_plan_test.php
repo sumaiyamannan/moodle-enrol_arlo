@@ -29,13 +29,16 @@ use totara_competency\aggregation_task;
 use totara_competency\aggregation_users_table;
 use totara_competency\competency_achievement_aggregator;
 use totara_competency\competency_aggregator_user_source;
-use totara_competency\entities\competency_achievement;
-use totara_competency\entities\pathway_achievement;
-use totara_competency\entities\scale_value;
+use totara_competency\entity\competency_achievement;
+use totara_competency\entity\pathway_achievement;
+use totara_competency\entity\scale_value;
 use pathway_learning_plan\learning_plan;
-use totara_competency\entities\competency;
+use totara_competency\entity\competency;
 use totara_core\advanced_feature;
 
+/**
+ * @group totara_competency
+ */
 class pathway_learning_plan_learning_plan_testcase extends advanced_testcase {
 
     /**

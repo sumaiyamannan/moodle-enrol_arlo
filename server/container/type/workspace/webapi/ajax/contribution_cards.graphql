@@ -1,6 +1,6 @@
 query container_workspace_contribution_cards(
   $workspace_id: param_integer!
-  $area: param_text!
+  $area: param_area!
   $access: totara_engage_access
   $type: param_component
   $topic: param_integer
@@ -10,9 +10,10 @@ query container_workspace_contribution_cards(
   $include_footnotes: Boolean!
   $footnotes_type: param_text
   $footnotes_item_id: core_id
-  $footnotes_area: param_text
+  $footnotes_area: param_area
   $footnotes_component: param_component
   $cursor: String
+  $image_preview_mode: String
 ) {
   contribution: container_workspace_contributions(
     workspace_id: $workspace_id
@@ -43,6 +44,8 @@ query container_workspace_contribution_cards(
       summary
       component
       tuicomponent
+      imagetuicomponent
+      image(preview_mode: $image_preview_mode)
       access
       comments
       reactions

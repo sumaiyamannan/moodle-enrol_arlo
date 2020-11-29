@@ -30,9 +30,9 @@ use core\orm\entity\model;
 use core\orm\query\builder;
 use mod_perform\controllers\activity\view_external_participant_activity;
 use mod_perform\controllers\activity\view_user_activity;
-use mod_perform\entities\activity\element_response;
-use mod_perform\entities\activity\participant_section as participant_section_entity;
-use mod_perform\entities\activity\section_relationship;
+use mod_perform\entity\activity\element_response;
+use mod_perform\entity\activity\participant_section as participant_section_entity;
+use mod_perform\entity\activity\section_relationship;
 use mod_perform\event\participant_section_saved_as_draft;
 use mod_perform\models\activity\participant_instance;
 use mod_perform\models\activity\participant_source;
@@ -303,14 +303,8 @@ class participant_section extends model implements section_response_interface {
             throw new coding_exception('This participant section is not in a valid state to be completed');
         }
 
-        $has_validation_error = false;
-
-        foreach ($this->get_section_element_responses() as $element_response) {
-            $has_validation_error = !$element_response->validate_response();
-        }
-
         // There was at least one validation problem, don't save anything.
-        if ($has_validation_error) {
+        if ($this->has_response_validation_errors(false)) {
             return false;
         }
 
@@ -352,6 +346,11 @@ class participant_section extends model implements section_response_interface {
             throw new coding_exception('This participant section is not in a valid state to be saved as draft');
         }
 
+        // There was at least one draft validation problem, don't save anything.
+        if ($this->has_response_validation_errors(true)) {
+            return false;
+        }
+
         builder::get_db()->transaction(function () {
             foreach ($this->get_section_element_responses() as $section_element_response) {
                 $section_element_response->save();
@@ -368,6 +367,22 @@ class participant_section extends model implements section_response_interface {
             ->trigger();
 
         return true;
+    }
+
+    /**
+     * @param bool $is_draft
+     *
+     * @return bool
+     */
+    private function has_response_validation_errors(bool $is_draft = false): bool {
+        $has_response_validation_errors = false;
+        foreach ($this->get_section_element_responses() as $element_response) {
+            if (!$element_response->validate_response($is_draft)) {
+                // We don't stop here because validate_response has side-effects that we want.
+                $has_response_validation_errors  = true;
+            }
+        }
+        return $has_response_validation_errors ;
     }
 
     /**

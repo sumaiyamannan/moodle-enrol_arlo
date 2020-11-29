@@ -1,5 +1,5 @@
 <?php
-/*
+/**
  * This file is part of Totara Learn
  *
  * Copyright (C) 2018 onwards Totara Learning Solutions LTD
@@ -22,8 +22,13 @@
  * @category test
  */
 
+use totara_competency\entity\competency as competency_entity;
+
 defined('MOODLE_INTERNAL') || die();
 
+/**
+ * @group totara_competency
+ */
 class totara_competency_crumbtrail_testcase extends advanced_testcase {
 
     /**
@@ -53,7 +58,7 @@ class totara_competency_crumbtrail_testcase extends advanced_testcase {
     public function test_generate_crumbtrail() {
         $test_data = $this->prepare_data();
 
-        $competency = new \totara_competency\entities\competency($test_data->comp4);
+        $competency = new competency_entity($test_data->comp4);
         $crumbtrail = $competency->crumbtrail;
 
         $this->assertCount(5, $crumbtrail);
@@ -116,7 +121,7 @@ class totara_competency_crumbtrail_testcase extends advanced_testcase {
     public function test_generate_crumbtrail_of_uppermost_level() {
         $test_data = $this->prepare_data();
 
-        $competency = new \totara_competency\entities\competency($test_data->comp1);
+        $competency = new competency_entity($test_data->comp1);
         $crumbtrail = $competency->crumbtrail;
 
         $this->assertCount(2, $crumbtrail);
@@ -156,7 +161,7 @@ class totara_competency_crumbtrail_testcase extends advanced_testcase {
     }
 
     public function test_invalid_object() {
-        $competency = new \totara_competency\entities\competency();
+        $competency = new competency_entity();
         $crumbtrail = $competency->crumbtrail;
 
         $this->assertEmpty($crumbtrail);

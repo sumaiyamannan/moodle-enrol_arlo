@@ -209,13 +209,13 @@ M.util.CollapsibleRegion.prototype.icon = null;
  */
 M.util.set_user_preference = function(name, value) {
     YUI().use('io', function(Y) {
-        var url = M.cfg.wwwroot + '/lib/ajax/setuserpref.php?sesskey=' +
-                M.cfg.sesskey + '&pref=' + encodeURI(name) + '&value=' + encodeURI(value);
+        var url = M.cfg.wwwroot + '/lib/ajax/setuserpref.php?pref=' + encodeURI(name) + '&value=' + encodeURI(value);
 
         // If we are a developer, ensure that failures are reported.
         var cfg = {
                 method: 'get',
-                on: {}
+                on: {},
+                headers: { 'x-totara-sesskey': M.cfg.sesskey }
             };
         if (M.cfg.developerdebug) {
             cfg.on.failure = function(id, o, args) {
@@ -1362,3 +1362,39 @@ M.util.validate_email = function(value) {
     var expression = /^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
     return expression.test(value);
 };
+
+// As we don't want the sesskey in a URL (as there are plenty of locations where a URL is stored),
+// we set a data attribute on the link so that we can convert the GET request to a POST (and hide the
+// sesskey from logs and referers).
+document.body.addEventListener('click', function (e) {
+    var node = e.target.closest('a[data-addsesskey]');
+    if (node) {
+        e.preventDefault();
+        var url = node.getAttribute('href').split('?')[0];
+        var queryString = node.getAttribute('href').split('?')[1];
+        var urlForm = document.createElement('form');
+
+        // Ensure sesskey is not in the URL (so it doesn't appear in logs etc)
+        queryString = queryString.split('&').filter(function(string) {
+            var query = string.split('=');
+            if (query[0] === 'sesskey') {
+                if (M.cfg.sesskey === query[1]) {
+                    var sesskeyInput = document.createElement('input');
+                    sesskeyInput.type = 'hidden';
+                    sesskeyInput.name = 'sesskey';
+                    sesskeyInput.value = M.cfg.sesskey;
+                    urlForm.appendChild(sesskeyInput);
+                }
+                return false;
+            } else {
+                return true;
+            }
+        }).join('&');
+
+        urlForm.action = url + '?' + queryString;
+        urlForm.method = 'POST';
+        urlForm.style.display = 'none';
+        document.body.appendChild(urlForm);
+        urlForm.submit();
+    }
+});

@@ -28,12 +28,14 @@ use core\orm\query\exceptions\multiple_records_found_exception;
 use core\orm\query\exceptions\record_not_found_exception;
 use core\webapi\execution_context;
 use core\webapi\query_resolver;
-use totara_competency\entities\assignment_availability;
+use totara_competency\entity\assignment_availability;
 use totara_criteria\criterion;
 use totara_criteria\criterion_not_found_exception;
 
 /**
  * Tests the query to fetch data for competency achievements
+ *
+ * @group totara_competency
  */
 abstract class totara_criteria_competency_achievements_testcase extends advanced_testcase {
 
@@ -115,18 +117,6 @@ abstract class totara_criteria_competency_achievements_testcase extends advanced
     }
 
     /**
-     * Test requires login, otherwise throw require_login_exception.
-     */
-    public function test_it_requires_login() {
-        $this->expectException(require_login_exception::class);
-        $args = [
-            'instance_id'   => $this->data['criterion']->get_id(),
-            'user_id'       => $GLOBALS['USER']->id,
-        ];
-        $this->execute_resolver($args);
-    }
-
-    /**
      * Test throw criterion_not_found_exception if there is no criterion.
      */
     public function test_it_throws_not_found_exception_for_criterion() {
@@ -182,12 +172,12 @@ abstract class totara_criteria_competency_achievements_testcase extends advanced
 
         /** @var criterion $criterion */
         $criterion = $this->data['criterion'];
-        $first_competency = new \totara_competency\entities\competency(
+        $first_competency = new \totara_competency\entity\competency(
             $criterion->get_item_ids()[0]
         );
 
         $assignment_availability = new assignment_availability();
-        $assignment_availability->availability = \totara_competency\entities\competency::ASSIGNMENT_CREATE_SELF;
+        $assignment_availability->availability = \totara_competency\entity\competency::ASSIGNMENT_CREATE_SELF;
         $assignment_availability->comp_id = $first_competency->id;
         $assignment_availability->save();
 

@@ -25,6 +25,7 @@ use mod_facetoface\{signup, signup_status, seminar_event, seminar, calendar};
 use mod_facetoface\signup\state\{
     attendance_state,
     booked,
+    event_cancelled,
     waitlisted,
     requested,
     requestedadmin,
@@ -34,7 +35,8 @@ use mod_facetoface\signup\state\{
     unable_to_attend,
     no_show,
     state,
-    not_set
+    not_set,
+    user_cancelled
 };
 
 defined('MOODLE_INTERNAL') || die();
@@ -53,17 +55,19 @@ final class mod_facetoface_generator_util {
         'fully_attended' => fully_attended::class,
         'partially_attended' => partially_attended::class,
         'unable_to_attend' => unable_to_attend::class,
-        'no_show' => no_show::class
+        'no_show' => no_show::class,
+        'event_cancelled' => event_cancelled::class,
+        'user_cancelled' => user_cancelled::class,
     ];
 
     private static function get_event_id_from_detail(string $details): int {
         global $DB;
-        $sql = "SELECT id FROM {facetoface_sessions} WHERE {$DB->sql_compare_text('details')} = '{$details}'";
+        $sql = 'SELECT id FROM {facetoface_sessions} WHERE details = ?';
 
         // This seems to be a bad idea, but presumably that the test environment does only have one record
         // per test suite, then it is okay to do so. Just pass IGNORE_MISSING here, so that it can return false
         // when record is not found.
-        $record = $DB->get_record_sql($sql, null, IGNORE_MISSING);
+        $record = $DB->get_record_sql($sql, [$details], IGNORE_MISSING);
         if (!$record) {
             throw new coding_exception("event '{$details}' does not exist");
         }

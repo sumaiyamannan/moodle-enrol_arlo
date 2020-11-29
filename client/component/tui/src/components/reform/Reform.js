@@ -30,7 +30,7 @@ import { set as vueSet } from 'tui/vue_util';
 import { isLangString, loadLangStrings, isRtl } from 'tui/i18n';
 import { getDocumentPosition } from 'tui/dom/position';
 import { getTabbableElements } from 'tui/dom/focus';
-import BatchingSerialLoadQueue from '../../js/internal/BatchingSerialLoadQueue';
+import BatchingLoadQueue from '../../js/internal/BatchingLoadQueue';
 
 /**
  * Check if two arrays are shallowly == (all of their items are ==)
@@ -70,7 +70,7 @@ export default {
   provide() {
     return {
       reformScope: {
-        getValue: name => get(this.values, name),
+        getValue: this.get,
         getError: name => get(this.displayedErrors, name),
         getTouched: name => !!get(this.touched, name),
         update: this.update,
@@ -175,10 +175,11 @@ export default {
   },
 
   created() {
-    this.validationQueue = new BatchingSerialLoadQueue({
+    this.validationQueue = new BatchingLoadQueue({
       handler: this.$_validateInternal,
       wait: 10,
       equal: arrayEqual,
+      serial: true,
     });
   },
 
@@ -190,11 +191,28 @@ export default {
      * @param {*} value
      */
     update(path, value) {
-      vueSet(this.values, path, value);
+      if (path == null) {
+        this.values = value;
+      } else {
+        vueSet(this.values, path, value);
+      }
       this.$emit('change', this.values);
       if (this.validationMode != 'submit') {
         this.$_validate(path);
       }
+    },
+
+    /**
+     * Get current value of input.
+     *
+     * @param {?(string|number|array)} path Path. Omit to return all values.
+     * @returns {*}
+     */
+    get(path) {
+      if (path == null) {
+        return this.values;
+      }
+      return get(this.values, path);
     },
 
     /**
@@ -498,7 +516,7 @@ export default {
      * @returns {Promise}
      */
     $_validate(path = null) {
-      return this.validationQueue.enqueue([path]);
+      return this.validationQueue.enqueue(path);
     },
 
     /**

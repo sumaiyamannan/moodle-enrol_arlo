@@ -24,29 +24,29 @@
 
 use container_perform\perform as perform_container;
 use core\collection;
-use core\entities\cohort;
-use core\entities\user;
+use core\entity\cohort;
+use core\entity\user;
 use core\orm\query\builder;
 use core\session\manager;
-use core_container\container_category_helper;
 use core_container\module\module;
-use hierarchy_organisation\entities\organisation;
-use hierarchy_position\entities\position;
+use hierarchy_organisation\entity\organisation;
+use hierarchy_position\entity\position;
 use mod_perform\constants;
 use mod_perform\dates\date_offset;
-use mod_perform\entities\activity\activity as activity_entity;
-use mod_perform\entities\activity\element as element_entity;
-use mod_perform\entities\activity\element_response;
-use mod_perform\entities\activity\manual_relationship_selection;
-use mod_perform\entities\activity\manual_relationship_selection_progress;
-use mod_perform\entities\activity\manual_relationship_selector;
-use mod_perform\entities\activity\participant_instance as participant_instance_entity;
-use mod_perform\entities\activity\participant_section as participant_section_entity;
-use mod_perform\entities\activity\section as section_entity;
-use mod_perform\entities\activity\section_element as section_element_entity;
-use mod_perform\entities\activity\subject_instance as subject_instance_entity;
-use mod_perform\entities\activity\track as track_entity;
-use mod_perform\entities\activity\track_user_assignment;
+use mod_perform\entity\activity\activity as activity_entity;
+use mod_perform\entity\activity\element as element_entity;
+use mod_perform\entity\activity\element_response;
+use mod_perform\entity\activity\manual_relationship_selection;
+use mod_perform\entity\activity\manual_relationship_selection_progress;
+use mod_perform\entity\activity\manual_relationship_selector;
+use mod_perform\entity\activity\notification_recipient as notification_recipient_entity;
+use mod_perform\entity\activity\participant_instance as participant_instance_entity;
+use mod_perform\entity\activity\participant_section as participant_section_entity;
+use mod_perform\entity\activity\section as section_entity;
+use mod_perform\entity\activity\section_element as section_element_entity;
+use mod_perform\entity\activity\subject_instance as subject_instance_entity;
+use mod_perform\entity\activity\track as track_entity;
+use mod_perform\entity\activity\track_user_assignment;
 use mod_perform\expand_task;
 use mod_perform\models\activity\activity;
 use mod_perform\models\activity\activity_setting;
@@ -80,9 +80,10 @@ use mod_perform\task\service\manual_participant_progress;
 use mod_perform\task\service\subject_instance_creation;
 use mod_perform\user_groups\grouping;
 use mod_perform\util;
-use totara_core\entities\relationship;
+use totara_core\entity\relationship;
 use totara_core\relationship\relationship as core_relationship;
 use totara_core\relationship\relationship_provider as core_relationship_provider;
+use totara_job\entity\job_assignment as job_assignment_entity;
 use totara_job\job_assignment;
 
 /**
@@ -153,6 +154,14 @@ class mod_perform_generator extends component_generator_base {
 
             if (isset($data['manual_relationships'])) {
                 $this->create_manual_relationships_for_activity($activity->id, $data['manual_relationships']);
+            }
+
+            if (isset($data['created_at'])) {
+                activity_entity::repository()->update_record([
+                    'id' => $activity->id,
+                    'created_at' => strtotime($data['created_at']),
+                ]);
+                $activity->refresh();
             }
 
             return $activity;
@@ -359,7 +368,7 @@ class mod_perform_generator extends component_generator_base {
         $element->update_details(
             $data['title'] ?? $element->title,
             $data['data'] ?? $element->data,
-            $data['is_required'] ?? $element->is_required
+            $data['is_required']
         );
     }
 
@@ -433,9 +442,29 @@ class mod_perform_generator extends component_generator_base {
         return core_relationship::load_by_idnumber($idnumber);
     }
 
-    public function create_notification_recipient(notification $notification, array $data, bool $active = true): notification_recipient {
-        $core_relationship = $this->get_core_relationship($data['idnumber']);
-        return notification_recipient::create($notification, $core_relationship, $active);
+    /**
+     * Get the notification recipient model instance for the specified notification.
+     *
+     * @param notification $notification
+     * @param array $data Relationship data, e.g. ['idnumber' => relationship idnumber]
+     * @param bool $active Should the recipient be active?
+     * @return notification_recipient
+     */
+    public function create_notification_recipient(
+        notification $notification,
+        array $data,
+        bool $active = true
+    ): notification_recipient {
+        $entity = notification_recipient_entity::repository()
+            ->join([relationship::TABLE, 'relationship'], 'core_relationship_id', 'id')
+            ->where('notification_id', $notification->id)
+            ->where('relationship.idnumber', $data['idnumber'])
+            ->one(true);
+        $model = notification_recipient::load_by_entity($entity);
+        if ($active != $model->active) {
+            $model->toggle($active);
+        }
+        return $model;
     }
 
     /**
@@ -616,7 +645,7 @@ class mod_perform_generator extends component_generator_base {
 
             // Create all notifications.
             $notifications = array_map(function ($class_key) use ($activity) {
-                return notification::create($activity, $class_key, true);
+                return notification::load_by_activity_and_class_key($activity, $class_key)->activate();
             }, factory::create_loader()->get_class_keys());
 
             if ($configuration->get_number_of_sections_per_activity() > 1) {
@@ -1311,7 +1340,7 @@ class mod_perform_generator extends component_generator_base {
     }
 
     private function get_last_job_assignment_idnumber(): int {
-        $last_record = \totara_job\entities\job_assignment::repository()
+        $last_record = job_assignment_entity::repository()
             ->order_by('id', 'desc')
             ->select('id')
             ->first();

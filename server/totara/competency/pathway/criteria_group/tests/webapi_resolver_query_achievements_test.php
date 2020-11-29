@@ -23,17 +23,19 @@
  */
 
 use core\webapi\execution_context;
-use pathway_criteria_group\entities\criteria_group as criteria_group_entity;
-use pathway_criteria_group\entities\criteria_group_criterion as criteria_group_criterion_entity;
+use pathway_criteria_group\entity\criteria_group as criteria_group_entity;
+use pathway_criteria_group\entity\criteria_group_criterion as criteria_group_criterion_entity;
 use pathway_criteria_group\webapi\resolver\query\achievements;
-use totara_competency\entities\scale_value;
-use totara_criteria\entities\criterion;
+use totara_competency\entity\scale_value;
+use totara_criteria\entity\criterion;
 
 defined('MOODLE_INTERNAL') || die();
 
 
 /**
  * Tests the query to fetch all criterions within a criteria group
+ *
+ * @group totara_competency
  */
 class pathway_criteria_group_webapi_resolver_query_achievements_testcase extends advanced_testcase {
 

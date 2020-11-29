@@ -17,7 +17,7 @@
 -->
 
 <template>
-  <Loader :loading="isLoading">
+  <Loader :loading="$apollo.loading || isLoading">
     <div class="tui-activityNotifications">
       <h3 class="tui-activityNotifications__header">
         <span class="tui-activityNotifications__title">{{
@@ -44,7 +44,6 @@ import { notify } from 'tui/notifications';
 import Loader from 'tui/components/loading/Loader';
 import NotificationSection from 'mod_perform/components/manage_activity/notification/NotificationSection';
 import notificationsQuery from 'mod_perform/graphql/notifications';
-import createNotificationMutation from 'mod_perform/graphql/create_notification';
 import toggleNotificationMutation from 'mod_perform/graphql/toggle_notification';
 import toggleNotificationRecipientMutation from 'mod_perform/graphql/toggle_notification_recipient';
 import updateNotificationTriggersMutation from 'mod_perform/graphql/update_notification_triggers';
@@ -61,12 +60,18 @@ export default {
       type: Object,
       required: true,
     },
+    tabIsActive: {
+      type: Boolean,
+      required: true,
+    },
   },
 
   data() {
     return {
       notifications: [],
       isLoading: false,
+      activityUpdated: false,
+      skipQuery: true,
     };
   },
 
@@ -77,25 +82,39 @@ export default {
         return { activity_id: this.value.id };
       },
       update: data => data.mod_perform_notifications,
+      skip() {
+        return this.skipQuery && !this.tabIsActive;
+      },
+      fetchPolicy: 'network-only',
     },
   },
 
   watch: {
     value() {
-      this.$apollo.queries.notifications.refetch();
+      // Queue the query to be updated again if other activity settings change
+      this.activityUpdated = true;
+    },
+    tabIsActive() {
+      this.skipQuery = false;
+      // We only refetch the notification data if the activity has changed, and this tab is selected again.
+      if (this.activityUpdated && this.tabIsActive) {
+        this.$apollo.queries.notifications.refetch();
+        this.activityUpdated = false;
+      }
     },
   },
 
-  beforeCreate() {
-    this.updateTriggers = debounce(
-      async (section, triggers) => {
-        const id = await this.createNotificationIfNotExists(section);
+  methods: {
+    onUpdateTriggers: debounce(
+      async function(section, triggers) {
         try {
+          // We deliberately don't update the notification state with what is returned by the mutation,
+          // as otherwise it creates a weird effect because of the 500ms delay.
           await this.$apollo.mutate({
             mutation: updateNotificationTriggersMutation,
             variables: {
               input: {
-                notification_id: id,
+                notification_id: section.id,
                 values: triggers,
               },
             },
@@ -114,81 +133,60 @@ export default {
       },
       500,
       { leading: true, trailing: true }
-    );
-  },
+    ),
 
-  methods: {
     async onToggleNotification(section, active) {
       this.isLoading = true;
-      if (section.id) {
-        await this.$apollo.mutate({
-          mutation: toggleNotificationMutation,
-          variables: {
-            input: {
-              notification_id: section.id,
-              active,
-            },
+      const { data: result } = await this.$apollo.mutate({
+        mutation: toggleNotificationMutation,
+        variables: {
+          input: {
+            notification_id: section.id,
+            active,
           },
-        });
-      } else {
-        await this.$apollo.mutate({
-          mutation: createNotificationMutation,
-          variables: {
-            input: {
-              activity_id: this.value.id,
-              class_key: section.class_key,
-              active,
-            },
-          },
-        });
-      }
-      await this.$apollo.queries.notifications.refetch();
+        },
+      });
+      this.updateNotification(result.mod_perform_toggle_notification);
       this.isLoading = false;
     },
 
+    /**
+     * @deprecated since Totara 13.2
+     */
     async createNotificationIfNotExists(section) {
-      let id;
-      if (!section.id) {
-        this.isLoading = true;
-        const mutationResult = await this.$apollo.mutate({
-          mutation: createNotificationMutation,
-          variables: {
-            input: {
-              activity_id: this.value.id,
-              class_key: section.class_key,
-              active: section.active,
-            },
-          },
-        });
-        id =
-          mutationResult.data.mod_perform_create_notification.notification.id;
-        await this.$apollo.queries.notifications.refetch();
-        this.isLoading = false;
-      } else {
-        id = section.id;
-      }
-      return id;
+      console.warn(
+        '[NotificationsTab] createNotificationIfNotExists() is deprecated and should not be used.\n' +
+          'Notifications now always exist, so this will always return the ID of the notification.'
+      );
+      return section.id;
     },
 
     async onToggleRecipient(section, recipient) {
       this.isLoading = true;
-      const id = await this.createNotificationIfNotExists(section);
-      await this.$apollo.mutate({
+      const { data: result } = await this.$apollo.mutate({
         mutation: toggleNotificationRecipientMutation,
         variables: {
           input: {
-            notification_id: id,
+            notification_id: section.id,
             relationship_id: recipient.id,
             active: recipient.active,
           },
         },
       });
-      await this.$apollo.queries.notifications.refetch();
+      this.updateNotification(result.mod_perform_toggle_notification_recipient);
       this.isLoading = false;
     },
 
-    onUpdateTriggers(section, triggers) {
-      this.updateTriggers(section, triggers);
+    updateNotification(updatedNotification) {
+      this.notifications = this.notifications.map(notification => {
+        if (
+          notification.class_key === updatedNotification.notification.class_key
+        ) {
+          return updatedNotification.notification;
+        } else {
+          return notification;
+        }
+      });
     },
   },
 };
@@ -207,10 +205,14 @@ export default {
 
 <style lang="scss">
 .tui-activityNotifications {
+  & > * + * {
+    margin-top: var(--gap-4);
+  }
+
   &__header {
     display: flex;
     align-items: baseline;
-    margin-top: var(--gap-2); // Check the content tab before changing this.
+    margin: 0;
   }
 
   &__title {

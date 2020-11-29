@@ -33,7 +33,11 @@ class numeric_rating_scale extends respondable_element_plugin {
     /**
      * @inheritDoc
      */
-    public function validate_response(?string $encoded_response_data, ?element $element): collection {
+    public function validate_response(
+        ?string $encoded_response_data,
+        ?element $element,
+        $is_draft_validation = false
+    ): collection {
         $element_data = $element->data ?? null;
         $answer_value = $this->decode_response($encoded_response_data, $element_data);
 
@@ -41,11 +45,12 @@ class numeric_rating_scale extends respondable_element_plugin {
             throw new coding_exception('Invalid element data format, expected "options" field');
         }
         $errors = new collection();
-
-        if ($answer_value !== '') {
-            $this->validate_value($answer_value, $element, $errors);
-        } else if ($element->is_required) {
+        if ($this->fails_required_validation($answer_value === '' || is_null($answer_value), $element, $is_draft_validation)) {
             $errors->append(new answer_required_error());
+        }
+
+        if (!is_null($answer_value) && $answer_value !== '') {
+            $this->validate_value($answer_value, $element, $errors);
         }
 
         return $errors;
@@ -58,17 +63,7 @@ class numeric_rating_scale extends respondable_element_plugin {
      * @return string|string[]
      */
     public function decode_response(?string $encoded_response_data, ?string $encoded_element_data) {
-        $response_data = json_decode($encoded_response_data, true);
-
-        if ($response_data === null) {
-            return null;
-        }
-
-        if (!isset($response_data['answer_value'])) {
-            throw new coding_exception('Invalid response data format, expected "answer_value" field');
-        }
-
-        return $response_data['answer_value'];
+        return json_decode($encoded_response_data, true);
     }
 
     /**
@@ -76,7 +71,7 @@ class numeric_rating_scale extends respondable_element_plugin {
      * @param element $element
      * @param collection $errors
      */
-    protected function validate_value(int $answer_value, element $element, collection $errors): void {
+    protected function validate_value(?int $answer_value, element $element, collection $errors): void {
         $data = json_decode($element->data, true);
 
         // If element does not have any data then we have a problem.
@@ -88,7 +83,7 @@ class numeric_rating_scale extends respondable_element_plugin {
         $high = $data['highValue'];
 
         // Confirm that the response value is in valid range.
-        if ($answer_value < $low || $answer_value > $high) {
+        if (!is_null($answer_value) && ($answer_value < $low || $answer_value > $high)) {
             $errors->append(new answer_invalid_error());
         }
     }
@@ -96,14 +91,14 @@ class numeric_rating_scale extends respondable_element_plugin {
     /**
      * @inheritDoc
      */
-    public function get_group(): int {
-        return self::GROUP_QUESTION;
+    public function get_sortorder(): int {
+        return 50;
     }
 
     /**
      * @inheritDoc
      */
-    public function get_sortorder(): int {
-        return 40;
+    public function is_response_required_enabled(): bool {
+        return true;
     }
 }

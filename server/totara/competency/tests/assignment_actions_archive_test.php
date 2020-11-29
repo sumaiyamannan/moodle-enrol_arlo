@@ -22,8 +22,8 @@
  * @category test
  */
 
-use totara_competency\entities\assignment;
-use totara_competency\entities\competency_assignment_user;
+use totara_competency\entity\assignment;
+use totara_competency\entity\competency_assignment_user;
 use totara_competency\expand_task;
 use totara_competency\models\assignment_actions;
 use totara_job\job_assignment;
@@ -33,6 +33,9 @@ defined('MOODLE_INTERNAL') || die();
 
 require_once(__DIR__.'/assignment_actions_testcase.php');
 
+/**
+ * @group totara_competency
+ */
 class totara_competency_actions_archive_testcase extends totara_competency_assignment_actions_testcase {
 
     public function test_archiving_draft() {

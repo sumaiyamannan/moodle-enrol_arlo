@@ -22,9 +22,12 @@
  */
 namespace engage_article\webapi\resolver\mutation;
 
+use core\json_editor\helper\document_helper;
 use core\webapi\execution_context;
+use core\webapi\middleware\clean_content_format;
 use core\webapi\middleware\require_advanced_feature;
 use core\webapi\middleware\require_login;
+use totara_engage\exception\resource_exception;
 use totara_engage\webapi\middleware\require_valid_recipients;
 use core\webapi\mutation_resolver;
 use core\webapi\resolver\has_middleware;
@@ -48,26 +51,60 @@ final class update implements mutation_resolver, has_middleware {
         }
 
         $id = $args['resourceid'];
-        unset($args['resourceid']);
+        $article_data = [
+            'draft_id' => $args['draft_id'] ?? null
+        ];
 
-        if (isset($args['access']) && !is_numeric($args['access']) && is_string($args['access'])) {
+        /** @var article $article */
+        $article = article::from_resource_id($id);
+
+        if (isset($args['access'])) {
             // Format the string access into a proper value that machine can understand.
             $access = access::get_value($args['access']);
-            $args['access'] = $access;
+
+            if (access::is_restricted($access) && empty($args['shares'])) {
+                throw resource_exception::create('update', article::get_resource_type());
+            }
+            if (access::is_public($access) && empty($args['topics'])) {
+                throw resource_exception::create('update', article::get_resource_type());
+            }
+
+            $article_data['access'] = $access;
         }
 
-        if (!isset($args['format'])) {
-            $args['format'] = FORMAT_JSON_EDITOR;
+        // Default to the current format value of the article.
+        $article_data['format'] = $article->get_format();
+
+        if (isset($args['format'])) {
+            $article_data['format'] = $args['format'];
         }
 
         if (isset($args['timeview'])) {
             $timeview = time_view::get_value($args['timeview']);
-            $args['timeview'] = $timeview;
+            $article_data['timeview'] = $timeview;
         }
 
-        /** @var article $article */
-        $article = article::from_resource_id($id);
-        $article->update($args, $USER->id);
+        if (isset($args['name'])) {
+            $article_data['name'] = $args['name'];
+        }
+
+        if (isset($args['content'])) {
+            $content = $args['content'];
+            $format = $article_data['format'];
+
+            if ((FORMAT_JSON_EDITOR == $format && document_helper::is_document_empty($content)) || empty($content)) {
+                throw resource_exception::create(
+                    'update',
+                    article::get_resource_type(),
+                    null,
+                    "Article content is empty"
+                );
+            }
+
+            $article_data['content'] = $content;
+        }
+
+        $article->update($article_data, $USER->id);
 
         // Add/remove topics.
         if (!empty($args['topics'])) {
@@ -93,6 +130,7 @@ final class update implements mutation_resolver, has_middleware {
             new require_login(),
             new require_advanced_feature('engage_resources'),
             new require_valid_recipients('shares'),
+            new clean_content_format('format', null, [FORMAT_JSON_EDITOR])
         ];
     }
 

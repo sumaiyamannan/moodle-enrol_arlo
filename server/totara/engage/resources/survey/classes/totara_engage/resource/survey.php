@@ -469,11 +469,13 @@ final class survey extends resource_item {
      * @inheritDoc
      */
     public function can_share(int $userid): bool {
-        if (access_manager::can_manage_engage($this->get_context(), $userid)) {
+        $context = $this->get_context();
+
+        if (access_manager::can_manage_engage($context, $userid)) {
             return true;
         }
+
         // Check if user is allowed to share surveys.
-        $context = \context_user::instance($userid);
         if (!has_capability('engage/survey:share', $context, $userid)) {
             return false;
         }
@@ -617,6 +619,6 @@ final class survey extends resource_item {
         }
 
         $context = \context_user::instance($sharer_id);
-        return has_capability('engage/article:unshare', $context, $sharer_id);
+        return has_capability('engage/survey:unshare', $context, $sharer_id);
     }
 }

@@ -25,7 +25,7 @@ namespace mod_perform\models\activity;
 
 use coding_exception;
 use core\collection;
-use mod_perform\entities\activity\element as element_entity;
+use mod_perform\entity\activity\element as element_entity;
 use mod_perform\models\response\element_validation_error;
 
 /**
@@ -46,12 +46,32 @@ abstract class respondable_element_plugin extends element_plugin {
      *
      * @param string|null $encoded_response_data
      * @param element|null $element
+     * @param bool|false $is_draft_validation
      *
      * @return collection|element_validation_error[]
      * @see element_validation_error
      */
-    public function validate_response(?string $encoded_response_data, ?element $element): collection {
-        return new collection();
+    abstract public function validate_response(
+        ?string $encoded_response_data,
+        ?element $element,
+        $is_draft_validation = false
+    ): collection ;
+
+    /**
+     * Does the response fail the element specific definition of required.
+     *
+     * @param bool         $is_empty_answer
+     * @param element|null $element
+     * @param bool         $is_draft_validation
+     *
+     * @return bool
+     */
+    public function fails_required_validation(
+        bool $is_empty_answer,
+        ?element $element,
+        bool $is_draft_validation = false
+    ): bool {
+        return $is_empty_answer && $element->is_required && !$is_draft_validation;
     }
 
     public function validate_element(element_entity $element) {
@@ -75,10 +95,112 @@ abstract class respondable_element_plugin extends element_plugin {
     abstract public function decode_response(?string $encoded_response_data, ?string $encoded_element_data);
 
     /**
+     * Format a response into lines ready to be displayed.
+     *
+     * @param string|null $encoded_response_data
+     * @param string|null $encoded_element_data
+     * @return string[]
+     */
+    public function format_response_lines(?string $encoded_response_data, ?string $encoded_element_data): array {
+        $decoded_response = $this->decode_response(
+            $encoded_response_data,
+            $encoded_element_data
+        );
+
+        if ($decoded_response === null) {
+            return [];
+        }
+
+        // Wrap scalars values in an array.
+        return (array) $decoded_response;
+    }
+
+    /**
      * Returns example response data that is in a format valid for the element. Used for generating records during testing.
+     *
      * @return string
      */
-    public function get_example_response_data():string {
-        return '{}';
+    public function get_example_response_data(): string {
+        return '""';
     }
+
+    /**
+     * @inheritDoc
+     */
+    public function get_group(): int {
+        return self::GROUP_QUESTION;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    final public function has_title(): bool {
+        return true;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function get_title_text():string {
+        return get_string('question_title', 'mod_perform');
+    }
+
+    /**
+     * @inheritDoc
+     */
+    final public function is_title_required(): bool {
+        return true;
+    }
+
+    /**
+     * Return true if element has reporting id
+     *
+     * @return bool
+     */
+    public function has_reporting_id(): bool {
+        return true;
+    }
+
+    /**
+     * Return true if element response required enabled
+     *
+     * @return bool
+     */
+    public function is_response_required_enabled(): bool {
+        return true;
+    }
+
+    /**
+     * This method return element's user form vue component name.
+     *
+     * @return string
+     */
+    public function get_participant_response_component(): string {
+        return 'mod_perform/components/element/participant_form/ResponseDisplay';
+    }
+
+    /**
+     * Pull the answer text string out of the encoded json data.
+     *
+     * @param string|null $encoded_response_data
+     * @return string|null
+     */
+    protected function decode_simple_string_response(?string $encoded_response_data): ?string {
+        if ($encoded_response_data === null) {
+            return null;
+        }
+
+        $decoded_response = json_decode($encoded_response_data, true);
+
+        if ($decoded_response === null) {
+            return null;
+        }
+
+        if (!is_string($decoded_response)) {
+            throw new coding_exception('Invalid response data format, expected a string');
+        }
+
+        return $decoded_response;
+    }
+
 }

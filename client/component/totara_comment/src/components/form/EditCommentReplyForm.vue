@@ -25,7 +25,7 @@
       <Weka
         v-if="!$apollo.queries.editorOption.loading"
         v-model="content"
-        :area="item.comment_area"
+        :area="item.comment_area.toLowerCase()"
         :instance-id="itemId"
         :file-item-id="item.file_draft_id"
         component="totara_comment"
@@ -55,7 +55,7 @@ import UnsavedChangesWarning from 'totara_engage/components/form/UnsavedChangesW
 
 // GraphQL query
 import getDraftItem from 'totara_comment/graphql/get_draft_item';
-import getEditorWeka from 'totara_comment/graphql/get_editor_weka';
+import getEditorWeka from 'totara_comment/graphql/get_editor_weka_from_id';
 
 export default {
   components: {
@@ -88,10 +88,9 @@ export default {
       query: getEditorWeka,
       variables() {
         return {
-          component: this.item.component,
-          area: this.item.area,
           comment_area: this.item.comment_area.toLowerCase(),
           id: this.itemId,
+          draft_id: this.item.file_draft_id,
         };
       },
 
@@ -100,7 +99,11 @@ export default {
       },
 
       skip() {
-        return this.$apollo.queries.item.loading;
+        return (
+          !this.item ||
+          this.item.file_draft_id === null ||
+          this.$apollo.queries.item.loading
+        );
       },
     },
   },

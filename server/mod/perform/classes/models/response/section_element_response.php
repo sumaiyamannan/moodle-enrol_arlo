@@ -26,8 +26,8 @@ namespace mod_perform\models\response;
 use coding_exception;
 use core\collection;
 use core\orm\entity\model;
-use mod_perform\entities\activity\section_element as section_element_entity;
-use mod_perform\entities\activity\element_response as element_response_entity;
+use mod_perform\entity\activity\section_element as section_element_entity;
+use mod_perform\entity\activity\element_response as element_response_entity;
 use mod_perform\models\activity\element;
 use mod_perform\models\activity\participant_instance;
 use mod_perform\models\activity\respondable_element_plugin;
@@ -61,6 +61,7 @@ class section_element_response extends model implements section_element_response
         'section_element',
         'section_element_id',
         'response_data', // as a JSON encoded string
+        'response_data_formatted_lines',
         'element',
         'validation_errors',
         'participant_instance',
@@ -167,6 +168,25 @@ class section_element_response extends model implements section_element_response
         return $this->entity->response_data;
     }
 
+    /**
+     * Get the response data formatted ready for display broken into an array entry for each response.
+     * For example for multi_choice_multi will have each selected checkbox value as an array entry.
+     *
+     * @return string[]
+     */
+    public function get_response_data_formatted_lines(): array {
+        $element_plugin = $this->get_element()->get_element_plugin();
+
+        if (!$element_plugin instanceof respondable_element_plugin) {
+            return [];
+        }
+
+        return $element_plugin->format_response_lines(
+            $this->entity->response_data,
+            $this->get_element()->data
+        );
+    }
+
     public function get_section_element(): section_element {
         return $this->section_element;
     }
@@ -212,9 +232,14 @@ class section_element_response extends model implements section_element_response
 
     /**
      * Run the element plugin specific validation on the response data.
+     *
+     * This function has the side-effect of setting the validation_errors
+     * property.
+     *
+     * @param bool $is_draft_validation
      * @return bool
      */
-    public function validate_response(): bool {
+    public function validate_response($is_draft_validation = false): bool {
         $element_plugin = $this->get_element()->get_element_plugin();
 
         if (!$element_plugin instanceof respondable_element_plugin) {
@@ -223,7 +248,8 @@ class section_element_response extends model implements section_element_response
 
         $this->validation_errors = $element_plugin->validate_response(
             $this->entity->response_data,
-            $this->get_element()
+            $this->get_element(),
+            $is_draft_validation
         );
 
         return $this->validation_errors->count() === 0;

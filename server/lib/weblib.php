@@ -2034,6 +2034,9 @@ function purify_html($text, $options = array()) {
             $config->set('Attr.EnableID', true);
         }
 
+        // Allow safe CSS extensions - http://htmlpurifier.org/live/configdoc/plain.html#CSS.Proprietary
+        $config->set('CSS.Proprietary', true);
+
         if ($def = $config->maybeGetRawHTMLDefinition()) {
             $def->addElement('nolink', 'Block', 'Flow', array());                       // Skip our filters inside.
             $def->addElement('tex', 'Inline', 'Inline', array());                       // Tex syntax, equivalent to $$xx$$.
@@ -2216,6 +2219,26 @@ function purify_uri($uri, $httponly = false, $requirescheme = false) {
         return '';
     }
     return $uri;
+}
+
+/**
+ * Uses HTMLPurifier to sanitise CSS colours.
+ *
+ * @since Totara 13.2
+ *
+ * @param string $color
+ * @return bool|string false if color invalid
+ */
+function purify_css_color(string $color) {
+    require_once __DIR__ . '/htmlpurifier/locallib.php';
+
+    static $config;
+    if (!$config) {
+        $config = HTMLPurifier_Config::createDefault();
+    }
+
+    $validator = new \HTMLPurifier_AttrDef_CSS_Color();
+    return $validator->validate($color, $config, new HTMLPurifier_Context());
 }
 
 /**

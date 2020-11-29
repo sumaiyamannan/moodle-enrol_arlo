@@ -20,8 +20,8 @@
  * @package totara_competency
  */
 
-define(['core/templates', 'core/ajax', 'core/modal_factory', 'core/modal_events', 'core/notification', 'core/str','totara_competency/loader_manager'],
-function(templates, ajax, modalFactory, modalEvents, notification, str,Loader) {
+define(['core/templates', 'core/ajax', 'core/modal_factory', 'core/modal_events', 'core/notification', 'core/str', 'totara_competency/loader_manager'],
+function(templates, ajax, modalFactory, modalEvents, notification, str, Loader) {
 
     /**
      * Class constructor for the AchievementPaths.
@@ -107,7 +107,7 @@ function(templates, ajax, modalFactory, modalEvents, notification, str,Loader) {
                         pwKey = e.target.closest('[data-tw-editAchievementPaths-pathway-key]').getAttribute('data-tw-editAchievementPaths-pathway-key');
 
                     if (actionC === 'remove') {
-                        that.removePathway(pwKey);
+                        that.removePathway(pwKey, '');
                     } else if (actionC === 'undo') {
                         that.undoRemovePathway(pwKey);
                     }
@@ -201,7 +201,6 @@ function(templates, ajax, modalFactory, modalEvents, notification, str,Loader) {
             window.addEventListener('beforeunload', function(e) {
                 if (that.dirty) {
                     e.preventDefault();
-                    // TODO: Test in IE
                     e.returnValue = '';
                     return '';
                 }
@@ -254,7 +253,6 @@ function(templates, ajax, modalFactory, modalEvents, notification, str,Loader) {
                 that.pathways[key].detail = pw;
 
                 // Reset busyAddPw to allow adding of another pw
-                // TODO: May want to check the current value against the update value. Just make sure it works during init
                 that.unsetBusyAddPathway();
             });
 
@@ -277,7 +275,6 @@ function(templates, ajax, modalFactory, modalEvents, notification, str,Loader) {
                     that.showAddScaleValuePaths(scaleValueId);
                 }
             });
-
         },
 
         /**
@@ -542,7 +539,6 @@ function(templates, ajax, modalFactory, modalEvents, notification, str,Loader) {
                 return criterion.type === criterionType;
             });
             criterion.key = criterionKey;
-            // TODO: For now singleuse is used to determine whether there are detail - may need to expand later
             criterion.expandable = !criterion.singleuse;
 
             pw = {
@@ -599,6 +595,7 @@ function(templates, ajax, modalFactory, modalEvents, notification, str,Loader) {
             }
 
             M.util.js_pending('competencyAchievementPathsApplyChanges');
+            this.loader.show();
 
             // Disable ordering so that the form elements get enabled again
             this.disableOrdering();
@@ -668,14 +665,15 @@ function(templates, ajax, modalFactory, modalEvents, notification, str,Loader) {
 
             if (promiseArr.length > 0) {
                 Promise.all(promiseArr).then(function() {
-                    // TODO: For now simply reloading all pathways. Try to find a way to update ids for keys
                     that.updatePage().then(function() {
                         that.showNotification('success', 'apply_success', 'totara_competency', {});
+                        that.loader.hide();
                         M.util.js_complete('competencyAchievementPathsApplyChanges');
                     }).catch(function(e) {
                         e.fileName = that.filename;
                         e.name = 'Error updating the page';
                         notification.exception(e);
+                        that.loader.hide();
                         M.util.js_complete('competencyAchievementPathsApplyChanges');
                     });
                 }).catch(function(e) {
@@ -686,6 +684,7 @@ function(templates, ajax, modalFactory, modalEvents, notification, str,Loader) {
                     e.fileName = that.filename;
                     e.name = 'Error applying changes';
                     notification.exception(e);
+                    that.loader.hide();
                     M.util.js_complete('competencyAchievementPathsApplyChanges');
                 });
             }
@@ -862,11 +861,11 @@ function(templates, ajax, modalFactory, modalEvents, notification, str,Loader) {
                     if (pwTarget) {
                         pwTarget.remove();
                     }
-
-                    if (pendingJsKey != '') {
-                        M.util.js_complete(pendingJsKey);
-                    }
                 }
+            }
+
+            if (pendingJsKey !== '') {
+                M.util.js_complete(pendingJsKey);
             }
         },
 
@@ -1360,6 +1359,7 @@ function(templates, ajax, modalFactory, modalEvents, notification, str,Loader) {
          */
         setBusyAddPathway: function (pathType) {
             this.busyAddPathway = pathType;
+            M.util.js_pending(this.busyAddPathway);
             this.loader.show();
         },
 
@@ -1367,8 +1367,11 @@ function(templates, ajax, modalFactory, modalEvents, notification, str,Loader) {
          * unset busyAddPathway and hide loading spinner
          */
         unsetBusyAddPathway: function () {
-            this.busyAddPathway = '';
-            this.loader.hide();
+            if (this.busyAddPathway !== '') {
+                this.loader.hide();
+                M.util.js_complete(this.busyAddPathway);
+                this.busyAddPathway = '';
+            }
         }
 
     };

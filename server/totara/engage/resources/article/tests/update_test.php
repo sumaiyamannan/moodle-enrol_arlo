@@ -129,13 +129,22 @@ class engage_article_update_testcase extends advanced_testcase {
      * @return void
      */
     public function test_update_article_via_graphql(): void {
+        $this->setAdminUser();
+        /** @var totara_topic_generator $topicgen */
+        $topicgen = $this->getDataGenerator()->get_plugin_generator('totara_topic');
+        $topics[] = $topicgen->create_topic('topic1')->get_id();
+        $topics[] = $topicgen->create_topic('topic2')->get_id();
+
         $user = $this->getDataGenerator()->create_user();
         $this->setUser($user);
 
         $article = article::create(
             [
                 'name' => "Hello world",
-                'content' => "Abcde eee",
+                'content' => json_encode([
+                    'type' => 'doc',
+                    'content' => [paragraph::create_json_node_from_text('Abcde eee')]
+                ]),
                 'timeview' => time_view::LESS_THAN_FIVE
             ]
         );
@@ -144,7 +153,12 @@ class engage_article_update_testcase extends advanced_testcase {
             'resourceid' => $article->get_id(),
             'name' => "Bolobala",
             'access' => 'PUBLIC',
-            'format' => FORMAT_PLAIN
+            'format' => FORMAT_JSON_EDITOR,
+            'topics' => $topics,
+            'content' => json_encode([
+                'type' => 'doc',
+                'content' => [paragraph::create_json_node_from_text('new content')]
+            ]),
         ];
 
         $ec = execution_context::create('ajax', 'engage_article_update_article');
@@ -158,6 +172,7 @@ class engage_article_update_testcase extends advanced_testcase {
 
         $this->assertEquals('Bolobala', $article['resource']['name']);
         $this->assertEquals('PUBLIC', $article['resource']['access']);
+        $this->assertEquals('new content', format_string($article['content']));
     }
 
     /**
@@ -201,8 +216,11 @@ class engage_article_update_testcase extends advanced_testcase {
         $args = [
             'resourceid' => $article->get_id(),
             'name' => "TfIKQ8IXoycfkcbGaav6B1XVVibwtIYTlyGIOiJukJ4xVOVd4dlbDBnVioSmM5LwdJ7lEv7MCNax",
-            'access' => 'PUBLIC',
-            'format' => FORMAT_PLAIN
+            'format' => FORMAT_JSON_EDITOR,
+            'content' => json_encode([
+                'type' => 'doc',
+                'content' => [paragraph::create_json_node_from_text('x')]
+            ])
         ];
 
         $ec = execution_context::create('ajax', 'engage_article_update_article');

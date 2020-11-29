@@ -82,6 +82,8 @@ class default_resolver {
         // Regular data type.
         $parts = explode('_', $info->parentType->name);
         if (!$this->is_introspection_type($info->parentType->name) && count($parts) > 1) {
+            $this->check_for_deprecation_messages($ec, $info);
+
             [$component, $name] = $this->split_type_name($info->parentType->name);
             if (empty($name)) {
                 throw new \coding_exception('Type resolvers must be named as component_name, e.g. totara_job_job');
@@ -106,6 +108,8 @@ class default_resolver {
         return strpos($name, '__') === 0;
     }
 
+    private static $split_type_name_cache = [];
+
     /**
      * Split type name, i.e. totara_competency_my_query_name into component (totara_competency) and the rest (my_query_name)
      *
@@ -113,8 +117,13 @@ class default_resolver {
      * @return array
      */
     private function split_type_name(string $name) {
+        if (isset(self::$split_type_name_cache[$name])) {
+            return self::$split_type_name_cache[$name];
+        }
+
         if (strpos($name, 'core_') === 0) {
-            return ['core', substr($name, 5)];
+            self::$split_type_name_cache[$name] = ['core', substr($name, 5)];
+            return self::$split_type_name_cache[$name];
         }
 
         // Build flat list out of all plugins and subplugins
@@ -141,13 +150,15 @@ class default_resolver {
             array_pop($parts);
             $component_search_name = implode('_', $parts);
             if (isset($components[$component_search_name])) {
-                return [
+                self::$split_type_name_cache[$name] = [
                     $component_search_name,
                     substr($name, strlen($component_search_name) + 1)
                 ];
+                return self::$split_type_name_cache[$name];
             }
         }
 
+        self::$split_type_name_cache[$name] = [null, null];
         return [null, null];
     }
 
@@ -225,6 +236,30 @@ class default_resolver {
         }
 
         return $middleware_chain;
+    }
+
+    /**
+     * Check for deprecation messages and if found add them to the execution context
+     *
+     * @param execution_context $execution_context
+     * @param ResolveInfo $info
+     */
+    private function check_for_deprecation_messages(execution_context $execution_context, ResolveInfo $info): void {
+        // phpcs:disable Totara.NamingConventions.ValidVariableName.LowerCaseUnderscores
+
+        if ($info->schema) {
+            $type = $info->schema->getType($info->parentType->name);
+            if ($type) {
+                $field = $type->getField($info->fieldName);
+                if (!empty($field->deprecationReason)) {
+                    $execution_context->add_deprecation_warning(
+                        $info->parentType->name,
+                        $info->fieldName,
+                        $field->deprecationReason
+                    );
+                }
+            }
+        }
     }
 
 }

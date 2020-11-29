@@ -22,16 +22,19 @@
  * @category test
  */
 
-use totara_competency\entities\assignment;
-use totara_competency\entities\competency;
-use totara_competency\entities\competency_framework;
+use totara_competency\entity\assignment;
+use totara_competency\entity\competency;
+use totara_competency\entity\competency_framework;
 use totara_competency\task\expand_assignment_task;
-use core\entities\user;
+use core\entity\user;
 use totara_competency\user_groups;
 use totara_core\basket\session_basket;
 
 defined('MOODLE_INTERNAL') || die();
 
+/**
+ * @group totara_competency
+ */
 class totara_competency_assignment_service_create_testcase extends advanced_testcase {
 
     use \totara_core\phpunit\webservice_utils;

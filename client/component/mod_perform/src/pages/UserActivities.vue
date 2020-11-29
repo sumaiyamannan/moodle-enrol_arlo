@@ -41,6 +41,7 @@
             about="self"
             :current-user-id="currentUserId"
             :view-url="viewActivityUrl"
+            :print-url="printActivityUrl"
           />
         </Tab>
         <Tab
@@ -53,6 +54,7 @@
             about="others"
             :current-user-id="currentUserId"
             :view-url="viewActivityUrl"
+            :print-url="printActivityUrl"
           />
         </Tab>
         <Tab
@@ -107,6 +109,10 @@ export default {
       type: Number,
     },
     viewActivityUrl: {
+      required: true,
+      type: String,
+    },
+    printActivityUrl: {
       required: true,
       type: String,
     },

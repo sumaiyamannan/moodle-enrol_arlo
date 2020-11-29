@@ -70,7 +70,7 @@
               )
             "
             :styleclass="{ transparent: true }"
-            class="tui-performUserActivityList__select-relationship-link"
+            class="tui-performUserActivityList__selectRelationshipLink"
             :text="subjectInstance.subject.activity.name"
             @click.prevent="showRelationshipSelector(subjectInstance)"
           />
@@ -166,57 +166,65 @@
         </Cell>
       </template>
       <template v-slot:expand-content="{ row: subjectInstance }">
-        <p class="tui-performUserActivityDateSummary">
-          {{
-            $str(
-              'user_activities_created_at',
-              'mod_perform',
-              subjectInstance.subject.created_at
-            )
-          }}
-          <span v-if="subjectInstance.subject.due_date">
+        <div class="tui-performUserActivityList__expandedRow">
+          <p class="tui-performUserActivityList__expandedRow-dateSummary">
             {{
               $str(
-                'user_activities_complete_before',
+                'user_activities_created_at',
                 'mod_perform',
-                subjectInstance.subject.due_date
+                subjectInstance.subject.created_at
               )
             }}
-          </span>
-          <span
-            v-if="isSingleSectionViewOnly(subjectInstance.subject.activity.id)"
-          >
-            {{
-              $str(
-                'user_activities_single_section_view_only_activity',
-                'mod_perform'
-              )
-            }}
-          </span>
-        </p>
+            <span v-if="subjectInstance.subject.due_date">
+              {{
+                $str(
+                  'user_activities_complete_before',
+                  'mod_perform',
+                  subjectInstance.subject.due_date
+                )
+              }}
+            </span>
+            <span
+              v-if="
+                isSingleSectionViewOnly(subjectInstance.subject.activity.id)
+              "
+            >
+              {{
+                $str(
+                  'user_activities_single_section_view_only_activity',
+                  'mod_perform'
+                )
+              }}
+            </span>
+          </p>
 
-        <Button
-          class="tui-performUserActivityList__button"
-          :text="$str('print_activity', 'mod_perform')"
-          @click="printActivity(subjectInstance)"
-        />
+          <SectionsList
+            :activity-id="subjectInstance.subject.activity.id"
+            :subject-sections="subjectInstance.sections"
+            :is-multi-section-active="
+              subjectInstance.subject.activity.settings.multisection
+            "
+            :view-url="viewUrl"
+            :current-user-id="currentUserId"
+            :subject-user="subjectInstance.subject.subject_user"
+            :anonymous-responses="
+              subjectInstance.subject.activity.anonymous_responses
+            "
+            @single-section-view-only="flagActivitySingleSectionViewOnly"
+          />
 
-        <SectionsList
-          :activity-id="subjectInstance.subject.activity.id"
-          :subject-sections="subjectInstance.sections"
-          :is-multi-section-active="
-            subjectInstance.subject.activity.settings.multisection
-          "
-          :view-url="viewUrl"
-          :current-user-id="currentUserId"
-          :subject-user="subjectInstance.subject.subject_user"
-          :anonymous-responses="
-            subjectInstance.subject.activity.anonymous_responses
-          "
-          @single-section-view-only="flagActivitySingleSectionViewOnly"
-        />
+          <Button
+            class="tui-performUserActivityList__button"
+            :text="$str('print_activity', 'mod_perform')"
+            :styleclass="{ small: true }"
+            @click="printActivity(subjectInstance)"
+          />
+        </div>
       </template>
     </Table>
+    <div v-if="showLoadMore" class="tui-performUserActivityList__loadMore">
+      <Button :text="$str('loadmore', 'totara_core')" @click="loadMore" />
+    </div>
 
     <ModalPresenter
       :open="isRelationshipSelectorShown"
@@ -228,7 +236,7 @@
         :participant-sections="selectedParticipantSections"
         :is-for-section="false"
         :subject-user="selectedSubjectUser"
-        :view-url="viewUrl"
+        :view-url="relationshipSelectorUrl"
       />
     </ModalPresenter>
   </Loader>
@@ -281,6 +289,10 @@ export default {
       type: String,
       required: true,
     },
+    printUrl: {
+      type: String,
+      required: true,
+    },
   },
 
   data() {
@@ -290,6 +302,8 @@ export default {
       selectedParticipantSections: [],
       selectedSubjectUser: {},
       singleSectionViewOnlyActivities: [],
+      relationshipSelectorUrl: '',
+      nextCursor: '',
     };
   },
 
@@ -314,6 +328,9 @@ export default {
         );
       });
     },
+    showLoadMore() {
+      return this.subjectInstances.length > 0 && this.nextCursor !== '';
+    },
   },
 
   apollo: {
@@ -327,7 +344,11 @@ export default {
           },
         };
       },
-      update: data => data['mod_perform_my_subject_instances'],
+      update: data => data['mod_perform_my_subject_instances'].items,
+      result({ data }) {
+        this.nextCursor =
+          data['mod_perform_my_subject_instances'].next_cursor || '';
+      },
     },
   },
 
@@ -403,8 +424,9 @@ export default {
      * Open the relationship selector modal.
      *
      * @param {Object} selectedSubjectInstance
+     * @param {Boolean=undefined} isForPrint
      */
-    showRelationshipSelector(selectedSubjectInstance) {
+    showRelationshipSelector(selectedSubjectInstance, isForPrint) {
       this.selectedSubjectUser = selectedSubjectInstance.subject.subject_user;
       this.selectedParticipantSections = [];
       selectedSubjectInstance.sections.forEach(subjectSection => {
@@ -412,6 +434,7 @@ export default {
           this.selectedParticipantSections.push(participantSection);
         });
       });
+      this.relationshipSelectorUrl = isForPrint ? this.printUrl : this.viewUrl;
       this.isRelationshipSelectorShown = true;
     },
 
@@ -602,20 +625,60 @@ export default {
     isSingleSectionViewOnly(activityId) {
       return this.singleSectionViewOnlyActivities.includes(activityId);
     },
+
     /**
      * Open print-friendly page with activity.
      *
      * @param subjectInstance
-     * @returns {boolean}
+     * @return {undefined}
      */
     printActivity(subjectInstance) {
+      if (
+        this.currentUserHasMultipleRelationships(
+          subjectInstance.subject.participant_instances
+        )
+      ) {
+        this.showRelationshipSelector(subjectInstance, true);
+        return;
+      }
+
       const participantSection = this.getFirstSectionToParticipate(
         subjectInstance.sections
       );
-      const url = this.$url('/mod/perform/activity/print.php', {
+      const url = this.$url(this.printUrl, {
         participant_section_id: participantSection.id,
       });
       window.open(url);
+    },
+
+    /**
+     * Load the next 'page' of results
+     */
+    loadMore() {
+      this.$apollo.queries.subjectInstances.fetchMore({
+        variables: {
+          filters: {
+            about: this.aboutFilter,
+          },
+          cursor: this.nextCursor,
+        },
+
+        updateQuery: (previousResult, { fetchMoreResult }) => {
+          const previousInstances =
+            previousResult.mod_perform_my_subject_instances.items;
+          const newInstances =
+            fetchMoreResult.mod_perform_my_subject_instances.items;
+          const nextCursor =
+            fetchMoreResult.mod_perform_my_subject_instances.next_cursor || '';
+          return {
+            mod_perform_my_subject_instances: {
+              items: [...previousInstances, ...newInstances],
+              total: fetchMoreResult.mod_perform_my_subject_instances.items,
+              next_cursor: nextCursor,
+            },
+          };
+        },
+      });
     },
   },
 };
@@ -644,6 +707,35 @@ export default {
       "user_activities_subject_header",
       "user_activities_title_header",
       "user_activities_type_header"
+    ],
+    "totara_core": [
+      "loadmore"
     ]
   }
 </lang-strings>
+
+<style lang="scss">
+.tui-performUserActivityList {
+  &__selectRelationshipLink {
+    text-align: left;
+    @include tui-font-link();
+  }
+
+  &__loadMore {
+    margin-top: var(--gap-2);
+    text-align: center;
+  }
+
+  &__expandedRow {
+    padding: var(--gap-6) var(--gap-4);
+
+    & > * + * {
+      margin-top: var(--gap-6);
+    }
+
+    &-dateSummary {
+      color: var(--color-neutral-6);
+    }
+  }
+}
+</style>

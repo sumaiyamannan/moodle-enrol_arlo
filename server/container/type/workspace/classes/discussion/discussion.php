@@ -23,6 +23,7 @@
 namespace container_workspace\discussion;
 
 use container_workspace\entity\workspace_discussion;
+use container_workspace\repository\discussion_repository;
 use container_workspace\workspace;
 use core\json_editor\document;
 use core\json_editor\node\attachment;
@@ -30,6 +31,7 @@ use core\json_editor\node\audio;
 use core\json_editor\node\file\base_file;
 use core\json_editor\node\image;
 use core\json_editor\node\video;
+use core_container\factory;
 use totara_comment\loader\comment_loader;
 use totara_reaction\loader\reaction_loader;
 
@@ -355,6 +357,10 @@ final class discussion {
         $this->entity->content_text = content_to_text($this->entity->content, $content_format);
 
         $this->entity->timestamp = time();
+
+        // This is to make sure that we update the time modified, because some part of the system
+        // set it to not update the time modified at all.
+        $this->entity->update_timestamps(true);
         $this->entity->save();
     }
 
@@ -475,7 +481,12 @@ final class discussion {
      */
     public function get_workspace(): workspace {
         $workspace_id = $this->entity->course_id;
-        return workspace::from_id($workspace_id);
+
+        /** @var workspace $workspace */
+        $workspace = factory::from_id($workspace_id);
+
+        // Factory will load from cache - hence this should be fast enough.
+        return $workspace;
     }
 
     /**
@@ -569,6 +580,17 @@ final class discussion {
     }
 
     /**
+     * This function will bump the timestamp of the discussion, so that we can tell the recently updated.
+     * @return void
+     */
+    public function touch(): void {
+        $this->entity->timestamp = time();
+        $this->entity->do_not_update_timestamps();
+
+        $this->entity->save();
+    }
+
+    /**
      * Returning the array of stored file record, only if there are files.
      *
      * Note that this function will only return the files that are uploaded under
@@ -656,7 +678,19 @@ final class discussion {
         $this->prevent_delete_files_on_update = $prevent_delete_files_on_update;
     }
 
-    public function reload() {
+    /**
+     * @return void
+     */
+    public function reload(): void {
         $this->entity->refresh();
+    }
+
+    /**
+     * Metadata function to return the repository instance of discussion's entity.
+     *
+     * @return discussion_repository
+     */
+    public static function get_entity_repository(): discussion_repository {
+        return workspace_discussion::repository();
     }
 }

@@ -26,7 +26,7 @@ namespace mod_perform\notification;
 use coding_exception;
 use core\orm\query\builder;
 use mod_perform\constants;
-use totara_core\entities\relationship as relationship_entity;
+use totara_core\entity\relationship as relationship_entity;
 use totara_core\relationship\relationship;
 
 /**
@@ -119,12 +119,15 @@ final class recipient {
      *
      * @param integer $recipients
      * @param builder $builder
-     * @param string $table_name
+     * @param string|null $table_name If not specified, defaults to the alias defined in the builder
      */
-    public static function where_available(int $recipients, builder $builder, string $table_name): void {
+    public static function where_available(int $recipients, builder $builder, string $table_name = null): void {
         if ($recipients === 0) {
             throw new coding_exception('recipients are not set');
         }
+
+        $table_name = $table_name ?? $builder->get_alias();
+
         // This is basically the SQL version of the is_available() function.
         $builder->where(function (builder $inner) use ($recipients, $table_name) {
             if (self::is_external_only($recipients)) {

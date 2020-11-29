@@ -59,14 +59,12 @@ Feature: Allow users to select manual (internal and external) participants for a
     And I click on ".tui-performActivitySectionRelationship:nth-of-type(2) .tui-checkbox__label" "css_element"
     Then I should see "Activity saved" in the tui success notification toast
     And I close the tui notification toast
-    And I click on "Edit content elements" "button"
-    And I click on "Add element" "button"
-    And I click on "Short text" "button"
+    And I click on "Edit content elements" "link_or_button"
+    And I add a "Text: Short response" activity content element
     When I set the following fields to these values:
       | rawTitle   | Question 1   |
-    And I click on "Done" "button" in the ".tui-performEditSectionContentModal__form" "css_element"
-    And I close the tui modal
-    And I close the tui notification toast
+    And I save the activity content element
+    And I follow "Content (Act1)"
     And I click on "Assignments" "link"
     And I click on "Add group" "button"
     And I click on "Audience" "link" in the ".tui-dropdown__menu" "css_element"
@@ -112,7 +110,7 @@ Feature: Allow users to select manual (internal and external) participants for a
     # Subject makes selection (appraiser user for the peer relationship)
     When I log in as "subject"
     And I navigate to the outstanding perform activities list page
-    Then I should see "You must select participants to take part in performance activities. Note: activities cannot start until this is done" in the ".tui-actionCard" "css_element"
+    Then I should see "There are activities awaiting participant selection. Please select people to participate so that those activities can start." in the ".tui-actionCard" "css_element"
     When I click on "Select participants" "link" in the ".tui-actionCard" "css_element"
     Then I should see "Select participants"
     And I should see "Note: None of these activities can start until participants are selected."
@@ -417,6 +415,8 @@ Feature: Allow users to select manual (internal and external) participants for a
     # Alright that's the last participant, subject instance should be closed after that
     When I navigate to the external participants form for user "Steve Example"
     Then I should see perform activity relationship to user "External respondent" as an "external" participant
+    # Make sure the navigate back link is not displayed for external participants
+    And I should not see "Performance activities"
     And I should see perform "short text" question "Question 1" is unanswered
     When I wait until ".tui-performElementResponse .tui-formField" "css_element" exists
     And I answer "short text" question "Question 1" with "External participant 2 was here"

@@ -29,9 +29,10 @@
         <template v-if="subjectSection.canParticipate">
           <Button
             v-if="currentUserHasMultipleRelationships(subjectSection)"
+            class="tui-performUserActivityListSection__selectRelationshipLink"
             :styleclass="{ transparent: true }"
             :text="subjectSection.section.display_title"
-            @click.prevent="showRelationshipSelector(subjectSection)"
+            @click="showRelationshipSelector(subjectSection)"
           />
           <a
             v-else
@@ -84,19 +85,15 @@
             :heavy="row.isForCurrentUser"
             valign="center"
           >
-            <Avatar
-              :src="row.participant.profileimageurlsmall"
-              :alt="row.participant.fullname"
-              size="xsmall"
-              class="tui-bulkManualRatingRateUsersList__avatar"
+            <ParticipantUserHeader
+              :user-name="
+                row.isForCurrentUser
+                  ? $str('user_activities_you', 'mod_perform')
+                  : row.participant.fullname
+              "
+              :profile-picture="row.participant.profileimageurlsmall"
+              size="xxsmall"
             />
-            <template v-if="row.isForCurrentUser">
-              {{ $str('user_activities_you', 'mod_perform') }}
-            </template>
-
-            <template v-else>
-              {{ row.participant.fullname }}
-            </template>
           </Cell>
           <Cell
             size="4"
@@ -167,23 +164,23 @@
 </template>
 
 <script>
-import Avatar from 'tui/components/avatar/Avatar';
 import Button from 'tui/components/buttons/Button';
 import Cell from 'tui/components/datatable/Cell';
 import Lock from 'tui/components/icons/Lock';
 import Lozenge from 'tui/components/lozenge/Lozenge';
 import ModalPresenter from 'tui/components/modal/ModalPresenter';
+import ParticipantUserHeader from 'mod_perform/components/user_activities/participant/ParticipantUserHeader';
 import RelationshipSelector from 'mod_perform/components/user_activities/list/RelationshipSelector';
 import Table from 'tui/components/datatable/Table';
 
 export default {
   components: {
-    Avatar,
     Button,
     Cell,
     Lock,
     Lozenge,
     ModalPresenter,
+    ParticipantUserHeader,
     RelationshipSelector,
     Table,
   },
@@ -445,16 +442,9 @@ export default {
 
 <style lang="scss">
 .tui-performUserActivityListSections {
-  padding: var(--gap-4);
-
   & > * + * {
     margin-top: var(--gap-12);
   }
-}
-
-.tui-performUserActivityDateSummary {
-  padding: var(--gap-6) var(--gap-4) 0;
-  color: var(--color-neutral-6);
 }
 
 .tui-performUserActivityListSection {
@@ -469,7 +459,8 @@ export default {
     @include tui-font-body();
   }
 
-  &__header button {
+  &__selectRelationshipLink {
+    text-align: left;
     @include tui-font-link();
   }
 }

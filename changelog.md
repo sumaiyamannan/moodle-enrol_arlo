@@ -1,3 +1,918 @@
+Release 13.2 (27th November 2020):
+==================================
+
+
+Security issues:
+
+    TL-28307       The correct capability is now checked when adding members to a workspace
+
+                   Previously the access control checks made when adding members to a
+                   workspace were checking the wrong capability. Any user who could invite
+                   users to a workspace could through direct querying immediately enrol
+                   users.
+                   Access control has now been fixed and the correct capability is now being
+                   checked.
+
+    TL-28310       Improved validation of urls requested by the core_get_linkmetadata GraphQL query
+
+                   Previously, the query to get meta data for links added in the Weka editor
+                   did allow links to internal websites being added even though the current
+                   user would not have access to them. This patch improves the validation:
+                   Only https links and links to hosts with IP addresses from non-reserved and
+                   non-private IP address ranges will be requested and parsed. Additionally it
+                   introduced new config variables $CFG->link_parser_allowed_hosts and
+                   $CFG->link_parser_blocked_hosts to be able to explicitly allow or block
+                   hosts.
+
+                   This also introduces a rate_limiter middleware which restricts the amount
+                   of request per minute on this GraphQL query for the currently logged in
+                   user.
+
+    TL-28314       Modified help text for the HTTP Strict Transport Security setting
+
+                   Previously, the HTTP Strict Transport Security setting just enabled HSTS
+                   with a default max-age of 16070400 which the help text does not make clear.
+                   The help text got extended to include more details on what response header
+                   is set and what to do if a custom header needs to be set.
+
+    TL-28315       Prevented self-scripting vulnerability when switching from raw HTML to visual mode in the Atto editor
+
+                   By default, Totara sanitises all HTML content to prevent cross-site
+                   scripting attacks. However, this sanitisation was only happening on the
+                   server, when the content was saved. It was possible to type or paste code
+                   into the Atto editor in raw HTML mode, and when the editor was switched
+                   back to visual mode the code would be executed.
+
+                   To fix this, Atto now performs client-side sanitisation of all HTML that is
+                   entered, unless the site or activity security settings explicitly allow
+                   unsafe HTML content.
+
+    TL-28437       Removed 'sesskey' value from delete topic handling URL
+
+                   Moved the 'sesskey' value that was exposed in delete topic URL, to POST
+                   data.
+
+    TL-28438       Fixed the logged in user's sesskey being shown in the audience dialogue request URLs
+    TL-28439       Removed sesskey from the URL after restoring a course
+    TL-28440       Updated legacy webservice calls to send sesskey as HTTP header rather than as a get parameter
+
+                   The JavaScript AJAX wrapper automatically added the current sesskey to
+                   every AJAX call as a get parameter, making it part of the URL. This could
+                   lead to sesskey exposure via server or proxy logs.
+
+                   The wrapper has been updated to send the sesskey in the X-Totara-Sesskey
+                   HTTP header, and the confirm_sesskey() function has been updated to check
+                   for a sesskey there.
+
+    TL-28441       Removed sesskey from URL's when editing blocks
+    TL-28460       Properly validated getnavbranch.php id values
+
+                   The getnavbranch.php AJAX endpoint is used by the Navigation and Course
+                   Navigation blocks to dynamically load collapsed sections of the navigation
+                   tree. For most branch types, it was designed to use the parent item id to
+                   load child items, but two values were allowed for the root node branch
+                   type: 'courses' and 'mycourses'. As a result, the endpoint allowed any
+                   alphanumeric value to be passed as an id. Also in Totara 13, a hook was
+                   implemented to allow plugins to override the navigation tree, which might
+                   accept any string value as a root node id.
+
+                   String values are now only allowed for the root node branch type; all
+                   other id values must be integers, to prevent any potential SQL injection
+                   vulnerabilities.
+
+    TL-28496       Removed sesskey from the URL when uploading a backup file during restore
+
+Performance improvements:
+
+    TL-24474       Reduced number of database queries triggered during subject and participant instance creation
+    TL-28192       Reduced number of queries for end user competency profile page
+
+Improvements:
+
+    TL-11276       Removed fieldset around enrolled users when editing course settings
+    TL-11307       Added label tag into checkbox on comment report table
+    TL-21748       Updated Learning Plan template 'User driven workflow' description text
+    TL-24195       Removed back to course button from quizzes when viewing in the mobile app
+    TL-24531       Implemented pagination for the list of activities on the manage activities page
+    TL-24540       Added pagination support for user performance activities
+    TL-25244       Improved display of expandable data tables
+    TL-25546       Added new report source for saved searches
+    TL-25566       Ensured that like buttons display appropriately for private and restricted Engage resources and surveys
+    TL-25724       Added the ability to set the values of Uniform forms externally
+    TL-25790       Added support for generating top recommendations per item category in the recommender engine for users
+
+                   Improved approach to group recommendations ensures that users will have
+                   enough recommendations in each category (such as micro-learning,
+                   workspaces, resources, etc)
+
+    TL-25855       Converted some section dividers in resources and workspaces to a neutral colour
+    TL-26027       Added behat tests for ventura theme settings
+    TL-26554       Allowed the perform activity numeric rating scale to be optional
+    TL-26908       Activity participant form layout improvements
+
+                   Standardises the activity participant form to align the spacing more
+                   closely with other pages
+
+    TL-26947       Improve the positioning and size of the activity print button
+    TL-27009       Improved user experience of Performance activity printing
+    TL-27014       Moved activity content form builder to its own page. Formerly it was on a sheet modal.
+    TL-27097       Improved display of icons
+
+                   With the addition of Ventura, a whole new icon set has been created. This
+                   resulted in the following changes:
+                    * The 'Base' theme CSS is now is written using SCSS (and not LESS)
+                    * The 'Roots' theme no longer explicitly excludes base CSS
+                      (as it previously included it as part of LESS compilation)
+                    * The new 'Legacy' theme inherits 'Base' themes SCSS (as 'Roots' did previously)
+
+    TL-27322       Added spacing between log in form error message and field labels in Ventura theme
+    TL-27324       Fixed workspace tab order to be handled by html
+
+                   Fixed Handling tab order by html instead of flex order for accessibility
+                   purposes
+
+    TL-27434       Added focusing on title field when opening an activity section form.
+    TL-27467       New performance activities will now have important notifications activated by default
+
+                   The "Participant selection" and the "Participant instance creation"
+                   notifications are now activated by default upon the creation of new
+                   performance activities. For the "Participant instance creation"
+                   notification, only the "External respondent" recipient will be active by
+                   default.
+
+                   This change is to help guarantee that users are aware they must take action
+                   on an activity in order for it to progress. If these notifications are not
+                   received, then the activity may not be able to be completed without manual
+                   intervention.
+
+    TL-27572       Fixed Seminar event attendance tracking grade validation
+
+                   Seminar manual grading fields are now limited to numeric values, and any
+                   validation errors are shown inline rather than at the top of the form.
+
+    TL-27671       Improved alignment of the subcategories section when managing programs or certifications
+    TL-27946       Added functionality to remove a custom image from theme settings
+    TL-28015       Created container categories immediately instead of on-demand
+
+                   The course categories associated with containers such as perform and
+                   workspaces were not created upon their installation and were not created
+                   when their parent tenants were created. Instead, they were created
+                   on-demand when required. This has been changed, in order to fix PHPUnit
+                   failures and to increase performance.
+
+    TL-28039       Tui unit tests will now fail if any console output is printed
+    TL-28103       Optimized DB calls in perform notification task
+    TL-28151       Improved responsiveness of current learning tiles
+
+                   Previously when viewing the current learning block in the tiles view, the
+                   number and layout of tiles was dictated by the block region to which the
+                   block was assigned, and, to a lesser extent, the current screen width. This
+                   improvement makes tile layout entirely dependant on the width of the block,
+                   regardless of the block region where it is displayed.
+
+    TL-28159       Added draft validation rules for Performance activity section element save responses
+    TL-28160       Extracted common response logic and lang strings out of individual components
+
+                   The Vue components for the question elements on the participant form got
+                   refactored and common logic and lang strings were extracted to reduce
+                   duplicated code and increase maintainability. Individual language strings
+                   previously defined on element level got deprecated. For details please
+                   refer to the upgrade.txt files in the affected components.
+
+                   The structure of the element responses was simplified, they now are not
+                   unnecessarily wrapped into parent structure anymore. All existing element
+                   responses will be migrated to the new structure on upgrade.
+
+    TL-28162       Added HTTPS check to the MS Teams app installation page to prevent site admin from downloading manifest on http site
+    TL-28205       Added microlearning as a distinct item type in recommender export
+    TL-28281       Added navigation back to performance activity list for participants in an activity
+    TL-28285       Added a link to the competency profile of team members in the team members report
+    TL-28301       Improved the text for prompting users to select participants for performance activities
+    TL-28305       Improved the help text for the default mobile compatibility setting
+    TL-28359       Restricted use of relate() on ORM entity to only defined relationships in entity class
+    TL-28363       Added aria-describedby attribute to form elements when validation errors are displayed
+    TL-28369       Added automatic handling of deprecated fields in GraphQL
+
+                   With this patch, all fields marked as @deprecated in the GraphQL schema
+                   will trigger a debugging message automatically if they are still in use.
+                   Also if developer mode is enabled the deprecation messages will be returned
+                   in the extensions field in the response.
+
+    TL-28372       Improved consistency and reduced code duplication in performance activity admin elements
+
+                   We have aligned the performance activity admin elements providing a more
+                   consistent approach, reducing a large amount of duplication. As the
+                   components have been restructured this is a breaking change from the
+                   previous implementation.
+
+                   Added a new wrapper component for all admin elements which provides the
+                   outer card style, action icons, reporting ID and the element title.
+
+                   A new edit form wrapper component was added for the edit mode of each
+                   element type. This provides the form functionality and optional form inputs
+                   for the common patterns.
+
+    TL-28375       Removed self completion form when viewing modules in the mobile app
+
+                   The mobile app supports this functionality in its native course view, so it
+                   has been removed from module webviews to reduce screen clutter and improve
+                   user experience.
+
+    TL-28402       Added PHP Unit test to detect untranslatable strings
+
+                   Strings with keys ending in '_link' are used to generate URLs to the Totara
+                   documentation site. They cannot be translated in AMOS or using the language
+                   customisation tool within Totara. This test fails if there are strings
+                   ending in '_link' and are not in the built-in whitelist. If you have a
+                   customisation which contains strings ending in '_link' then either rename
+                   them to allow them to be translated, or add then to the whitelist to have
+                   them ignored by the test.
+
+    TL-28419       Fixed phpunit DML test compatibility with MySQL 8.0.22
+    TL-28447       Improved webservice entrypoint to show generic error message in production environment
+    TL-28455       Allowed negative numbers for numeric rating scale form elements in Perform
+    TL-28456       Added a seminar virtual room link to the notification emails
+    TL-28458       Seminar room details page updated to display the virtual room link and 'join now' button only if conditions are met
+
+                   When a virtual room URL is added to a seminar room, a 'Join Now' button is
+                   displayed in the event listing and event details from 15 minutes before the
+                   session starts until the session ends. The room name is also displayed, and
+                   is clickable to discover room details, such as physical address,
+                   description, and custom fields.
+
+                   Prior to this patch, the virtual room URL was also displayed on the room
+                   details page. This was undesirable, as the room might be in use for other
+                   sessions. There is now a virtual room card displayed on the room details
+                   page when a virtual room url is present. Admins, trainers, facilitators,
+                   and other users with event roles can always click the virtual room url, but
+                   it will only be available to learners at the same time the 'Join now'
+                   button is available.
+
+    TL-28463       Allowed course custom fields to be both locked and required
+    TL-28509       Improved accessibility of date and date time moodle form inputs
+    TL-28528       Some proprietary CSS is now allowed in sanitised HTML
+
+                   The list of allowed CSS styles:
+                    * scrollbar-arrow-color
+                    * scrollbar-base-color
+                    * scrollbar-darkshadow-color
+                    * scrollbar-face-color
+                    * scrollbar-highlight-color
+                    * scrollbar-shadow-color
+                    * -moz-opacity
+                    * -khtml-opacity
+                    * filter (only opacity)
+                    * page-break-after
+                    * page-break-before
+                    * page-break-inside
+                    * border-radius
+
+    TL-28553       Display a 'misconfigured web server' error message at root index.php
+
+                   In Totara 13, the web root has been moved to the server/ directory.
+                   Previously, the root index.php redirected to server/index.php as a
+                   convenience. But allowing the root directory to be web accessible is
+                   considered a misconfiguration as it may expose files and directories that
+                   are not meant to be served directly, and not tested as such.
+
+                   The root index.php file will no longer redirect. Please update your server
+                   configuration to make server/ the web root.
+
+    TL-28563       Added new Report builder graph option colorRanges
+
+                   This new setting can be used to select item colour based on its value, it
+                   expects array of cut values that specify intervals for each colour.
+
+                   For example:
+                   {"colors" : ["red", "yellow", "green"],"colorRanges": [20, 100]}
+                   results in values having following colours:
+                    * -1 red
+                    * 0 red
+                    * 10 red
+                    * 19 red
+                    * 20 yellow
+                    * 21 yellow
+                    * 95 yellow
+                    * 99 yellow
+                    * 100 green
+                    * 500 green
+
+                   If there are fewer colours than ranges then the colours are repeated.
+
+    TL-28572       Added support for custom chart colours
+
+                   There is a new "colors" setting available in Custom settings in Report
+                   builder graph configuration, it accepts an array of CSS colours.
+
+    TL-28611       Renamed and re-grouped Engage reports into a single 'Engagement' category.
+    TL-28704       Implemented small UX improvements for performance activities
+
+                   * Improved text for Multiple Choice Multi element settings
+                   * Reordered question element items on selector
+                   * Renamed question elements for easier comparison
+                   * Updated help strings for question elements
+                   * Updated string on performance activity status banner
+
+    TL-28761       Added new column and filter for user's time zone in Report builder
+
+Bug fixes:
+
+    TL-11274       Replaced fieldset with div on the language import page
+    TL-11326       Fixed the select check boxes within manage program/certification pages to be accessible
+    TL-11327       Fixed inputs on the report builder columns page without accessible names
+    TL-23457       Enabled Totara Mobile app to use basic LDAP authentication in-app
+
+                   Previously, admins who wished to allow users to use LDAP authentication
+                   could not enable 'native' (in-app) authentication in the Totara Mobile
+                   app.
+
+                   LDAP is now allowed for mobile native authentication, as long as the NTLM
+                   SSO feature is disabled (because NTLM SSO requires a web browser for
+                   authentication.)
+
+    TL-23555       Fixed User calendar entries to respect course visibility
+
+                   Previously if the Seminar Calendar option is set to "Course", the learner
+                   who was not enrolled into a course was able to see the Seminar events, now
+                   this issue is fixed.
+
+    TL-24735       Improved the way to handle the seminar notification templates when unsafe the characters used
+    TL-25078       Fixed accessibility of FormRowDetails by linking details using aria-describedby
+    TL-26097       Fixed the 'signout' command in MS Teams so that it logs the user out of Totara
+    TL-26233       Fixed export on "Usage of topics" page does not work
+
+                   Usage of topics did not work with export,  it has been fixed.
+
+    TL-26496       Removed comment's author profile link when user actor is not able to see the author
+    TL-26637       Removed back-to-course links from feedback activity when viewed in the mobile app
+    TL-26917       Changed validation text in profile summary card
+
+                   Changed validation text in profile summary card to make error wording
+                   should be succinct
+
+    TL-27031       Fixed allowing non tenant user to access shared resources from the tenant member
+
+                   Fixed the inconsistent logic rules around resources with multi-tenancy,
+                   where the system user is now able to interact with the tenant user's
+                   resources. However, when isolation mode is on, this ability will be
+                   revoked.
+
+    TL-27081       Updated  number of resources text  on workspace library to number of item text
+    TL-27102       Fixed the bug that playlist' back  button respect design requirement
+    TL-27213       Closing a tui modal using the "escape" key now works in IE11
+    TL-27283       Fixed workspace image upload for tenant members
+    TL-27289       Fixed the ability to see shared resources that have been bookmarked
+
+                   Previously attempting to view resources that had been shared after removing
+                   them from the "shared with you" page would result in an error. Now users
+                   should still be able to see the bookmarked resources via their "saved
+                   resources" page.
+
+    TL-27291       Fixed action buttons overlapping with form elements in edit survey
+    TL-27385       Fixed fullmessageformat in seminar notification
+
+                   In seminar notification, fullmessageformat was hardcoded as PLAIN.
+
+                   Now it will return HTML or JSON_EDITOR when it will fully be implemented
+                   in seminar notification.
+
+    TL-27485       Improved styling of the password reset confirmation page
+    TL-27522       Fixed report sources still available when feature disabled
+
+                   Report sources and templates belonging to features that are disabled
+                   (including when part of a flavour that is not installed) were available
+                   when creating custom reports. Also, some report sources were not correctly
+                   being flagged as belonging to a feature, resulting in embedded reports
+                   being listed in the embedded reports list when the feature was disabled.
+                   These problems have now been corrected.
+
+    TL-27593       Fixed bug permitting successful oAuth2 login to redirect away from site
+    TL-27601       Improved text labels for workspace "Add members" dialog
+    TL-27602       Removed a seminar send-to-recipients template which exposed PHP code
+
+                   The html file /server/mod/facetoface/editrecipients.html was being used as
+                   a template by the message users edit recipients endpoint, and included PHP
+                   code which could be exposed on the server. The HTML has been moved into the
+                   PHP endpoint.
+
+    TL-27652       Fixed search in workspace and indication to empty search results
+
+                   Included a remove icon to clear search input field all at once and display
+                   default state. Indication to total available workspaces and message to
+                   indicate if no results are returned when filtered.
+
+    TL-27677       Fixed bug causing recommender to skip non-tenants when multitenancy enabled
+    TL-27688       Removed remaining references of removed earlier totara_competency block
+    TL-27724       Fixed logic rules about sharing resources between tenant user and tenant participant
+
+                   Fixed the issue when user tenant received the shared resources from a
+                   tenant member but could not view the resource due to isolation mode was on.
+                   The fix is about allowing tenant participant to access to the tenant
+                   member's resources despite of isolation mode status.
+
+    TL-27725       Added clear icon to search box for member/discussion/your library search
+    TL-27740       Improve handling deleted user in engage
+
+                   Several things had been added with this patch
+                    * Survey page will no longer be available to view when user owner has been deleted
+                    * Article/Resource page will no longer be available to view when user owner has been deleted.
+                    * Playlist page will no longer be available to view when user owner has been deleted.
+                    * Catalog page is now excluding those resources/playlists that belong to a deleted user.
+                    * Workspace's members list are no longer including deleted users.
+
+    TL-27747       Fixed popover elements being overlapped by the side panel button
+
+                   Fixed the like button's hovering over popover being overlapped by the side
+                   panel button
+
+    TL-27774       Fixed thumbnail generator to keep transparent background in GIF and PNG images
+    TL-27780       Modified the main script of the recommender engine to skip the model building process when data is not enough
+
+                   When the data was too small with the existing script, the engine was
+                   producing the model with warning messages. The script is modified now to
+                   skip such cases.
+
+    TL-27782       Removed unused container_workspace_count_members query
+    TL-27867       Added multi-tenancy checks when adding contacts via messaging api
+    TL-27880       Fixed access logic for Engage resources, Workspaces, and playlists within cross-tenant settings
+    TL-27957       Fixed the message when viewing a user library with 0 contributions
+    TL-27989       Fixed tenancy logic rules applied for users when searching for workspaces
+    TL-28008       Improved handling of system-managed categories in coursecat methods
+
+                   System-managed categories were introduced in Totara 13, and behave as
+                   invisible categories outside any user's ability to manage. There were a few
+                   methods in the coursecat class which didn't properly take them into
+                   account, particularly when loading child categories or counting the number
+                   of subcategories. These have been fixed.
+
+    TL-28031       Fixed TUI theme settings parameter naming
+
+                   Fixed the parameter naming from 'theme' to 'theme_name' as 'theme' caused
+                   the site theme to be changed when 'allowthemechangeonurl' config property
+                   is true.
+
+    TL-28034       Added PHP 7.2 compatibility function getallheaders to ensure code that uses it doesn't break
+
+                   Some functionality in Totara uses the function getallheaders which was
+                   added in PHP 7.3. This adds a compatibility function to ensure running on
+                   PHP 7.2 works as expected.
+
+    TL-28044       Remove Avatar when workspace is on the moblie view
+    TL-28046       Fixed accessibility issues in the assignment online submission settings
+    TL-28075       Header text colour and page text colour settings now affect all entries in the Navigation
+    TL-28099       Fixed capability checking in mod_perform\settings::add_manage_activities_link method
+    TL-28134       Fixed keyboard accessiblity of Article and Playlist cards
+    TL-28175       Fixed an issue with catalogue filter merging when loading filters from multiple sources
+    TL-28184       Fixed a bug causing random failures of the totara_engage_webapi_resolver_query_share_totals_testcase
+    TL-28187       Fixed a bug that allowed clicking the cog icon on an archived seminar signup
+    TL-28204       Fixed catalogue image display in MS Teams
+
+                   The playlist thumbnails now use the accent colour as background in the
+                   settings flyout of a configurable tab.
+
+    TL-28279       Updated tablelib to not print empty rows after results
+    TL-28303       Fixed bug causing realpath to break system call to symlinked python executable
+    TL-28316       Fixed automatic creation of missing default perform activity setting records as non-admin
+    TL-28317       Fixed workspaces not being created due to too long names with the dev generator
+    TL-28322       Fixed a bug where the workspace owner can remove shared content from workspace library
+    TL-28323       Fixed a bug where access permissions are not honoured when a member leaves a private workspace
+
+                   Previously when member bookmarked the resource in the workspace and then
+                   left workspace, they still could see the resource in the saved resource
+                   page.
+
+    TL-28328       Fixed issues with the access setting modal style for iOS
+    TL-28329       Fixed hiding the recommendations related tab when it is empty
+    TL-28358       Fixed the incorrect type being used for area graphql property
+
+                   The 'area' GraphQL property used by engage content sharing was incorrectly
+                   specified as param_text this has now been updated to be param_area.
+
+    TL-28361       Displayed an alert banner when a scorm page is not compatible with MS Teams
+
+                   The 'new window (simple)' option is not compatible with MS Teams
+                   integration. The workaround solution aka shim was added to open in a new
+                   window when such a scorm activity is launched in MS Teams.
+                   Note that the shim is not compatible with IE11. Please do not use MS Teams
+                   on IE11.
+
+    TL-28362       Fixed an undefined function error appearing when running the recommenders export scheduled task
+    TL-28364       Removed an invalid href HTML attribute on the share button in the grid catalog
+    TL-28371       Fixed admin settings form elements to correctly be reverted when reloading the page without saving changes
+    TL-28379       Stopped a warning from being shown when an alert or task is being sent without setting msgtype
+    TL-28381       Updated the get_docs_url() function to use the new 'TH' prefix
+    TL-28382       Fixed memory issues when upgrading large evidence files
+    TL-28385       Fixed the topic filter on the catalogue not working with custom labels
+
+                   When clicking on a topic in a playlist or resource the sidepanel filter
+                   would only work if the defined label was "Topics". Now the label used on
+                   the topic filter does not matter, it will always apply.
+
+    TL-28387       Added an automated fix for certifications which were incorrectly reassigned
+
+                   Prior to Totara 10.0, it was possible that a user who was unassigned from a
+                   certification and then reassigned would not be put back into the correct
+                   state. This patch provides an automated fix which can be applied to users
+                   who were affected in this way.
+
+    TL-28413       Fixed the current learning tab in MS Teams to allow tile view and other custom settings
+    TL-28415       Targeting an item in the navigation bar of a user tour now highlights the item correctly
+    TL-28430       Ensured the 'currentstagename' and 'expectedstagecompletiondate' Totara legacy appraisal message placeholders work correctly
+    TL-28431       Fixed the opening of PDF certificates in the browser window
+    TL-28433       Fixed the reordering of a course's activities within the same course section
+
+                   Fixed an issue with storing the order of activities within a course
+                   section, when they got moved the result was not stored correctly.
+
+    TL-28444       Allowed guest users to see catalogue images for visible programs and certifications
+    TL-28452       Fixed an error stopping an admin from deleting other user's workspaces during cron run
+    TL-28459       Fixed an issue with the handling of files and attachments in the Weka editor
+    TL-28461       Removed remote unserialize() call from Flickr reverse geocoding method, and deprecated the method
+
+                   The phpFlickr::getFriendlyGeodata() method, which was used to discover the
+                   place name at a given latitude and longitude (reverse geocoding), relied on
+                   a script on the developer's website which is no longer available.
+                   Additionally, the response from the website was passed directly to PHP's
+                   unserialize() function, which could lead to PHP object injection.
+
+                   The method has been deprecated, and now always returns false.
+
+    TL-28462       Added a workaround for elimination of duplicate records in the course completion logs
+    TL-28469       Changed the notification only display in shared-with-you and saved-resources page
+
+                   Before notification showed when users created resource/survey, the current
+                   fix is the notification only display when users create resource/ survey in
+                   share-with-you and saved-resources page
+
+    TL-28527       Fixed "Team" menu item being disabled if perform is disabled
+
+                   Previously, the team menu item was disabled if both the competency
+                   assignments and the performance activities feature were disabled, and it
+                   was not possible to enable it. This has been fixed and the team menu item
+                   is now hidden by default unless the perform features are enabled. The team
+                   menu item can be enabled manually in the main menu settings at any time.
+
+    TL-28536       Fixed notification settings disappearing from a performance activity while managing activation
+    TL-28564       Fixed Learning plan items so they maintain state changes correctly
+    TL-28574       Updated the paging background in the current learning block to be set by the primary button colour in Ventura settings
+    TL-28580       Profile image in mini profile card is hidden from screen readers when no alt text is provided
+    TL-28481       Fixed a non-translatable string when viewing your reports
+    TL-28507       Renamed strings in weka editor which used reserved keys
+    TL-28525       Renamed strings in perform which used reserved keys
+    TL-28541       Renamed strings in engage workspaces which used reserved keys
+    TL-28542       Renamed strings in totara catalog which used reserved keys
+    TL-28543       Renamed strings in totara competencies which used reserved keys
+    TL-28544       Renamed strings in completion reports which used reserved keys
+    TL-28586       Fixed lang string deprecation files belonging to report sources not being loaded
+
+                   Previously, if a report builder's lang folder contained a deprecation.txt
+                   file, it was not being loaded. This resulted in allowing the deprecated
+                   strings within to continue to be used undetected. This has now been fixed.
+
+                   While all uses of deprecated strings within the core Totara code have been
+                   removed, it is possible that a customisation using a previously undetected
+                   deprecated string might now cause deprecation warnings.
+
+                   Also, the Totara Plan Evidence lang file has been removed without
+                   deprecation. These strings were inaccessible due to the corresponding
+                   report source being removed in Totara 13.0.
+
+    TL-28590       Ensured an alert is sent for failed certification completion imports
+    TL-28592       Fixed incorrect system context id in quicklinks block installation
+    TL-28646       Fixed HR import to not skip records when column length limit is exceeded
+    TL-28695       Updated how button padding is calculated based off the height variable
+    TL-28699       Fixed participants not being able to view the profile of a subject in anonymous activities
+    TL-28700       Fixed multi-language filter support for seminar names
+    TL-28706       Fixed theme settings not taking effect in IE until caches were manually purged
+    TL-28710       Fixed the permissions cache for appraisals not being correctly cleared during PHPUnit execution
+    TL-28726       Added require competency/lib.php in the competency_frameworks filter for the 'Competency Assignments' Report Builder report
+
+API changes:
+
+    TL-28368       Renamed Perform entities namespace to entity
+
+                   All renamed classes got added to the db/renamedclasses.php file and usage
+                   of the old classnames will trigger debugging messages.
+
+Tui front end framework:
+
+    TL-25446       Added the ability to hide the close button in popover elements
+    TL-27702       Reduced the number of language string requests made for asynchronous components
+
+
+Release 13.1 (22nd October 2020):
+=================================
+
+
+Performance improvements:
+
+    TL-28016       Reduced the number of database queries issued to load the list of activities for end users
+    TL-28017       Reduced the number of database queries issued to load the list of performance activities to manage
+    TL-28018       Reduced the number of database queries issued to load the data for activity content management
+    TL-28020       Reduced the number of AJAX requests issued when managing notifications for performance activities
+    TL-28029       Improved memory consumption of the subject_instance creation task
+    TL-28093       Improved performance loading Perform activities list
+    TL-28094       Improved performance of WebApi requests by optimising the internal function to split the name of the type
+
+Improvements:
+
+    TL-6557        Added User's mobile phone number column and filter to report sources using the user trait
+    TL-26412       Added new tile view to the current learning block
+    TL-27021       Added a mobile compatibility column and filter to course reports
+
+                   Added a new column to course-related reports to display the courses "Course
+                   compatible in-app" value, along with a filter to allow users to specify
+                   which records are shown based on that value.
+
+    TL-27306       Updated the Perform participant responses to use smaller user avatars
+    TL-27345       Made the Custom CSS text box variable height
+    TL-27641       Improved display of icons with a slash in them
+    TL-27878       Specific embedded reports can now be prevented from being cloned
+
+                   Embedded reports such as the 'Performance activity response export' report
+                   that are not intended to be viewed by end users must be restricted so they
+                   can not be cloned.
+
+                   A warning message has been added for when a user attempts to clone such
+                   embedded reports, which prevents them from cloning with a reason as to why.
+
+    TL-28058       Added new option for allowing embedding of PDF files in course resources
+    TL-28061       Added bottom padding for editing a long resource
+    TL-28065       Added 'image' and 'component_name' properties to user_learning items
+    TL-28077       Adjusted the dropdown menu item colour in the seminar dashboard to match other menus
+    TL-28095       Added option for Totara Connect users to change their password from client sites
+
+Tui front end framework:
+
+    TL-23882       Fixed source map warnings in Chrome 80+
+
+                   This will require you to run `npm ci` as package.json has been updated.
+
+    TL-27169       Allow specifying new components to use in the template when you override a component
+
+                   When overriding a template from a theme, previously it was not possible to
+                   add new components without replacing the entire script block.
+
+                   You can now specify <script extends> to have the script block inherit from
+                   the previous one, and add your additional components to the "components"
+                   option.
+
+    TL-27726       Updated the colour and font size of loading icons to be less prominent
+
+Bug fixes:
+
+    TL-23909       Fixed the use of theme_roots and theme_basis component names
+    TL-26005       Added a confirmation message when a resource or survey is added to a user's library
+
+                   Previously when a user opened their 'Shared with you' or 'Saved resources'
+                   page and created a resource or survey, there would be no visual indication
+                   the resource/survey was created successfully. Now when creating a resource
+                   or survey from any of the 'Your library' pages, a notification will appear
+                   at the top of the screen confirming the action.
+
+    TL-26034       Fixed length validation for playlist and workspace titles
+    TL-26909       Improved content layout on the 'General' tab on performance activity management screens
+
+                   Improved the spacing between form elements and wrapped the page in a common
+                   layout.
+
+    TL-26935       Fixed participant section to ensure showing the updated responses after switching sections
+    TL-26943       Prevented duplicate navigation bars from being displayed inside a MS Teams tab
+    TL-27071       Fixed the print performance activity page to display general information about the participant
+    TL-27111       Fixed favicon theme file by using new icon file type and validate uploaded files accordingly
+    TL-27149       Fixed the hash tag popup to not display '[[loadinghelp, core]]'
+    TL-27214       Fixed the survey icon not using the themes custom colours
+
+                   Previously the survey icon was served as a static jpg image which did not
+                   react to theme changes. The survey icon is now a svg that reacts to changes
+                   to theme colours.
+
+    TL-27234       Fixed the use of alternative text for Totara logo set in the theme settings
+    TL-27250       Fixed the file uploader on the theme settings page so it accepts different images with the same file name
+    TL-27273       Fixed bug preventing article owner from clicking on hashtag
+    TL-27316       Changed the aria label for the SidePanel component toggle button for accessibility
+
+                   The expand/collapse button in the SidePanel component had an aria label of
+                   'Expand' or 'Collapse' depending on the panel's state which was not
+                   correct. The state of the panel was already indicated with the
+                   aria-expanded attribute. This is now changed so the aria label is simply
+                   'Side panel' and the state is indicated with the aria-expanded attribute.
+
+    TL-27395       Fixed a bug where you could change a resource/survey from private to public without setting topics using GraphQL
+
+                   Previously the check to see whether a resource or survey had topics when
+                   changed from private/restricted to public happened on the client side only.
+                   With this fix the GraphQL will also perform the check so resources/surveys
+                   cannot be made public without associating one or more topics.
+
+    TL-27402       Stopped user being redirected to course pages when logging back in after using login as functionality
+
+                   After using the 'login as' functionality and logging in again, if you were
+                   on a course page (or performance activity page), the system would redirect
+                   back to that page which sometimes causes irrelevant error messages. Logging
+                   in after using this functionality now redirects to the default homepage.
+
+    TL-27403       Updated the link to share engage content with multiple people to display as a clickable link
+
+                   Sharing with multiple people link was not clickable and did not have the
+                   link colour, so updating it in the tag list selector to make it clickable
+                   and added colour to it.
+
+    TL-27452       Prevented the use of formats other than JSON_EDITOR_TEXT from being used in playlist summary GraphQL mutations
+
+                   Prior to this patch, create and update playlist's summary via GraphQL
+                   mutation allowed the use of any valid text format. This was causing issues
+                   as the mutations were expecting to be run exclusively in
+                   FORMAT_JSON_EDITOR.
+
+                   With this patch, the GraphQL mutations are now locked down to
+                   FORMAT_JSON_EDITOR and will throw an error if the text format is different
+                   from FORMAT_JSON_EDITOR.
+
+    TL-27455       The Engage resources access setting modal now has 'Only you' selected by default
+    TL-27483       Fixed missing advanced feature checks in external competency APIs
+    TL-27489       Prevented the use of formats other than JSON_EDITOR_TEXT from being used in article summary GraphQL mutations
+
+                   Prior to this patch, create and update article's summary via GraphQL
+                   mutation allowed the use of any valid text format. This was causing issues
+                   as the mutations were expecting to be run exclusively in
+                   FORMAT_JSON_EDITOR.
+
+                   With this patch, the GraphQL mutations are now locked down to
+                   FORMAT_JSON_EDITOR and will throw error if the text format is different
+                   from FORMAT_JSON_EDITOR.
+
+    TL-27490       Fixed GraphQL mutations (create/update) to not accept different content format other than FORMAT_JSON_EDITOR nor json document that appears to be an empty document
+
+                   Forced the GraphQL mutations that create or update the workspace,
+                   discussion, comments or resource to only accept FORMAT_JSON_EDITOR for
+                   content format. Different content formats such as FORMAT_PLAIN,
+                   FORMAT_MOODLE or FORMAT_MARKDOWN will result in an error in the mutations.
+                   However, the lower level API still accepts different formats, this is to
+                   help writing test easier.
+
+                   Furthermore, the GraphQL mutations are now preventing to save the json
+                   document that appears to be an empty document for mutations to create or
+                   update the discussion, comments or resource.
+
+                   Example of empty document: {"type":"doc","content":[]}
+
+    TL-27524       Fixed Perform navigation items not showing as selected across Perform pages
+    TL-27600       Fixed a bug where a topic's case could not be changed by an admin
+
+                   Previously the case of a topic could not be changed as the admin form would
+                   display an error message stating that the topic already exists. With this
+                   fix topics can now have their case changed in the manage topics interface.
+
+    TL-27617       Fixed a bug when creating a resource via a workspace if the workspace was removed from the 'Share to' taglist, it could not be added back in again
+
+                   Previously if the active workspace was removed from the 'Share to' taglist
+                   while inside the workspace's library tab, the workspace could not be chosen
+                   again. Now if the workspace is removed from the 'Share to' taglist, it can
+                   be chosen in the taglist like any other user or workspace.
+
+    TL-27655       Colour of name(s) under 'Shared with x people and x workspace(s)' changed so it does not appear as if it is a link
+
+                   This applies to workspaces, playlists, resources and surveys.
+
+    TL-27663       Fixed keyboard navigation in the Quick Access menu and Message Menu
+    TL-27701       Fixed GraphQL query mod_perform_participant_section to only be called once
+    TL-27728       Fixed room availabilities when they are used in cancelled events
+    TL-27738       Fixed topic tag selector to allow case-insensitive searching
+    TL-27746       Removed unnecessary id param from manage room and assets page links
+    TL-27838       Fixed keyboard accessibility of playlist rating stars
+    TL-27850       Fixed various problems related to weka editor in assignments and forums
+    TL-27860       Fixed 'My status' column for the Seminar sessions report source when a user has 'Not set' status
+    TL-27883       Added 'legacy' label to 360 feedback link in user_with_components_links Report Builder display class
+    TL-27891       Added workaround to the 'Open in new window' link for Google Chrome when MS Teams is opened in the web browser
+    TL-27892       Fixed removing a resource from a playlist so the playlist image is updated correctly
+
+                   Previously removing a resource with an image from a playlist would not
+                   update the playlist image. Now the playlist image will update every time a
+                   resource is removed from it.
+
+    TL-27895       Changed the playlist order so that newly added items appear on the top
+    TL-27905       Fixed removal of performance activity containers when mod_perform plugin is uninstalled
+
+                   Prior to this patch performance activity container categories and courses
+                   were not deleted when the mod_perform plugin was uninstalled.
+
+    TL-27932       Current learning block now has the correct theme link colour
+    TL-27942       Fixed a bug where administrators were unable to update the order of resources/surveys on a playlist
+
+                   Previously an administrator would encounter an error message when trying to
+                   reorder resources on a playlist. With this fix administrators can now order
+                   resources on any playlist.
+
+    TL-27947       Ensured user identities are displayed when allocating spaces to a Seminar event
+
+                   This creates consistency between 'Add attendees' and 'Allocate spaces' user
+                   selectors.
+
+    TL-27963       Fixed the text colour of the dropdown menu items on the main header
+    TL-27965       Fixed the capability and hierarchy checks for the update_theme_settings GraphQL mutation
+
+                   Tenants are only allowed to update their own brand and colours.
+
+                   Prior to this change, if settings not belonging to a brand or colour were
+                   passed to the update_theme_settings GraphQL mutation, those settings were
+                   still being applied, which is incorrect. A tenant could update custom CSS
+                   or change the login image for example, which is not allowed.
+
+    TL-27967       The Date Reviewed column on Inappropriate Content report will immediately update when an action is taken
+
+                   Previously only the "Status" column would update immediately on the
+                   Inappropriate Content report, but the "Date Reviewed" column would not
+                   update until the page is refreshed. Now when something is approved or
+                   removed via the Inappropriate Content report, the "Date Reviewed" column
+                   will immediately update without needing to refresh the page.
+
+    TL-27974       Deletion of workspaces is now deferred to run via cron
+
+                   When a workspace is deleted, the record will be flagged as pending deletion
+                   in the database, and an ad hoc task will be created to perform the actual
+                   deletion.
+
+                   The patch represents a significant change in the behaviour first introduced
+                   in 13.0 where the deletion of a workspace occurred immediately. This will
+                   help to improve performance and lower the risk of data loss.
+
+                   The flagged (to be deleted) workspace will not be shown to the user except
+                   on the Resource's sharing recipient(s) page.
+
+    TL-28014       Removed hyphenation for resource card and resource content
+    TL-28022       Fixed editable region border for playlist summary being cut off
+    TL-28027       Fixed Engage Resource cards in Playlist so they don't take all horizontal space on the screen
+    TL-28036       Fixed form rows wrapping incorrectly in Safari at narrow viewport sizes
+    TL-28037       Added relationship selector to print button in user activity list
+
+                   Prior to this patch, activity participants with more than one relationship
+                   in an activity could not select the relationship which they would like to
+                   use to view the print version of the activity. Instead one of the
+                   relationships was automatically used. This patch adds the missing
+                   relationship selector.
+
+    TL-28040       Fixed JS bundles from parent themes not being loaded
+    TL-28043       Fixed errors printed to console when popover target is hidden
+    TL-28055       Fixed overlapping text in profile mini card on mobile view
+    TL-28056       Fixed upgrade of Perform user reports created in Totara 13.0 RC1
+
+                   In RC1 some performance activity report sources and embedded reports got
+                   renamed. The upgrade step originally just renamed the embedded reports but
+                   not any user reports already been created based upon those. This patch adds
+                   an additional upgrade step to also rename any existing user reports.
+
+    TL-28060       Fixed the formatting of course summary URLs returned by GraphQL
+    TL-28067       Moved some incorrectly placed quotation marks from the subject to the body text of Engage "like" notifications
+
+                   The Engage "like" resource notification had incorrectly placed quotation
+                   marks around the resource type in the subject and missing quotation marks
+                   around the resource name in the body. These have been switched so the
+                   notification surrounds the correct thing with quotations.
+
+    TL-28080       Fixed incorrect theme settings URL after purging caches
+    TL-28084       Updated the timestamp of the discussion when there is a reply or comment added to the discussion
+
+                   Prior to this patch, a discussion with a comment/reply recently added would
+                   not be moved to the top in a sort order of recently updated when loading
+                   the discussions.
+
+                   With the patch, when a discussion with comment/reply recently added will
+                   not be moved to the top in a sort order of recently updated when loading
+                   the discussions.
+
+    TL-28089       Fixed link to Notification preferences in plain text body of notification emails
+    TL-28090       Fixed incorrect validation message when checking for Course Question Category loops
+    TL-28091       Fixed the workspace name appearing as dark text on a dark background on the dashboard 'Recently Viewed' block
+    TL-28104       Fixed Seminar so attendance can still be taken after some signups have been archived
+
+                   Previously, for a seminar where attendance had been marked for some
+                   learners, and where course completions had been archived, it was impossible
+                   to mark attendance for the remaining learners.
+
+                   Archived seminar signups are now ignored when taking attendance.
+
+    TL-28113       Fixed duplicate triggering of module created event in test generators
+    TL-28117       Fixed the link included in badge notifications
+    TL-28166       Fixed invalid default substring length in MS SQL Server database driver
+    TL-28172       Fixed the location of the workspace members search box and placeholder text
+
+                   The workspace members search box was in the wrong location and had the
+                   wrong placeholder.
+
+    TL-28195       Fixed warning when exporting report using wkhtmltopdf
+
+                   Prevented PDF export warning being displayed. A plain text description for
+                   a report is now displayed with links and embedded images stripped out.
+
+    TL-28198       Fixed the JSON editor escaping URLs in mobile GraphQL queries
+
+Contributions:
+
+    * Davo Smith from Synergy Learning - TL-28113
+    * Michael Geering from Kineo UK - TL-28166
+
+
 Release 13.0 (1st October 2020):
 ================================
 

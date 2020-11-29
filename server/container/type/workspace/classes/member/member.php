@@ -31,6 +31,9 @@ use core_container\factory;
 use totara_core\visibility_controller;
 use core\task\manager as task_manager;
 use container_workspace\task\notify_added_to_workspace_task;
+use stdClass;
+use core_user;
+use coding_exception;
 
 /**
  * A model class for workspace's member.
@@ -49,6 +52,11 @@ final class member {
     private $user_enrolment;
 
     /**
+     * @var stdClass|null
+     */
+    private $user_record;
+
+    /**
      * member constructor.
      * @param user_enrolment $user_enrolment
      */
@@ -59,6 +67,7 @@ final class member {
 
         $this->user_enrolment = $user_enrolment;
         $this->workspace_id = null;
+        $this->user_record = null;
     }
 
     /**
@@ -521,10 +530,26 @@ final class member {
     }
 
     /**
-     * @return \stdClass
+     * @return stdClass
      */
-    public function get_user_record(): \stdClass {
-        return \core_user::get_user($this->user_enrolment->userid);
+    public function get_user_record(): stdClass {
+        if (null === $this->user_record) {
+            $this->user_record = core_user::get_user($this->user_enrolment->userid, '*', MUST_EXIST);
+        }
+
+        return $this->user_record;
+    }
+
+    public function set_user_record(stdClass $user_record): void {
+        if (!property_exists($user_record, 'id')) {
+            throw new coding_exception("The user's record does not have 'id' property");
+        }
+
+        if ($user_record->id != $this->user_enrolment->userid) {
+            throw new coding_exception("User record is different from the user's enrolment");
+        }
+
+        $this->user_record = $user_record;
     }
 
     /**
@@ -572,9 +597,15 @@ final class member {
 
     /**
      * @return int
+     * @deprecated Since Totara 13.2
      */
     public function get_member_id(): int {
-        return $this->user_enrolment->id;
+        debugging(
+            "Function 'get_member_id' had been deprecated, please use 'get_id' instead",
+            DEBUG_DEVELOPER
+        );
+
+        return $this->get_id();
     }
 
     /**

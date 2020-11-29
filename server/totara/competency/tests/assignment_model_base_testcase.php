@@ -22,12 +22,11 @@
  * @category test
  */
 
-use totara_competency\entities\assignment as assignment_entity;
+use totara_competency\entity\assignment as assignment_entity;
 use totara_competency\models\assignment as assignment_model;
 use totara_competency\user_groups;
 
 defined('MOODLE_INTERNAL') || die();
-
 
 abstract class assignment_model_base_testcase extends advanced_testcase {
 

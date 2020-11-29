@@ -98,6 +98,8 @@ final class manager {
         // Validate recipients
         foreach ($recipients as $recipient) {
             $recipient->validate();
+            $recipient->validate_against_share_item($instance);
+            $recipient->validate_against_actor($actor_id);
         }
 
         // Get context in which instance is being shared.
@@ -107,7 +109,7 @@ final class manager {
         $shares = self::create($instance->get_id(), $instance->get_userid(), $component, $recipients, $context->id);
 
         foreach ($shares as $share) {
-            if ($share->get_recipient_component() === 'core_user' && $share->get_recipient_area() === 'USER') {
+            if ($share->get_recipient_component() === 'core_user' && $share->get_recipient_area() === 'user') {
                 $task = new share_notify_task();
                 $task->set_component('totara_engage');
                 $task->set_custom_data(
@@ -301,6 +303,17 @@ final class manager {
 
         if (empty($recipient)) {
             throw new \coding_exception("No recipient with {$recipient_id} is found");
+        }
+
+        if ($recipient->area !== user::AREA) {
+            $library = \totara_engage\share\recipient\helper::get_recipient_class($recipient->component, $recipient->area);
+            $library = new $library($recipient->instanceid);
+            $data = $library->get_data();
+            $has_capability = $data['unshare'];
+
+            if (!$has_capability) {
+                throw new share_exception('error:sharecapability', $instance::get_resource_type());
+            }
         }
 
         if (!$instance->can_unshare($recipient->instanceid, $recipient->area !== user::AREA)) {

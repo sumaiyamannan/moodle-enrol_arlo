@@ -1,0 +1,10 @@
+This files describes API changes in /client/component/tui,
+information provided here is intended especially for developers.
+
+=== 13.2 ===
+
+* Added closeable prop to Popover.vue component
+* Added closeable prop to PopoverFrame.vue component
+* Added closeablePopover prop to LabelledButtonTrigger.vue component
+* Updated Range.vue component to not emit a change event on focus
+* Converted Loader.vue emptySlot computed property to a isEmptySlot method so it correctly updates for subsequent requests

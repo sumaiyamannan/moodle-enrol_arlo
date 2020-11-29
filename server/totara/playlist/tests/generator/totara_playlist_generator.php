@@ -23,6 +23,7 @@
 
 use totara_engage\rating\rating_manager;
 use totara_engage\share\shareable;
+use totara_playlist\local\image_processor\contract as image_processor_contract;
 use totara_playlist\playlist;
 use totara_engage\access\access;
 use totara_engage\share\manager as share_manager;
@@ -30,14 +31,16 @@ use totara_engage\share\share as share_model;
 use totara_engage\share\recipient\recipient;
 use core_user\totara_engage\share\recipient\user as user_recipient;
 use totara_topic\provider\topic_provider;
+use core\json_editor\helper\document_helper;
+use core\json_editor\node\paragraph;
 
 final class totara_playlist_generator extends component_generator_base {
     /**
-     * @param array|\stdClass $parameters
+     * @param array|stdClass $parameters
      * @return playlist
      */
     public function create_playlist($parameters = []): playlist {
-        if ($parameters instanceof \stdClass) {
+        if ($parameters instanceof stdClass) {
             $parameters = get_object_vars($parameters);
         }
 
@@ -48,7 +51,11 @@ final class totara_playlist_generator extends component_generator_base {
         if (isset($parameters['name'])) {
             $name = $parameters['name'];
         } else {
-            $name = $this->get_random_name();
+            if (core_text::strlen($this->get_random_name()) > 75) {
+                $name = \core_text::substr($this->get_random_name(), 0, 75);
+            } else {
+                $name = $this->get_random_name();
+            }
         }
 
         $access = access::PRIVATE;
@@ -66,18 +73,16 @@ final class totara_playlist_generator extends component_generator_base {
             $userid = $parameters['userid'];
         }
 
-        $summary_format = $parameters['summaryformat'] ?? null;
-
+        $summary_format = $parameters['summaryformat'] ?? FORMAT_JSON_EDITOR;
         $summary = null;
+
         if (isset($parameters['summary'])) {
-            if ($summary_format === null || $summary_format === FORMAT_JSON_EDITOR) {
-                $summary_format = FORMAT_JSON_EDITOR;
+            $summary = $parameters['summary'];
+            if (FORMAT_JSON_EDITOR == $summary_format && !document_helper::looks_like_json($summary)) {
                 $summary = json_encode([
                     'type' => 'doc',
-                    'content' => [\core\json_editor\node\paragraph::create_json_node_from_text($parameters['summary'])]
+                    'content' => [paragraph::create_json_node_from_text($summary)]
                 ]);
-            } else {
-                $summary = $parameters['summary'];
             }
         }
 
@@ -88,6 +93,19 @@ final class totara_playlist_generator extends component_generator_base {
         }
 
         return $playlist;
+    }
+
+    /**
+     * @param array|stdClass $parameters
+     * @return playlist
+     */
+    public function create_public_playlist($parameters = []): playlist {
+        if ($parameters instanceof stdClass) {
+            $parameters = get_object_vars($parameters);
+        }
+
+        $parameters['access'] = access::PUBLIC;
+        return $this->create_playlist($parameters);
     }
 
     /**
@@ -291,5 +309,28 @@ final class totara_playlist_generator extends component_generator_base {
         }
 
         $playlist->add_resource($resource, $actor_id);
+    }
+
+    /**
+     * @return image_processor_contract
+     */
+    public function get_mock_image_processor(): image_processor_contract {
+        global $CFG;
+        require_once("{$CFG->dirroot}/totara/playlist/tests/fixtures/mock_image_processor.php");
+
+        return new mock_playlist_image_processor();
+    }
+
+    /**
+     * @param array $parameters
+     * @return playlist
+     */
+    public function create_restricted_playlist($parameters = []): playlist {
+        if (is_object($parameters)) {
+            $parameters = (array) $parameters;
+        }
+
+        $parameters['access'] = access::RESTRICTED;
+        return $this->create_playlist($parameters);
     }
 }
