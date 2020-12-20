@@ -48,12 +48,17 @@ function xmldb_local_catalyst_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2018102800, 'local', 'catalyst');
     }
 
-    if ($oldversion < 2018102802) {
-        // We hide the UI for this plugin to users that are not in the whitelist, so we have to set it to something valid.
-        set_config('testingsitewhitelist', '@catalyst.net.nz', 'local_catalyst');
+    if ($oldversion < 2018102902) {
+        $existing = get_config('local_catalyst', 'testingsitewhitelist');
+        if (!empty($existing)) {
+            set_config('testingsiteallowlist', $existing, 'local_catalyst');
+            $DB->delete_records('config_plugins', array('name' => 'testingsitewhitelist', 'plugin' => 'local_catalyst'));
+        } else {
+            set_config('testingsiteallowlist', '@catalyst.net.nz', 'local_catalyst');
+        }
 
         // Save point reached.
-        upgrade_plugin_savepoint(true, 2018102802, 'local', 'catalyst');
+        upgrade_plugin_savepoint(true, 2018102902, 'local', 'catalyst');
     }
 
     return true;
