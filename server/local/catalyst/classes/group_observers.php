@@ -42,6 +42,11 @@ class group_observers {
      */
     public static function user_login($event) {
         global $USER, $CFG;
+
+        if (empty($CFG->siteadmins) || !empty($CFG->adminsetuppending)) {
+            return;
+        }
+
         $catconfig = get_config('local_catalyst');
         if (empty($catconfig->testingavailableto)) {
             // If not set in db, set to 0.
@@ -50,7 +55,7 @@ class group_observers {
         if (!empty($catconfig->testingsite) && $catconfig->testingavailableto < time()) {
             // This is a catalyst test site with an expired time, check for user access.
             if (!in_array(substr($USER->email, strpos($USER->email, '@')),
-                explode(",", get_config('local_catalyst', 'testingsiteallowlist')))) {
+                explode(",", get_config('local_catalyst', 'testingsitewhitelist')))) {
                 // This is not a catalyst user, force logout and redirect to catalyst error page.
                 require_logout();
                 redirect($CFG->wwwroot.'/local/catalyst/login.php');

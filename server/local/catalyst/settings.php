@@ -27,7 +27,7 @@ global $USER;
 // Only show these to catadmin/catalyst accounts that have config ability.
 if ($hassiteconfig &&
     in_array(substr($USER->email, strpos($USER->email, '@')),
-             explode(",", get_config('local_catalyst', 'testingsiteallowlist')))) {
+             explode(",", get_config('local_catalyst', 'testingsitewhitelist')))) {
 
     $ADMIN->add('localplugins', new admin_externalpage('local_catalyst', get_string('pluginname', 'local_catalyst'), $CFG->wwwroot.'/local/catalyst/testingsite.php'));
 
