@@ -181,6 +181,12 @@ class auth_plugin_saml2 extends auth_plugin_base {
             // @codingStandardsIgnoreStart
             error_log('auth_saml2: ' . $msg);
             // @codingStandardsIgnoreEnd
+
+            // If SSP logs to tmp file we want these to also go there.
+            if ($this->config->logtofile) {
+                require_once('setup.php');
+                SimpleSAML\Logger::debug('auth_saml2: ' . $msg);
+            }
         }
     }
 
@@ -255,15 +261,15 @@ class auth_plugin_saml2 extends auth_plugin_base {
                     $idpname = $metadata->idpname;
                 }
 
+                // Try to use the <mdui:DisplayName> if it exists.
+                if (!empty($idp->name)) {
+                    $idpname = $idp->name;
+                }
+
                 // Has the IdP label override been set in the admin configuration?
                 // This is best used with a single IdP. Multiple IdP overrides are different.
                 if (!empty($conf->idpname)) {
                     $idpname = $conf->idpname;
-                }
-
-                // Try to use the <mdui:DisplayName> if it exists.
-                if (!empty($idp->name)) {
-                    $idpname = $idp->name;
                 }
 
                 $idplist[] = [
@@ -507,7 +513,7 @@ class auth_plugin_saml2 extends auth_plugin_base {
         global $CFG, $DB, $USER, $SESSION, $saml2auth;
         // @codingStandardsIgnoreEnd
 
-        require('setup.php');
+        require_once('setup.php');
         require_once("$CFG->dirroot/login/lib.php");
 
         // Set the default IdP to be the first in the list. Used when dual login is disabled.
@@ -617,6 +623,13 @@ class auth_plugin_saml2 extends auth_plugin_base {
                 if (empty($CFG->allowaccountssameemail) && $this->is_email_taken($email)) {
                     $this->log(__FUNCTION__ . " user '$uid' can't be autocreated as email '$email' is taken");
                     $this->error_page(get_string('emailtaken', 'auth_saml2', $email));
+                }
+
+                // Honor the core allowemailaddresses setting #412.
+                $error = email_is_not_allowed($email);
+                if ($error) {
+                    $this->log(__FUNCTION__ . " '$email' " . $error);
+                    $this->handle_blocked_access();
                 }
 
                 $this->log(__FUNCTION__ . " user '$uid' is not in moodle so autocreating");
@@ -961,12 +974,21 @@ class auth_plugin_saml2 extends auth_plugin_base {
 
         // Do not attempt to log out of the IdP.
         if (!$this->config->attemptsignout) {
+
+            $alterlogout = $this->config->alterlogout;
+            if (!empty($alterlogout)) {
+                // If we don't sign out of the IdP we still want to honor the
+                // alternate logout page.
+                $this->log(__FUNCTION__ . " Do SSP alternate URL logout $alterlogout");
+                redirect(new moodle_url($alterlogout));
+            }
             return;
         }
 
-        require('setup.php');
+        require_once('setup.php');
 
-        // Woah there, we lost the session data, lets restore the IdP.
+        // We just loaded the SP session which replaces the Moodle so we lost
+        // the session data, lets temporarily restore the IdP.
         $SESSION->saml2idp = $idp;
         $auth = new \SimpleSAML\Auth\Simple($this->spname);
 
@@ -978,7 +1000,10 @@ class auth_plugin_saml2 extends auth_plugin_base {
                 $this->log(__FUNCTION__ . " Do SSP alternate URL logout $alterlogout");
                 $redirect = $alterlogout;
             }
-            $auth->logout($redirect);
+            $auth->logout([
+                'ReturnTo' => $redirect,
+                'ReturnCallback' => 'auth_saml2_after_logout_from_sp',
+            ]);
         }
     }
 
@@ -1025,7 +1050,7 @@ class auth_plugin_saml2 extends auth_plugin_base {
      * @return string
      */
     public function get_ssp_version() {
-        require('setup.php');
+        require_once('setup.php');
         $config = new SimpleSAML\Configuration(array(), '');
         return $config->getVersion();
     }
@@ -1101,5 +1126,34 @@ class auth_plugin_saml2 extends auth_plugin_base {
             }
         }
     }
+
+    /**
+     * Called from SimpleSamlphp after a LogoutResponse from the IdP
+     */
+    static public function auth_saml2_after_logout_from_idp_front_channel() {
+        global $saml2config;
+
+        // The SP session will be cleaned up but we need to remove the
+        // Moodle session here.
+        \core\session\manager::terminate_current();
+    }
+
+}
+
+/**
+ * Called from SimpleSamlphp after a LogoutRequest from the SP
+ */
+function auth_saml2_after_logout_from_sp($state) {
+    global $saml2config;
+
+    $cookiename = $saml2config['session.cookie.name'];
+    $sessid = $_COOKIE[$cookiename];
+
+    // In SSP should do this for us but remove stored SP session data.
+    $storeclass = $saml2config['store.type'];
+    $store = new $storeclass;
+    $store->delete('session', $sessid);
+
+    redirect(new moodle_url($state['ReturnTo']));
 }
 

@@ -26,7 +26,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-global $CFG, $saml2auth;
+global $CFG, $saml2auth, $saml2config;
 
 // Check for https login.
 $wwwroot = $CFG->wwwroot;
@@ -42,21 +42,26 @@ foreach ($saml2auth->metadataentities as $metadataurl => $idpentities) {
     ];
 }
 
+$remoteip = getremoteaddr();
+
 $config = array(
     'baseurlpath'       => $wwwroot . '/auth/saml2/sp/',
     'certdir'           => $saml2auth->get_saml2_directory() . '/',
     'debug'             => $saml2auth->config->debug ? true : false,
     'logging.level'     => $saml2auth->config->debug ? SimpleSAML\Logger::DEBUG : SimpleSAML\Logger::ERR,
     'logging.handler'   => $saml2auth->config->logtofile ? 'file' : 'errorlog',
+
+    // SSP has a %srcip token, but instead use $remoteip so Moodle handle's which header to use.
+    'logging.format'    => '%date{%b %d %H:%M:%S} ' . $remoteip . ' %process %level %stat[%trackid] %msg',
+
     'loggingdir'        => $saml2auth->config->logdir,
     'logging.logfile'   => 'simplesamlphp.log',
     'showerrors'        => $CFG->debugdisplay ? true : false,
     'errorreporting'    => false,
     'debug.validatexml' => false,
     'secretsalt'        => $saml2auth->config->privatekeypass,
-    'technicalcontact_name'  => $CFG->supportname,
-    'technicalcontact_email' => $CFG->supportemail ? $CFG->supportemail : $CFG->noreplyaddress,
-    // TODO \core_user::get_support_user().
+    'technicalcontact_name'  => !empty($CFG->supportname) ? $CFG->supportname : get_string('administrator'),
+    'technicalcontact_email' => !empty($CFG->supportemail) ? $CFG->supportemail : $CFG->noreplyaddress,
     'timezone' => class_exists('core_date') ? core_date::get_server_timezone() : null,
 
     'session.duration'          => (int)$CFG->sessiontimeout,
@@ -92,8 +97,9 @@ $config = array(
 
     'authproc.sp' => auth_plugin_saml2::saml2_authproc_filters_hook(),
 
-    // TODO setting for signature.algorithm (ADFS 3 requires http://www.w3.org/2001/04/xmldsig-more#rsa-sha256)
-    // TODO setting for redirect.sign
-    // TODO More options for post-processing of the UID - essentially we need a safer version of SSPHP's authproc.
-    // A basic plugin system would be ideal as requirements here can vary wildly.
+    // TODO setting for redirect.sign.
 );
+
+// Save this in a global for later.
+$saml2config = $config;
+
