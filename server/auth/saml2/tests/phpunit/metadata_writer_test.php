@@ -48,7 +48,6 @@ class auth_saml2_metadata_writer_testcase extends basic_testcase {
     }
 
     /**
-     * @expectedException coding_exception
      */
     public function test_write_empty_filename() {
         $filename = '';

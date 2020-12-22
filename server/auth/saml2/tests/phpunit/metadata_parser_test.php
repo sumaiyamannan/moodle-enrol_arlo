@@ -46,7 +46,6 @@ class auth_saml2_metadata_parser_testcase extends basic_testcase {
     }
 
     /**
-     * @expectedException \moodle_exception
      */
     public function test_parse_metadata_fail() {
         $malformedxml = <<<XML
