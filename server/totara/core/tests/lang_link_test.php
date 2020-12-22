@@ -48,7 +48,10 @@ class totara_core_lang_link_testcase extends database_driver_testcase {
                 if (substr_compare($key, '_link', strlen($key) - strlen('_link'), strlen('_link')) !== 0) {
                     continue;
                 }
-
+                // Catalyst Hack - ignore some known 3rd party strings.
+                if ($component == 'mod_bigbluebuttonbn' || $key == "modulename_link") {
+                    continue;
+                }
                 if (isset($whitelist[$component]) && in_array($key, $whitelist[$component])) {
                     continue;
                 }
