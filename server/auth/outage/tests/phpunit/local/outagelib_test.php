@@ -99,8 +99,8 @@ class outagelib_test extends auth_outage_base_testcase {
         self::assertEmpty($CFG->additionalhtmltopofbody);
 
         outagelib::reinject();
-        self::assertContains('<style>', $CFG->additionalhtmltopofbody);
-        self::assertContains('<script>', $CFG->additionalhtmltopofbody);
+        self::assertStringContainsString('<style>', $CFG->additionalhtmltopofbody);
+        self::assertStringContainsString('<script>', $CFG->additionalhtmltopofbody);
 
         // Should not inject more than once with the inject() function.
         $size = strlen($CFG->additionalhtmltopofbody);
@@ -139,8 +139,8 @@ class outagelib_test extends auth_outage_base_testcase {
         $_GET = ['auth_outage_preview' => (string)$outage->id];
 
         outagelib::reinject();
-        self::assertContains('<style>', $CFG->additionalhtmltopofbody);
-        self::assertContains('<script>', $CFG->additionalhtmltopofbody);
+        self::assertStringContainsString('<style>', $CFG->additionalhtmltopofbody);
+        self::assertStringContainsString('<script>', $CFG->additionalhtmltopofbody);
     }
 
     /**

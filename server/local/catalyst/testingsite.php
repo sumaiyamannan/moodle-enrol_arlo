@@ -53,9 +53,9 @@ if ($data = $mform->get_data()) {
 
 
     if (!array_key_exists('local_catalyst', $CFG->forced_plugin_settings) ||
-        !array_key_exists('testingsitewhitelist', $CFG->forced_plugin_settings['local_catalyst'])) {
+        !array_key_exists('testingsiteallowlist', $CFG->forced_plugin_settings['local_catalyst'])) {
 
-        set_config('testingsitewhitelist', trim($data->testingsitewhitelist), 'local_catalyst');
+        set_config('testingsiteallowlist', trim($data->testingsiteallowlist), 'local_catalyst');
     }
 
     if (!array_key_exists('local_catalyst', $CFG->forced_plugin_settings) ||
