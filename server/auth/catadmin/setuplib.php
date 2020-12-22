@@ -5,7 +5,9 @@
  * @package    auth_catadmin
  */
 
-require_once(__DIR__ . '/../../config.php');
+if (!isset($CFG)) {
+    require_once(__DIR__ . '/../../config.php');
+}
 require_once(__DIR__ . '/autoload.php');
 
 global $CFG;
