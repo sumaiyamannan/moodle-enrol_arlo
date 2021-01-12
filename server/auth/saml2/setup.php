@@ -22,17 +22,13 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+defined('MOODLE_INTERNAL') || die();
+
 use auth_saml2\event\cert_regenerated;
 
-// @codingStandardsIgnoreStart
-global $CFG;
-if (!isset($CFG)) {
-    require_once(__DIR__ . '/../../config.php');
-}
-// @codingStandardsIgnoreEnd
 require_once(__DIR__ . '/setuplib.php');
 
-global $saml2auth;
+global $CFG, $saml2auth;
 
 // Tell SSP that we are on 443 if we are terminating SSL elsewhere.
 if (isset($CFG->sslproxy) && $CFG->sslproxy) {
