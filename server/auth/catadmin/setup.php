@@ -5,9 +5,9 @@
  *
  * @package     auth_catadmin
  */
-if (!isset($CFG)) {
-    require_once(__DIR__ . '/../../config.php');
-}
+
+defined('MOODLE_INTERNAL') || die();
+
 require_once(__DIR__ . '/setuplib.php');
 
 global $CFG, $catadminsaml;
