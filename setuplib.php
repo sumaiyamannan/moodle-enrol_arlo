@@ -5,7 +5,8 @@
  * @package    auth_catadmin
  */
 
-require_once(__DIR__ . '/../../config.php');
+defined('MOODLE_INTERNAL') || die();
+
 require_once(__DIR__ . '/autoload.php');
 
 global $CFG;
