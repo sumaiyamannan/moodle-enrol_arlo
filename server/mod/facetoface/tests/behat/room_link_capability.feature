@@ -33,23 +33,20 @@ Feature: Check seminar room link setting
       | student1 | event 1      |
 
     And I log in as "admin"
-    And I navigate to "Rooms" node in "Site administration > Seminars"
-    And I press "Add a new room"
-    And I set the following fields to these values:
-      | Name                         | Room 1          |
-      | Capacity                     | 10              |
-      | Allow booking conflicts      | 0               |
-      | Virtual room link            | http://example.com?id=12345 |
-      | Building                     | Some Building 1 |
-      | Address                      | 123 Main Street |
-    And I press "Add a room"
-
     And I am on "Course 1" course homepage
     And I click on "View all events" "link"
     And I click on the seminar event action "Edit event" in row "Upcoming"
     And I click on "Select room" "link"
-    And I click on "Room 1" "text" in the "Choose rooms" "totaradialogue"
-    And I click on "OK" "button" in the "Choose rooms" "totaradialogue"
+    And I click on "Create" "link" in the "Choose rooms" "totaradialogue"
+    And I set the following fields to these values:
+      | Name                         | Room 1          |
+      | Capacity                     | 10              |
+      | Allow booking conflicts      | 0               |
+      | Add virtual room link        | Custom virtual room link |
+      | Virtual room link            | http://example.com?id=12345 |
+      | Building                     | Some Building 1 |
+      | Address                      | 123 Main Street |
+    And I click on "//div[@aria-describedby='editcustomroom0-dialog']//div[@class='ui-dialog-buttonset']/button[contains(.,'OK')]" "xpath_element"
     And I press "Save changes"
     And I log out
 

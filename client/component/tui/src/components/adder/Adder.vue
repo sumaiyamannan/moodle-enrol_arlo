@@ -79,7 +79,12 @@
 
           <!-- Footer (count & action buttons) -->
           <div class="tui-adder__footer">
-            <div :id="$id('items-added')" class="tui-adder__summary">
+            <div
+              :id="$id('items-added')"
+              class="tui-adder__summary"
+              aria-live="polite"
+              aria-atomic="true"
+            >
               <template v-if="customSelected">
                 {{ customSelected(count) }}
               </template>
@@ -90,10 +95,12 @@
             <div class="tui-adder__actions">
               <ButtonGroup>
                 <Button
-                  :disabled="!count"
+                  :disabled="!count || showLoadingBtn"
                   :text="$str('add', 'totara_core')"
                   :styleclass="{ primary: true }"
                   :aria-describedby="$id('items-added')"
+                  :aria-haspopup="ariaHaspopup"
+                  :loading="showLoadingBtn"
                   @click="$emit('added', allSelectedItems)"
                 />
                 <ButtonCancel @click="$emit('cancel')" />
@@ -132,6 +139,7 @@ export default {
   },
 
   props: {
+    ariaHaspopup: [Boolean, String],
     // Customized item-selected context
     customSelected: Function,
     // Pre-selected items
@@ -143,6 +151,8 @@ export default {
     loading: {
       type: Boolean,
     },
+    // Display loading spinner on Add button click
+    showLoadingBtn: Boolean,
     // Display a load more button
     showLoadMore: {
       type: [Boolean, String],
@@ -290,21 +300,23 @@ export default {
 
   &__footer {
     display: flex;
-    padding-top: var(--gap-6);
+    flex-wrap: wrap;
     border-top: var(--border-width-normal) solid var(--color-neutral-5);
+
+    & > * {
+      margin-top: var(--gap-6);
+    }
   }
 
   &__summary {
     display: flex;
     align-items: center;
-    width: 50%;
     @include tui-font-heading-label();
   }
 
   &__actions {
     display: flex;
-    justify-content: flex-end;
-    width: 50%;
+    margin-left: auto;
   }
 }
 

@@ -37,6 +37,7 @@ $string['addeditattendeessuccess'] = 'Add/edit attendees success';
 $string['addedsuccessfully'] = 'Added successfully';
 $string['addfacilitator'] = 'Add a facilitator';
 $string['addingsession'] = 'Adding a new event in {$a}';
+$string['addingseminarsession'] = 'Adding a new Seminar to {$a}';
 $string['additionalfeaturesheading'] = 'Additional features';
 $string['addnewasset'] = 'Add a new asset';
 $string['addnewfacilitator'] = 'Add a new facilitator';
@@ -126,6 +127,10 @@ $string['approvertime'] = 'Approval Time';
 $string['approveuserevent'] = 'Approve {$a} for this event';
 $string['archivewarning_removeattendees'] = 'The disabled attendees can not be removed because they hold archived course completion records';
 $string['archivewarning_takeattendance'] = 'The disabled attendees can not be updated because they hold archived course completion records';
+$string['archive_nousers'] = 'No users have been archived.';
+$string['archive_warning'] = 'Notifications will NOT be sent to restored archived users and their managers.';
+$string['archive_success'] = 'Successfully restored {$a} user(s).';
+$string['archive_restore'] = 'Restore selected users';
 $string['areyousureconfirmwaitlist'] = 'This will be over the event maximum bookings allowance. Are you sure you want to continue?';
 $string['assessmentyour'] = 'Your assessment';
 $string['asset'] = 'Asset';
@@ -145,9 +150,12 @@ $string['assetshow'] = 'Show to users when choosing an asset on the Add/Edit eve
 $string['assetshown'] = 'Asset shown successfully';
 $string['assetupdatesuccess'] = 'Successfully updated asset';
 $string['attendance'] = 'Attendance';
+$string['attendancename'] = 'Name';
 $string['attendancetaken'] = 'Attendance taken';
 $string['attendancerequestsupdated'] = 'Attendance requests updated';
 $string['attendedsession'] = 'Attended event';
+$string['attendancestatus'] = 'Attendance status';
+$string['attendancetimeofsignup'] = 'Time of sign-up';
 $string['attendeeactions'] = 'Attendee actions';
 $string['attendeenote'] = 'Attendee\'s note';
 $string['attendees'] = 'Attendees';
@@ -398,6 +406,8 @@ $string['confirmation'] = 'Confirmation';
 $string['confirmationmessage'] = 'Confirmation message';
 $string['confirmationsent'] = 'You will receive a booking confirmation email shortly.';
 $string['confirmationsentmgr'] = 'You will be notified about their decision.';
+$string['connectedas'] = 'Connected as {$a}';
+$string['connectedasx'] = 'Connected as {$a->name} ({$a->email})';
 $string['completionstatusrequired'] = 'Require status';
 $string['completionstatusrequired_help'] = 'Checking one or more statuses will require a user to achieve at least one of the checked statuses in order to be marked complete in this seminar activity, as well as any other Activity Completion requirements.';
 $string['completiondelay'] = 'Require event over for';
@@ -406,6 +416,7 @@ $string['completiondelay_help'] = 'Checking this completion criteria will requir
 
 Use this setting to allow trainers to mark attendance and/or grades without triggering activity completions. The setting of 0 days will delay activity completion until the event is over.';
 $string['completiondelaydays'] = 'days';
+$string['connectionfailed'] = 'Connnection failed';
 $string['copyingsession'] = 'Copying as a new event in {$a}';
 $string['copynotification'] = 'Copy notification';
 $string['copynotificationcreated'] = 'Copy of the notification is created.';
@@ -635,6 +646,7 @@ $string['error:cutofftooclose'] = 'The cut-off time for minimum bookings is too 
 $string['error:cutofftoolate'] = 'The cut-off for minimum bookings is after the events earliest start date, it must be before to have any effect.';
 $string['error:datesunavailablestuff'] = 'The new dates you have selected are unavailable due to a scheduling conflict with the following resources:<br/>{$a}Please choose different dates or change the selected room/facilitators/assets.';
 $string['error:delimiternotfound'] = 'Supported CSV file delimiter is not found.';
+$string['error:disconnected'] = 'Authorisation required.';
 $string['error:emptylocation'] = 'Location was empty.';
 $string['error:emptyvenue'] = 'Venue was empty.';
 $string['error:enrolmentfailed'] = 'Could not enrol {$a} into the course.';
@@ -688,6 +700,7 @@ $string['error:notificationdoesnotexist'] = 'Notification does not exist';
 $string['error:notificationnonduplicate'] = 'Can not delete non-duplicate auto notification';
 $string['error:notificationtemplatemissing'] = 'The following notification templates are missing (notifications could not be created for them):';
 $string['error:notificationnocopy'] = 'Notification copy failed.';
+$string['error:plugin_is_disabled'] = 'Virtual meeting is disabled on this event';
 $string['error:problemsigningup'] = 'There was a problem signing you up.';
 $string['error:removeattendee'] = 'Could not remove {$a} from the event.';
 $string['error:roomconflicts'] = 'Room has conflicting usage';
@@ -705,6 +718,7 @@ $string['error:shortnamecustomfield'] = 'This shortname is reserved by Totara se
 $string['error:takeattendance'] = 'An error occurred while taking attendance';
 $string['error:therearexconflicts'] = 'There are ({$a}) conflicts with the proposed time period.';
 $string['error:thereisaconflict'] = 'There is a conflict with the proposed time period.';
+$string['error:toomanyvirtualmeetings'] = 'Too many virtual meetings. Please ensure that <strong>only one</strong> virtual meeting is assigned per session';
 $string['error:unrecognisedapprovaltype'] = 'Unrecognised approval type passed to facetoface_get_approvaltype_string()';
 $string['error:unknownbuttonclicked'] = 'No action associated with the button that was clicked';
 $string['error:unknownuserfield'] = 'This field is not supported for user search.';
@@ -815,6 +829,7 @@ $string['facetoface:joinanyvirtualroom'] = 'View \'Join now\' room link';
 $string['facetoface:manageadhocassets'] = 'Manage ad-hoc assets';
 $string['facetoface:manageadhocfacilitators'] = 'Manage ad-hoc facilitators';
 $string['facetoface:manageadhocrooms'] = 'Manage ad-hoc rooms';
+$string['facetoface:managearchivedattendees'] = 'Manage archived attendees';
 $string['facetoface:manageattendeesnote'] = 'Manage event attendee\'s notes';
 $string['facetoface:managecustomfield'] = 'Manage seminar custom fields';
 $string['facetoface:managesitewideassets'] = 'Manage sitewide assets';
@@ -930,6 +945,7 @@ $string['inactive'] = 'Inactive';
 $string['individuals'] = 'Individuals';
 $string['info'] = 'Info';
 $string['inprogress'] = 'In progress';
+$string['internal'] = 'Custom virtual room link';
 $string['itemstoadd'] = 'Items to add';
 $string['jobassignment'] = 'Job assignment';
 $string['joinwaitlist'] = 'Join waitlist';
@@ -940,6 +956,7 @@ $string['location'] = 'Location';
 $string['locationtimetbd'] = 'Location and time to be announced later.';
 $string['lookfor'] = 'Search';
 $string['manageassets'] = 'Manage assets';
+$string['managearchivedattendees'] = 'Manage archived users';
 $string['manageevents'] = 'View and manage events';
 $string['managefacilitators'] = 'Manage facilitators';
 $string['managenotificationtemplates'] = 'Manage notification templates';
@@ -1157,8 +1174,12 @@ $string['roomdescription'] = 'Room description';
 $string['roomdescriptionedit'] = 'Description';
 $string['roomdetails'] = 'Room details';
 $string['roomgoto'] = 'Go to room';
+$string['roomgotox'] = 'Go to \'{$a}\'';
 $string['roomhidden'] = 'Room hidden successfully';
 $string['roomhide'] = 'Hide from users when choosing a room on the Add/Edit event page';
+$string['roomhost'] = 'Host meeting';
+$string['roomhostx'] = 'Start meeting as host of \'{$a}\'';
+$string['roomhostjoin'] = 'Join as attendee';
 $string['roomidentifier_nameonly'] = 'Room name';
 $string['roomidentifier_name_building'] = 'Room name and building';
 $string['roomidentifier_name_building_address'] = 'Room name, building and address';
@@ -2259,6 +2280,22 @@ Duration: [session:duration]
 [session:facilitators]
 [/sessions]';
 $string['setting:defaultvalue'] = 'Default value';
+$string['setting:defaultvirtualmeetingfailuresubjectdefault'] = 'Virtual meeting creation failure';
+$string['setting:defaultvirtualmeetingfailuremessagedefault'] = 'This is to advise that the system failed to create virtual meetings for the following event. Please try again by deleting and recreating these virtual rooms in the event. If the error persists check your connection to the virtual meeting service provider or contact site administrators:
+
+
+***VIRTUAL MEETING CREATION FAILURE***
+
+Course: [coursename]
+Seminar: [facetofacename]
+
+Event times and virtual meeting details:
+[#sessions]
+[session:startdate], [session:starttime] - [session:finishdate], [session:finishtime] [session:timezone]
+Duration: [session:duration]
+Room: [session:room:name]
+[session:room:link]
+[/sessions]';
 $string['setting:defaultwaitlistautocleansubjectdefault'] = 'Waitlisted signup expired';
 $string['setting:defaultwaitlistautocleanmessagedefault'] = 'This is to advise you that your waitlisted signup for the following course has been cancelled due to the event starting:
 
@@ -2517,6 +2554,7 @@ $string['summary'] = 'Summary';
 $string['takeattendance'] = 'Take attendance';
 $string['takeattendance_label'] = '{$a}\'s attendance';
 $string['takeattendance_tick'] = 'Select {$a}';
+$string['takeattendance_tickall'] = 'Select all attendees';
 $string['template'] = 'Template';
 $string['templateadminrequest'] = 'Booking admin request';
 $string['templateallreservationcancel'] = 'All reservations cancelled';
@@ -2559,6 +2597,7 @@ $string['type'] = 'Type';
 $string['unapprovedrequests'] = 'Unapproved Requests';
 $string['unavailable'] = 'Unavailable';
 $string['unavailablenotifications'] = 'This seminar has unavailable notifications.<br/><a href=\'{$a->url1}\'>Restore them for this seminar only</a> or go to <a href=\'{$a->url2}\'>Manage notification templates</a> to restore them for all seminars.';
+$string['unavailableplugin'] = '(Unavailable)';
 $string['unavailabletemplates'] = '{$a} notification templates below are <strong>unavailable</strong> to any seminars created in an older version of this product. Please review and restore where necessary.';
 $string['undo'] = 'Undo';
 $string['unknowndate'] = '(unknown date)';
@@ -2590,6 +2629,7 @@ $string['userdataitemcustomfields'] = 'Sign-up and cancellation custom fields';
 $string['userdataitemfacilitator'] = 'Facilitator records';
 $string['userdataitemfacilitator_customfields'] = 'Facilitator custom fields';
 $string['userdataiteminterest'] = 'Declared interest';
+$string['userdataitemroom_virtualmeeting'] = 'Virtual meeting rooms created by the user';
 $string['userdataitemsignups'] = 'Attendance records';
 $string['userdoesnotexist'] = 'User with {$a->fieldname} "{$a->value}" does not exist';
 $string['useriddoesnotexist'] = 'User with ID "{$a}" does not exist';
@@ -2628,9 +2668,19 @@ $string['viewdetails'] = 'View details';
 $string['viewresults'] = 'View results';
 $string['viewroom'] = 'View room';
 $string['viewsubmissions'] = 'View submissions';
+$string['virtual_meeting'] = 'Virtual meeting';
+$string['virtual_meeting_add'] = 'Add virtual room link';
+$string['virtual_meeting_connect'] = 'Connect';
+$string['virtual_meeting_date_locked'] = 'This session uses a virtual room that you do not have control of';
+$string['virtual_meeting_disconnect'] = 'Disconnect';
+$string['virtual_meeting_not_owner'] = 'You are not the owner of the {$a} virtual room';
+$string['virtual_meeting_service_provider'] = 'Service provider account';
+$string['virtual_meeting_service_provider_help'] = 'Once you connect your service provider account and save this virtual room, the session will appear as a scheduled meeting under your authorised service provider account.';
+$string['virtual_meetings'] = 'Virtual meetings';
 $string['virtualroom_card_willopen'] = 'Virtual room will open 15 minutes before next session';
 $string['virtualroom_card_unavailable'] = 'Virtual room is unavailable';
 $string['virtualroom_card_over'] = 'Virtual room is no longer available';
+$string['virtualroom_creator'] = 'Virtual room creator';
 $string['virtualroom_heading'] = 'Virtual room';
 $string['virtualroom_details_seminar'] = 'Seminar';
 $string['virtualroom_details_session_time'] = 'Session time';

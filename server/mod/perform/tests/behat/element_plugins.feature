@@ -1,4 +1,4 @@
-@totara @perform @mod_perform @javascript @vuejs
+@totara @perform @mod_perform @perform_element @javascript @vuejs
 Feature: I can create and use performance activities with any and every custom element type
 
   Background:
@@ -48,8 +48,8 @@ Feature: I can create and use performance activities with any and every custom e
     And I log in as "user1"
     And I navigate to the outstanding perform activities list page
     Then I should see the tui datatable contains:
-      | Activity title       | Type     | Overall progress | Your progress   |
-      | One of every element | Check-in | Not yet started  | Not yet started |
+      | Activity title                          | Type     | Overall progress | Your progress   |
+      | One of every element (##today##j F Y##) | Check-in | Not started      | Not started     |
 
     When I click on "One of every element" "link"
     And I click on "Save as draft" "button"
@@ -75,11 +75,12 @@ Feature: I can create and use performance activities with any and every custom e
     And I log in as "user1"
     And I navigate to the outstanding perform activities list page
     Then I should see the tui datatable contains:
-      | Activity title       | Type     | Overall progress | Your progress   |
-      | One of every element | Check-in | Not yet started  | Not yet started |
+      | Activity title                          | Type     | Overall progress | Your progress   |
+      | One of every element (##today##j F Y##) | Check-in | Not started      | Not started     |
 
     When I click on "One of every element" "link"
     And I click on "Save as draft" "button"
-    And I click on "Submit" "button"
+    Then I should see "Draft saved" in the tui success notification toast and close it
+    When I click on "Submit" "button"
     And I confirm the tui confirmation modal
     Then I should see "Section submitted" in the tui success notification toast

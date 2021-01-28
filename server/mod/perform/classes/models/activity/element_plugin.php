@@ -24,6 +24,7 @@
 namespace mod_perform\models\activity;
 
 use mod_perform\entity\activity\element as element_entity;
+use mod_perform\models\response\section_element_response;
 
 /**
  * Class element_plugin
@@ -186,6 +187,15 @@ abstract class element_plugin {
     }
 
     /**
+     * This method return element's print vue component name
+     *
+     * @return string
+     */
+    public function get_participant_print_component(): string {
+        return $this->get_component_path('ParticipantPrint');
+    }
+
+    /**
      * This method return element's user form vue component name
      * @return string
      */
@@ -245,6 +255,25 @@ abstract class element_plugin {
      * @param element_entity $element
      */
     public function validate_element(element_entity $element) {
+    }
+
+    /**
+     * Do any required actions after the element has been created.
+     *
+     * @param element $element
+     */
+    public function post_create(element $element): void {
+        // Can be overridden if necessary.
+    }
+
+    /**
+     * Do any required actions after the element configuration has been updated.
+     *
+     * @param element $element
+     */
+    public function post_update(element $element): void {
+        // Can be overridden if necessary.
+        $this->post_create($element);
     }
 
     /**

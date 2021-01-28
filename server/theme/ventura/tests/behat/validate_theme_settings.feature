@@ -12,10 +12,10 @@ Feature: Theme settings basic validations
   Scenario: Confirm Brand tab has all the required elements
     When I click on "Brand" "link"
     Then I should see "Logo" in the ".tui-tabContent" "css_element"
-    And the URL for image nested in ".tui-formImageUpload:aria-label-extension=Logo" should match "/theme\/image.php\/ventura\/totara_core\/[0-9]+\/logo/"
+    And the URL for image nested in ".tui-form .tui-formRow:nth-child(1)" should match "/theme\/image.php\/ventura\/totara_core\/[0-9]+\/logo/"
     And I should see "Logo alternative text" in the ".tui-tabContent" "css_element"
     And I should see "Favicon" in the ".tui-tabContent" "css_element"
-    And the URL for image nested in ".tui-formImageUpload:aria-label-extension=Favicon" should match "/theme\/image.php\/ventura\/theme\/[0-9]+\/favicon/"
+    And the URL for image nested in ".tui-form .tui-formRow:nth-child(3)" should match "/theme\/image.php\/ventura\/theme\/[0-9]+\/favicon/"
 
   Scenario: Confirm Colours tab has all the required elements
     When I click on "Colours" "link"
@@ -30,9 +30,36 @@ Feature: Theme settings basic validations
     When I click on "Images" "link"
     And the field "Display login page image" matches value "1"
     And the field "Login alternative text" matches value "Totara Login"
-    And the URL for image nested in ".tui-formImageUpload:aria-label-extension=Login page default image" should match "/theme\/image.php\/ventura\/totara_core\/[0-9]+\/default_login/"
-    And the URL for image nested in ".tui-formImageUpload:aria-label-extension=Course default image" should match "/theme\/image.php\/ventura\/core\/[0-9]+\/course_defaultimage/"
-    And the URL for image nested in ".tui-formImageUpload:aria-label-extension=Program default image" should match "/theme\/image.php\/ventura\/totara_program\/[0-9]+\/defaultimage/"
-    And the URL for image nested in ".tui-formImageUpload:aria-label-extension=Certification default image" should match "/theme\/image.php\/ventura\/totara_certification\/[0-9]+\/defaultimage/"
-    And the URL for image nested in ".tui-formImageUpload:aria-label-extension=Resource default image" should match "/theme\/image.php\/ventura\/engage_article\/[0-9]+\/default/"
-    And the URL for image nested in ".tui-formImageUpload:aria-label-extension=Workspace default image" should match "/theme\/image.php\/ventura\/container_workspace\/[0-9]+\/default_space/"
+    And the URL for image nested in "#tabpanel-uid-3 .tui-collapsible:nth-child(1) .tui-formRow:nth-child(2)" should match "/theme\/image.php\/ventura\/totara_core\/[0-9]+\/default_login/"
+    And the URL for image nested in "#tabpanel-uid-3 .tui-collapsible:nth-child(2) .tui-formRow:nth-child(1)" should match "/theme\/image.php\/ventura\/core\/[0-9]+\/course_defaultimage/"
+    And the URL for image nested in "#tabpanel-uid-3 .tui-collapsible:nth-child(2) .tui-formRow:nth-child(2)" should match "/theme\/image.php\/ventura\/totara_program\/[0-9]+\/defaultimage/"
+    And the URL for image nested in "#tabpanel-uid-3 .tui-collapsible:nth-child(2) .tui-formRow:nth-child(3)" should match "/theme\/image.php\/ventura\/totara_certification\/[0-9]+\/defaultimage/"
+    And the URL for image nested in "#tabpanel-uid-3 .tui-collapsible:nth-child(3) .tui-formRow:nth-child(1)" should match "/theme\/image.php\/ventura\/engage_article\/[0-9]+\/default/"
+    And the URL for image nested in "#tabpanel-uid-3 .tui-collapsible:nth-child(3) .tui-formRow:nth-child(2)" should match "/theme\/image.php\/ventura\/container_workspace\/[0-9]+\/default_space/"
+
+  Scenario: Confirm Custom tab has all the required elements
+    When I click on "Custom" "link"
+    Then I should see "Custom footer" in the ".tui-tabContent:nth-of-type(4)" "css_element"
+    And I should see "Custom CSS" in the ".tui-tabContent:nth-of-type(4)" "css_element"
+
+  Scenario: Confirm that when entering custom text in the footer that it displays
+    When I click on "Custom" "link"
+    And I set the field "Custom footer" to "Behat Test 123"
+    And I click on "Save Custom Settings" "button"
+    And I reload the page
+    Then I should see "Behat Test 123" in the ".footnote" "css_element"
+
+  Scenario: Confirm that when entering custom HTML in the footer that it renders correctly.
+    When I click on "Custom" "link"
+    And I set the field "Custom footer" to "<div id='behat_test_123'>Behat Test 123</div>"
+    And I click on "Save Custom Settings" "button"
+    And I reload the page
+    Then I should see "Behat Test 123" in the "#behat_test_123" "css_element"
+
+  # XSS test - which it should strip out the bad <script> tag content.
+  Scenario: Custom HTML with XSS protection in the footer.
+    When I click on "Custom" "link"
+    And I set the field "Custom footer" to "<div id='bomba_test_this'>Makag latatag, normalin</div><script id='42_meaning_of_every_thing'>alert('hi there');</script>"
+    And I click on "Save Custom Settings" "button"
+    And I reload the page
+    Then I should see "Makag latatag, normalin" in the "#bomba_test_this" "css_element"

@@ -21,17 +21,37 @@
   <div class="tui-wekaAudioBlock">
     <template v-if="!$apollo.loading">
       <div class="tui-wekaAudioBlock__inner">
+        <ModalPresenter :open="showModal" @request-close="hideModal">
+          <ExtraFileUploadModal
+            :item-id="itemId"
+            :context-id="contextId"
+            :accepted-file-types="['.txt']"
+            :modal-title="$str('upload_audio_transcript', 'editor_weka')"
+            :modal-title-help-text="
+              $str('transcript_modal_title_help', 'editor_weka')
+            "
+            :submit-button-text="
+              $str('upload_caption_transcript_button', 'editor_weka', '.txt')
+            "
+            :modal-help-text="$str('audio_alt_help', 'editor_weka')"
+            :filename="transcriptFilename"
+            @change="updateTranscript"
+          />
+        </ModalPresenter>
         <CoreAudioBlock
           :filename="filename"
           :item-id="itemId"
           :url="file.url"
           :mime-type="file.mime_type"
-        />
-
-        <NodeBar
-          :actions="actions"
-          :aria-label="$str('actions_menu_for', 'editor_weka', filename)"
-        />
+          :transcript-url="transcriptUrl"
+        >
+          <template slot="actions">
+            <NodeBar
+              :actions="actions"
+              :aria-label="$str('actions_menu_for', 'editor_weka', filename)"
+            />
+          </template>
+        </CoreAudioBlock>
       </div>
     </template>
   </div>
@@ -42,11 +62,15 @@ import CoreAudioBlock from 'tui/components/json_editor/nodes/AudioBlock';
 import BaseNode from 'editor_weka/components/nodes/BaseNode';
 import getDraftFile from 'editor_weka/graphql/get_draft_file';
 import NodeBar from 'editor_weka/components/toolbar/NodeBar';
+import ModalPresenter from 'tui/components/modal/ModalPresenter';
+import ExtraFileUploadModal from 'editor_weka/components/upload/ExtraFileUploadModal';
 
 export default {
   components: {
     CoreAudioBlock,
     NodeBar,
+    ModalPresenter,
+    ExtraFileUploadModal,
   },
 
   extends: BaseNode,
@@ -65,49 +89,41 @@ export default {
   data() {
     return {
       file: {},
+      showModal: false,
     };
   },
 
   computed: {
     actions() {
-      let rtn = [];
-
-      if (this.hasAttachmentNode) {
-        rtn.push({
+      return [
+        this.hasAttachmentNode && {
           label: this.$str('display_as_attachment', 'editor_weka'),
-          action: () => {
-            this.$_toAttachment();
-          },
-        });
-      }
-
-      rtn = rtn.concat([
+          action: this.$_toAttachment,
+        },
+        {
+          label: this.$str('upload_transcript', 'editor_weka'),
+          action: this.$_showModal,
+        },
         {
           label: this.$str('remove', 'core'),
-          action: () => {
-            this.$_removeNode();
-          },
+          action: () => this.$_removeNode,
         },
-      ]);
-
-      if (this.downloadUrl) {
-        rtn.push({
+        {
           label: this.$str('download', 'core'),
-          action: () => {
-            window.document.location.href = this.downloadUrl;
-          },
-        });
-      }
-
-      return rtn;
+          action: this.$_download,
+        },
+      ].filter(Boolean);
     },
 
     itemId() {
-      if (!this.context.getItemId) {
-        throw new Error('No function "getItemId" found for extension media');
-      }
-
       return this.context.getItemId();
+    },
+
+    contextId() {
+      if (!this.context.getContextId) {
+        throw new Error("No function 'getContextId' was found from extension");
+      }
+      return this.context.getContextId();
     },
 
     filename() {
@@ -118,29 +134,29 @@ export default {
       return this.attrs.filename;
     },
 
-    hasAttachmentNode() {
-      if (!this.context.hasAttachmentNode) {
-        return false;
-      }
-
-      return this.context.hasAttachmentNode();
-    },
-
-    downloadUrl() {
-      if (!this.context.getFileUrl) {
+    transcriptFilename() {
+      if (!this.attrs.transcript) {
         return null;
       }
 
-      return this.context.getFileUrl(this.filename);
+      return this.attrs.transcript.filename;
+    },
+
+    transcriptUrl() {
+      if (!this.attrs.transcript) {
+        return null;
+      }
+
+      return this.attrs.transcript.url;
+    },
+
+    hasAttachmentNode() {
+      return this.context.hasAttachmentNode();
     },
   },
 
   methods: {
     $_removeNode() {
-      if (!this.context.removeNode) {
-        return;
-      }
-
       return this.context.removeNode(this.getRange);
     },
 
@@ -152,9 +168,44 @@ export default {
       const params = {
         filename: this.filename,
         size: this.file.file_size,
+        transcript: this.attrs.transcript || null,
       };
 
       this.context.replaceWithAttachment(this.getRange, params);
+    },
+
+    async $_download() {
+      window.open(await this.context.getDownloadUrl(this.filename));
+    },
+
+    $_showModal() {
+      this.showModal = true;
+    },
+
+    hideModal() {
+      this.showModal = false;
+    },
+
+    /**
+     * @param {Object|null} transcriptFile
+     */
+    async updateTranscript(transcriptFile) {
+      this.hideModal();
+
+      if (!this.context.updateAudioWithTranscript) {
+        return;
+      }
+
+      const audioAttrs = Object.assign({}, this.attrs, { transcript: null });
+
+      if (transcriptFile) {
+        audioAttrs.transcript = {
+          filename: transcriptFile.filename,
+          url: transcriptFile.url,
+        };
+      }
+
+      this.context.updateAudioWithTranscript(this.getRange, audioAttrs);
     },
   },
 };
@@ -168,8 +219,13 @@ export default {
     ],
 
     "editor_weka": [
+      "audio_alt_help",
       "display_as_attachment",
-      "actions_menu_for"
+      "actions_menu_for",
+      "upload_caption_transcript_button",
+      "upload_audio_transcript",
+      "upload_transcript",
+      "transcript_modal_title_help"
     ]
   }
 </lang-strings>

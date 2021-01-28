@@ -22,12 +22,17 @@
  */
 namespace container_workspace\member;
 
+use cache;
 use container_workspace\exception\enrol_exception;
 use container_workspace\interactor\workspace\interactor;
+use container_workspace\task\notify_added_to_workspace_bulk_task;
 use container_workspace\tracker\tracker;
 use container_workspace\workspace;
 use core\entity\user_enrolment;
+use core\orm\query\builder;
 use core_container\factory;
+use totara_core\event\bulk_enrolments_ended;
+use totara_core\event\bulk_enrolments_started;
 use totara_core\visibility_controller;
 use core\task\manager as task_manager;
 use container_workspace\task\notify_added_to_workspace_task;
@@ -68,6 +73,37 @@ final class member {
         $this->user_enrolment = $user_enrolment;
         $this->workspace_id = null;
         $this->user_record = null;
+    }
+
+    /**
+     * Gets the member by it's id
+     *
+     * @param int $member_id
+     * @param int $workspace_id
+     * @return member
+     */
+    public static function from_id(int $member_id, int $workspace_id): member {
+        global $DB;
+
+        $sql = '
+            SELECT ue.* FROM "ttr_user_enrolments" ue
+            INNER JOIN "ttr_enrol" e ON ue.enrolid = e.id
+            WHERE ue.id = :member_id
+            AND e.courseid = :workspace_id
+        ';
+
+        $params = [
+            'member_id' => $member_id,
+            'workspace_id' => $workspace_id
+        ];
+
+        $record = $DB->get_record_sql($sql, $params, MUST_EXIST);
+        $entity = new user_enrolment($record);
+
+        $member = new static($entity);
+        $member->workspace_id = $workspace_id;
+
+        return $member;
     }
 
     /**
@@ -177,6 +213,62 @@ final class member {
     }
 
     /**
+     * Adds given members in bulk and returns the ids of the members created.
+     *
+     * This is optimised for bulk users so that the visibility recalculation is done only once and not per member.
+     *
+     * @param workspace $workspace
+     * @param int[] $user_ids
+     * @param bool $trigger_notification
+     * @param int|null $actor_id
+     * @return member[] returns the member ids just added
+     */
+    public static function added_to_workspace_in_bulk(workspace $workspace, array $user_ids,
+                                                      bool $trigger_notification = true, ?int $actor_id = null): array {
+        global $USER;
+        if (empty($actor_id)) {
+            $actor_id = $USER->id;
+        }
+
+        if (empty($user_ids)) {
+            throw new coding_exception('No user ids given');
+        }
+
+        $members = builder::get_db()->transaction(
+            function () use ($workspace, $user_ids, $actor_id): array {
+                $role = self::get_role_for_members();
+
+                $owner_id = $workspace->get_user_id();
+
+                foreach ($user_ids as $user_id) {
+                    // The owner cannot be added by this, he should always be a member already
+                    if ($user_id == $owner_id) {
+                        throw enrol_exception::on_manual_enrol();
+                    }
+                }
+
+                return self::do_add_to_workspace_bulk($workspace, $user_ids, $role->id, $actor_id);
+            }
+        );
+
+        if ($trigger_notification) {
+            $member_ids = [];
+            foreach ($members as $member) {
+                $member_ids[] = $member->get_id();
+            }
+
+            $member_id_chunks = array_chunk($member_ids, 500);
+
+            foreach ($member_id_chunks as $member_id_chunk) {
+                $task = notify_added_to_workspace_bulk_task::from_members($workspace, $member_id_chunk);
+                task_manager::queue_adhoc_task($task);
+            }
+        }
+
+        return $members;
+    }
+
+    /**
      * Target user is being added to the workspace by the actor.
      *
      * @param workspace $workspace
@@ -198,12 +290,8 @@ final class member {
             throw enrol_exception::on_manual_enrol();
         }
 
-        $roles = get_archetype_roles('student');
-        if (empty($roles)) {
-            throw new \coding_exception("No roles for archetype 'student'");
-        }
+        $role = static::get_role_for_members();
 
-        $role = reset($roles);
         $member = static::do_add_to_workspace($workspace, $user_id, $role->id, $actor_id);
 
         if ($trigger_notification) {
@@ -213,6 +301,66 @@ final class member {
         }
 
         return $member;
+    }
+
+    /**
+     * Get role for member being added.
+     *
+     * @return stdClass
+     */
+    private static function get_role_for_members(): stdClass {
+        $cache = cache::make('container_workspace', 'workspace');
+        $role = $cache->get('member_role');
+        if (!$role) {
+            $roles = get_archetype_roles('student');
+            if (empty($roles)) {
+                throw new \coding_exception("No roles for archetype 'student'");
+            }
+            $role = reset($roles);
+            $cache->set('member_role', $role);
+        }
+
+        return $role;
+    }
+
+    /**
+     * Add users in bulk to the workspace
+     * @param workspace $workspace
+     * @param int[] $user_ids
+     * @param int $role_id
+     * @param int $actor_id
+     * @return member[]
+     */
+    private static function do_add_to_workspace_bulk(
+        workspace $workspace,
+        array $user_ids,
+        int $role_id,
+        int $actor_id
+    ): array {
+        global $CFG;
+        // Make sure everything is valid before enrolling users
+        foreach ($user_ids as $user_id) {
+            if ($CFG->tenantsenabled) {
+                // Only checking this if multi-tenancy is enabled.
+                $target_workspace_interactor = new interactor($workspace, $user_id);
+                if (!$target_workspace_interactor->can_view_workspace_with_tenant_check()) {
+                    // Check if the newly going-to-be-added user is able to see the workspace or not.
+                    throw new \coding_exception("Target user is not able to see the workspace");
+                }
+            }
+        }
+
+        $manager = $workspace->get_enrolment_manager();
+        $manager->manual_enrol_user_bulk($user_ids, $role_id, $actor_id);
+
+        static::assign_view_hidden_capability($workspace, $role_id);
+
+        $members = [];
+        foreach ($user_ids as $user_id) {
+            $members[] = self::from_user($user_id, $workspace->id);
+        }
+
+        return $members;
     }
 
     /**

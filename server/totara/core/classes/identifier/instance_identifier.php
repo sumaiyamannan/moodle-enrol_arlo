@@ -22,6 +22,13 @@
  */
 namespace totara_core\identifier;
 
+/**
+ * A metadata class that tracks a specific item instance,
+ * where an item is a database record made up of a context, component, area and id.
+ *
+ * Useful for updates/deletes to an existing record.
+ * If a new record is being created, use {@see component_area} instead.
+ */
 class instance_identifier {
     /**
      * @var int

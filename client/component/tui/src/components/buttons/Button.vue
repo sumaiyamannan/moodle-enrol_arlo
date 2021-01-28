@@ -22,7 +22,7 @@
     :aria-expanded="ariaExpanded"
     :aria-disabled="ariaDisabled"
     :aria-describedby="ariaDescribedby"
-    :autofocus="autofocus"
+    :aria-haspopup="ariaHaspopup"
     :class="{
       'tui-formBtn--alert': styleclass.alert,
       'tui-formBtn--prim': styleclass.primary,
@@ -31,7 +31,6 @@
       'tui-formBtn--transparent': styleclass.transparent,
       'tui-formBtn--reveal': styleclass.reveal,
       'tui-formBtn--stealth': styleclass.stealth,
-      'tui-formBtn--toolbar': styleclass.toolbar,
     }"
     :disabled="disabled"
     :formaction="formaction"
@@ -46,15 +45,22 @@
   >
     {{ text }}
     <Caret v-if="caret" class="tui-formBtn__caret" />
+    <Loading
+      v-if="loading"
+      class="tui-formBtn__loading"
+      :alt="'(' + $str('loading', 'core') + ')'"
+    />
   </button>
 </template>
 
 <script>
 import Caret from 'tui/components/decor/Caret';
+import Loading from 'tui/components/icons/Loading';
 
 export default {
   components: {
     Caret,
+    Loading,
   },
 
   props: {
@@ -64,6 +70,7 @@ export default {
       type: [Boolean, String],
       default: false,
     },
+    ariaHaspopup: [Boolean, String],
     autofocus: Boolean,
     caret: Boolean,
     styleclass: {
@@ -95,6 +102,7 @@ export default {
       type: String,
       validator: x => ['_blank', '_parent', '_self', '_top'].includes(x),
     },
+    loading: Boolean,
     name: String,
     text: {
       required: true,
@@ -107,8 +115,26 @@ export default {
     },
     value: String,
   },
+  mounted() {
+    if (this.autofocus && this.$el) {
+      // Make the input element to be focused, when the prop autofocus is set.
+      // We are moving away from the native attribute for element, because
+      // different browser will treat autofocus different. Furthermore,
+      // the slow performing browser will not make the element focused due
+      // to the element is not rendered on time.
+      this.$el.focus();
+    }
+  },
 };
 </script>
+
+<lang-strings>
+{
+  "core": [
+    "loading"
+  ]
+}
+</lang-strings>
 
 <style lang="scss">
 // Reset
@@ -179,6 +205,11 @@ export default {
 
   > .tui-formBtn__caret {
     margin-left: var(--gap-2);
+  }
+
+  > .tui-formBtn__loading {
+    margin-left: var(--gap-1);
+    color: var(--btn-loader-color-disabled);
   }
 
   &:active,
@@ -303,6 +334,10 @@ export default {
         background: var(--btn-prim-bg-color-disabled);
         border-color: var(--btn-prim-border-color-disabled);
         box-shadow: none;
+      }
+
+      & .tui-formBtn__loading {
+        color: var(--btn-prim-loader-color-disabled);
       }
     }
   }

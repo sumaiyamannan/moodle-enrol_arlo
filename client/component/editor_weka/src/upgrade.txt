@@ -1,7 +1,28 @@
 This files describes API changes in /client/component/editor_weka,
 information provided here is intended especially for developers.
 
+=== 13.3 ===
+
+* Suggestion.showList() fourth parameter had been deprecated and no longer used, please update all calls.
+* Function Suggestion.resetComponent() had been deprecated and no longer used, please update all calls.
+* Suggestion.apply() fourth parameter had been deprecated and no longer used, please update all calls.
+* Updates in Weka.vue:
+  * Deprecated optional prop "instanceId"
+  * Deprecated optional prop "component"
+  * Deprecated optional prop "area"
+  * Added new optional prop "compact"
+  * Added new optional prop "usageIdentifier"
+  * Added new optional prop "variantName"
+  * Data attribute "toolbarEnabled" had been deprecated in favour of prop "compact"
+  * The function getCurrentFiles had been deprecated and no longer used.
+    The behaviour of this function had also been changed. Please updated all calls.
+  * The function getRepositoryData had been deprecated and no longer used.
+    The behaviour of this function had also been changed. Please update all calls.
+  * Updated AudioBlock.vue to move NodeBar.vue inside tui AudioBlock.vue slot
+    * Template changes
+
 === 13.2 ===
 
 * Added new optional prop "instanceId" for component User.vue
 * Added new optional prop "contextId" for component Weka.vue
+* Added new addAltButton for component ImageBlock.vue

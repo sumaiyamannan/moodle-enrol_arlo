@@ -24,6 +24,7 @@
       'tui-dropdown--open': isOpen,
       'tui-dropdown--disabled': disabled,
       'tui-dropdown--flexibleWidth': matchWidth,
+      'tui-dropdown--fixedHeight': fixedHeight,
     }"
   >
     <div
@@ -118,6 +119,7 @@ export default {
     matchWidth: Boolean,
     /** Show the menu inline (rather than as a popover/overlay) */
     inlineMenu: Boolean,
+    fixedHeight: Boolean,
   },
 
   data() {
@@ -145,9 +147,19 @@ export default {
       handler() {
         if (this.isOpen) {
           document.addEventListener('keydown', this.$_keyPress);
+          document.addEventListener(
+            'click',
+            this.$_clickedOutsideCapture,
+            true
+          );
           document.addEventListener('click', this.$_clickedOutside);
         } else {
           document.removeEventListener('keydown', this.$_keyPress);
+          document.removeEventListener(
+            'click',
+            this.$_clickedOutsideCapture,
+            true
+          );
           document.removeEventListener('click', this.$_clickedOutside);
           this.activeNodeIndex = null;
         }
@@ -158,6 +170,7 @@ export default {
 
   beforeDestroy() {
     if (typeof document !== 'undefined') {
+      document.removeEventListener('click', this.$_clickedOutsideCapture, true);
       document.removeEventListener('click', this.$_clickedOutside);
       document.removeEventListener('keydown', this.$_keyPress);
     }
@@ -172,6 +185,20 @@ export default {
       };
     },
 
+    $_clickedOutsideCapture(event) {
+      if (!this.$refs.dropdownMenu) {
+        return;
+      }
+
+      // store target for later so we can tell if it was inside the
+      // menu if it gets removed from the document
+      if (this.$refs.dropdownMenu.contains(event.target)) {
+        this.targetInMenu = event.target;
+      } else {
+        this.targetInMenu = null;
+      }
+    },
+
     /**
      * Close dropdown if clicked outside.
      */
@@ -182,6 +209,11 @@ export default {
       // work around bug in Bootstrap < 3.3.5: https://github.com/twbs/bootstrap/issues/16090
       if (event.target !== this.$refs.dropdownMenu) {
         if (!this.cancelOptions.includes('outside')) return;
+
+        const targetInMenu =
+          this.targetInMenu === event.target ||
+          this.$refs.dropdownMenu.contains(event.target);
+
         if (
           !this.$refs.trigger ||
           // treat direct click on trigger div (*not* content) as click outside
@@ -190,7 +222,7 @@ export default {
         ) {
           if (!this.closeOnClick) {
             // not close after click when we set the closeOnClick prop to false
-            if (this.$refs.dropdownMenu.contains(event.target)) {
+            if (targetInMenu) {
               return;
             }
           }
@@ -202,8 +234,7 @@ export default {
             this.$refs.dropdownMenu.contains(document.activeElement) ||
             // also handle the case where we click on something non-focusable
             // inside the dropdown (which just shifts focus to the body)
-            (this.$refs.dropdownMenu.contains(event.target) &&
-              document.activeElement == document.body)
+            (targetInMenu && document.activeElement == document.body)
           ) {
             this.$_focusTrigger();
           }
@@ -325,6 +356,17 @@ export default {
     &--separator > * + * {
       border-top: var(--border-width-thin) solid
         var(--dropdown-menu-border-color);
+    }
+  }
+
+  &--fixedHeight {
+    .tui-dropdown__content {
+      height: 100%;
+    }
+
+    .tui-dropdown__menu {
+      height: 38vh;
+      overflow-y: visible;
     }
   }
 

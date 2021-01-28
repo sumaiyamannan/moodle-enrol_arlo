@@ -1,5 +1,5 @@
 <?php
-/*
+/**
  * This file is part of Totara LMS
  *
  * Copyright (C) 2019 onwards Totara Learning Solutions LTD
@@ -22,6 +22,9 @@
  */
 namespace editor_weka\extension;
 
+/**
+ * @method static mention create(array $options)
+ */
 final class mention extends extension {
     /**
      * @return string

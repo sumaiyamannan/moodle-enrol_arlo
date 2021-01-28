@@ -884,6 +884,16 @@
   }
 }
 
+.tui-workspaceAddAudienceModal {
+  padding-top: var(--gap-2);
+
+  &__list {
+    & > * + * {
+      margin-top: var(--gap-2);
+    }
+  }
+}
+
 .tui-workspaceEditModal {
   display: flex;
   flex-direction: column;

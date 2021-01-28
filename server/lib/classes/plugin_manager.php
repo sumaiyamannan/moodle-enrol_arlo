@@ -1400,6 +1400,7 @@ class core_plugin_manager {
                 'perform_engage',
                 'engage',
                 'learn_perform_engage',
+                'learn_professional',
             ),
 
             'format' => array(
@@ -1442,6 +1443,10 @@ class core_plugin_manager {
 
             'media' => array(
                 'html5audio', 'html5video', 'swf', 'videojs', 'vimeo', 'youtube'
+            ),
+
+            'virtualmeeting' => array(
+                'msteams', 'zoom'
             ),
 
             'message' => array(

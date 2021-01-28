@@ -562,8 +562,10 @@ function get_exception_info($ex) {
     // Be careful, no guarantee weblib.php is loaded.
     if (function_exists('clean_text')) {
         $message = clean_text($message);
+        $debuginfo = clean_text($debuginfo);
     } else {
         $message = htmlspecialchars($message);
+        $debuginfo = htmlspecialchars($debuginfo);
     }
 
     if (!empty($CFG->errordocroot)) {
@@ -838,18 +840,24 @@ function initialise_cfg(bool $usecache) {
             $cache = cache::make('core', 'config');
             $localcfg = $cache->get('core');
             $updatecache = empty($localcfg);
-            if ($localcfg !== false || isset($localcfg['siteidentifier'])) {
-                $localcfg = (array)$localcfg;
+
+            $localcfg = empty($localcfg)
+                ? $DB->get_records_menu('config', [], '', 'name, value')
+                : (array) $localcfg;
+
+            $cached_siteidentifier = $localcfg['siteidentifier'] ?? null;
+            // If we have a siteidentifier cached make sure it matches the one in the database.
+            // If not, make sure we update the cache from the database entries
+            if (!$updatecache) {
                 // In theory fetching just one record to validate cache should be faster
                 // than fetching all config values...
                 $siteidentifier = $DB->get_field('config', 'value', ['name' => 'siteidentifier']);
-                if ($siteidentifier !== $localcfg['siteidentifier']) {
+                if ($siteidentifier !== $cached_siteidentifier) {
                     $localcfg = $DB->get_records_menu('config', [], '', 'name, value');
+                    $updatecache = true;
                 }
-            } else {
-                // Fallback to DB read.
-                $localcfg = $DB->get_records_menu('config', [], '', 'name, value');
             }
+
             if ($updatecache && $localcfg) {
                 $cache->set('core', $localcfg);
             }
@@ -1643,15 +1651,16 @@ function make_writable_directory($dir, $exceptiononerror = true) {
     umask($CFG->umaskpermissions);
 
     if (!file_exists($dir)) {
-        @mkdir($dir, $CFG->directorypermissions, true);
-        clearstatcache(true, $dir);
-        if (!file_exists($dir)) {
+        if (!@mkdir($dir, $CFG->directorypermissions, true)) {
+            clearstatcache();
             // There might be a race condition when creating directory.
-            if ($exceptiononerror) {
-                throw new invalid_dataroot_permissions($dir.' can not be created, check permissions.');
-            } else {
-                debugging('Can not create directory: '.$dir, DEBUG_DEVELOPER);
-                return false;
+            if (!is_dir($dir)) {
+                if ($exceptiononerror) {
+                    throw new invalid_dataroot_permissions($dir.' can not be created, check permissions.');
+                } else {
+                    debugging('Can not create directory: '.$dir, DEBUG_DEVELOPER);
+                    return false;
+                }
             }
         }
     }

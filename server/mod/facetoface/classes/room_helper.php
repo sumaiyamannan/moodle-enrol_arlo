@@ -26,6 +26,7 @@ namespace mod_facetoface;
 use coding_exception;
 use context_course;
 use context_module;
+use core\orm\collection;
 use core\orm\query\builder;
 
 /**
@@ -53,7 +54,7 @@ final class room_helper {
      * @return room
      */
     public static function save(\stdClass $data): room {
-        global $TEXTAREA_OPTIONS;
+        global $TEXTAREA_OPTIONS, $USER;
 
         $data->custom = $data->notcustom ? 0 : 1;
 
@@ -69,6 +70,11 @@ final class room_helper {
         $room->set_name($data->name);
         $room->set_allowconflicts($data->allowconflicts);
         $room->set_capacity($data->roomcapacity);
+        if (room_virtualmeeting::VIRTUAL_MEETING_INTERNAL != $data->plugin) {
+            // Clear the value if the update is changing the value
+            // from 'internal' plugin to 'none/zoom/msteams'
+            $data->url = '';
+        }
         $room->set_url($data->url);
         if (empty($data->custom)) {
             $room->publish();
@@ -95,7 +101,38 @@ final class room_helper {
         );
         $room->set_description($data->description);
         $room->save();
-        // Return new/updated asset.
+
+        // Set room virtual meeting record.
+        if (!empty($data->plugin)) {
+            if (empty($data->custom) && room_virtualmeeting::is_virtual_meeting($data->plugin)) {
+                throw new coding_exception("you cannot create a site-wide virtual meeting!");
+            }
+
+            /** @var room_virtualmeeting $virtual_meeting */
+            $virtual_meeting = room_virtualmeeting::get_virtual_meeting($room);
+            // Lets check if this room a new or an update.
+            if ($data->id) {
+                // Nobody can update or delete another user's virtual meeting room
+                if ($virtual_meeting->exists() && !self::can_update_virtualmeeting($room)) {
+                    throw new coding_exception("you cannot update or delete virtual meeting!");
+                }
+                // This is the update.
+                // Once a virtualmeeting provider is created and saved, an indeterminate state is created which is difficult
+                // to resolve in real time if a manager changed a mind, so we disable it in meantime
+                if ($virtual_meeting->exists() && !room_virtualmeeting::is_virtual_meeting($data->plugin)) {
+                    $data->plugin = $virtual_meeting->get_plugin();
+                }
+            }
+
+            if (room_virtualmeeting::is_virtual_meeting($data->plugin)) {
+                $virtual_meeting->set_plugin($data->plugin)
+                    ->set_roomid($room->get_id())
+                    ->set_userid($USER->id)
+                    ->save();
+            }
+        }
+
+        // Return new/updated room.
         return $room;
     }
 
@@ -106,29 +143,7 @@ final class room_helper {
      * @return bool
      */
     public static function sync(int $date, array $rooms = []): bool {
-        global $DB;
-
-        if (empty($rooms)) {
-            return $DB->delete_records('facetoface_room_dates', ['sessionsdateid' => $date]);
-        }
-
-        $oldrooms = $DB->get_fieldset_select('facetoface_room_dates', 'roomid', 'sessionsdateid = :date_id', ['date_id' => $date]);
-
-        // WIPE THEM AND RECREATE if certain conditions have been met.
-        if ((count($rooms) == count($oldrooms)) && empty(array_diff($rooms, $oldrooms))) {
-            return true;
-        }
-
-        $res = $DB->delete_records('facetoface_room_dates', ['sessionsdateid' => $date]);
-
-        foreach ($rooms as $room) {
-            $res &= $DB->insert_record('facetoface_room_dates', (object) [
-                'sessionsdateid' => $date,
-                'roomid' => intval($room)
-            ],false);
-        }
-
-        return !!$res;
+        return resource_helper::sync_resources($date, $rooms, 'room');
     }
 
     /**
@@ -204,6 +219,26 @@ final class room_helper {
     }
 
     /**
+     * Is the current user capable to update the virtual room?
+     *
+     * @param room $room
+     * @return boolean
+     */
+    public static function can_update_virtualmeeting(room $room): bool {
+        global $USER;
+
+        /** @var room_virtualmeeting $virtual_meeting */
+        $virtual_meeting = room_virtualmeeting::get_virtual_meeting($room);
+        $can_manage = true;
+        if ($virtual_meeting->exists()) {
+            if ($virtual_meeting->get_userid() != $USER->id) {
+                $can_manage = false;
+            }
+        }
+        return $can_manage;
+    }
+
+    /**
      * room::show_joinnow(html button)::has_time_come(to display 'Join now' button)?
      * Has time come to display the 'Join now' link button
      * from 15 minutes prior to the session start time, until the session end time
@@ -237,7 +272,7 @@ final class room_helper {
         global $USER;
         // Private cache;
         static $usercapabilitylist = [];
-        if (isset($usercapabilitylist[$eventid][$USER->id])) {
+        if (isset($usercapabilitylist[$eventid][$USER->id]) && (!defined('PHPUNIT_TEST') || !PHPUNIT_TEST)) {
             return $usercapabilitylist[$eventid][$USER->id];
         }
 

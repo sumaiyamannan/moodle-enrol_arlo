@@ -4,6 +4,10 @@ query mod_perform_participant_sections_for_print(
   mod_perform_participant_instance(
     participant_instance_id: $participant_instance_id
   ) {
+    subject_instance {
+      progress_status
+    }
+    progress_status
     core_relationship {
       idnumber
       name
@@ -23,7 +27,7 @@ query mod_perform_participant_sections_for_print(
       section_element_id
       element {
         element_plugin {
-          participant_form_component
+          participant_print_component
           participant_response_component
         }
         title

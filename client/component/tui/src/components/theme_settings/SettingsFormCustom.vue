@@ -26,13 +26,30 @@
   >
     <FormRowStack spacing="large">
       <FormRow
+        v-if="customFooterEditable"
+        :label="$str('formcustom_label_customfooter', 'totara_tui')"
+        :is-stacked="true"
+      >
+        <FormTextarea
+          :name="['formcustom_field_customfooter', 'value']"
+          :rows="rows('formcustom_field_customfooter', 6, 20)"
+          char-length="full"
+          :aria-describedby="$id('formcustom-customfooter-details')"
+        />
+        <FormRowDetails :id="$id('formcustom-customfooter-details')">
+          {{ $str('formcustom_details_customfooter', 'totara_tui') }}
+        </FormRowDetails>
+      </FormRow>
+
+      <FormRow
+        v-if="customCssEditable"
         :label="$str('formcustom_label_customcss', 'totara_tui')"
         :is-stacked="true"
       >
         <FormTextarea
           :name="['formcustom_field_customcss', 'value']"
           spellcheck="false"
-          :rows="rows"
+          :rows="rows('formcustom_field_customcss', 6, 30)"
           char-length="full"
           :aria-describedby="$id('formcustom-customcss-details')"
         />
@@ -88,21 +105,39 @@ export default {
   },
 
   props: {
-    // Array of Objects, each describing the properties for fields that are part
-    // of this Form. There is only an Object present in this Array if it came
-    // from the server as it was previously saved
+    /**
+     * Array of Objects, each describing the properties for fields that are part
+     * of this Form. There is only an Object present in this Array if it came
+     * from the server as it was previously saved
+     */
     savedFormFieldData: {
       type: Array,
       default: function() {
         return [];
       },
     },
-    // Saving state, controlled by parent component GraphQl mutation handling
+
+    /**
+     * Saving state, controlled by parent component GraphQl mutation handling
+     */
     isSaving: {
       type: Boolean,
       default: function() {
         return false;
       },
+    },
+
+    /**
+     * Tenant ID or null if global/multi-tenancy not enabled.
+     */
+    selectedTenantId: Number,
+
+    /**
+     *  Customizable tenant settings
+     */
+    customizableTenantSettings: {
+      type: [Array, String],
+      required: false,
     },
   },
 
@@ -110,6 +145,10 @@ export default {
     return {
       initialValues: {
         formcustom_field_customcss: {
+          value: '',
+          type: 'text',
+        },
+        formcustom_field_customfooter: {
           value: '',
           type: 'text',
         },
@@ -123,23 +162,12 @@ export default {
   },
 
   computed: {
-    rows() {
-      var text = '';
-      if (this.valuesForm && 'formcustom_field_customcss' in this.valuesForm) {
-        text = this.valuesForm.formcustom_field_customcss.value;
-      } else if (
-        this.initialValues &&
-        'formcustom_field_customcss' in this.initialValues
-      ) {
-        text = this.initialValues.formcustom_field_customcss.value;
-      }
-      var lines = (text.match(/\n/g) || []).length + 1;
-      if (lines < 6) {
-        lines = 6;
-      } else if (lines > 30) {
-        lines = 30;
-      }
-      return lines;
+    customFooterEditable() {
+      return this.canEditSetting('formcustom_field_customfooter');
+    },
+
+    customCssEditable() {
+      return this.canEditSetting('formcustom_field_customcss');
     },
   },
 
@@ -159,6 +187,7 @@ export default {
       mergedFormData
     );
     this.initialValuesSet = true;
+    this.$emit('mounted', { category: 'custom', values: this.initialValues });
   },
 
   methods: {
@@ -167,6 +196,48 @@ export default {
       if (this.errorsForm) {
         this.errorsForm = null;
       }
+    },
+
+    /**
+     * Check whether the specific setting can be customized
+     * @param {String} key
+     * @return {Boolean}
+     */
+    canEditSetting(key) {
+      if (!this.selectedTenantId) {
+        return true;
+      }
+
+      if (!this.customizableTenantSettings) {
+        return false;
+      }
+
+      if (Array.isArray(this.customizableTenantSettings)) {
+        return this.customizableTenantSettings.includes(key);
+      }
+
+      return this.customizableTenantSettings === '*';
+    },
+
+    /**
+     * Adjust the height of a textarea field as the user types, up to
+     * a supplied limit, which then invokes a scrollbar
+     **/
+    rows(field, minLines, maxLines) {
+      let text = '';
+      if (this.valuesForm && field in this.valuesForm) {
+        text = this.valuesForm[field].value;
+      } else if (this.initialValues && field in this.initialValues) {
+        text = this.initialValues[field].value;
+      }
+      let lines = (text.match(/\n/g) || []).length + 1;
+      if (lines < minLines) {
+        return minLines;
+      }
+      if (lines > maxLines) {
+        return maxLines;
+      }
+      return lines;
     },
 
     /**
@@ -215,6 +286,8 @@ export default {
   "totara_tui": [
     "formcustom_label_customcss",
     "formcustom_details_customcss",
+    "formcustom_label_customfooter",
+    "formcustom_details_customfooter",
     "tabcustom"
   ],
   "totara_core": [

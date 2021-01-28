@@ -446,8 +446,8 @@ class behat_totara_data_generators extends behat_base {
                 'required' => array('activity_name', 'track_description')
             ),
             'external participants' => array(
-                'datagenerator' => 'external_participant',
-                'required' => array('fullname', 'email')
+                'datagenerator' => 'external_participant_instances',
+                'required' => array('subject', 'fullname', 'email')
             ),
             'section relationships' => array(
                 'datagenerator' => 'section_relationship_from_name',
@@ -465,6 +465,12 @@ class behat_totara_data_generators extends behat_base {
         'mod_quiz' => array(
             'responses' => array(
                 'age_data' => 'age_quiz_responses'
+            )
+        ),
+        'totara_message' => array(
+            'alerts' => array(
+                'datagenerator' => 'alert_from_params',
+                'required' => array('fromuser', 'touser', 'description')
             )
         ),
         'totara_mobile' => array(

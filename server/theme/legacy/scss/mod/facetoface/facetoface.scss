@@ -187,6 +187,30 @@ body.path-mod-facetoface div#fgroup_id_recipients input[id*='id_booked_type'] {
   float: right;
 }
 
+.mod_facetoface-date-other-virtual-room {
+  .mod_facetoface-show-selectdate-dialog,
+  [data-action="clonedate"] {
+    display: none;
+  }
+}
+
+.mod_facetoface-date-lock {
+  display: none;
+  float: right;
+
+  .mod_facetoface-date-other-virtual-room & {
+    display: block;
+  }
+}
+
+.mod_facetoface-duplicate-lock {
+  display: none;
+
+  .mod_facetoface-date-other-virtual-room & {
+    display: inline;
+  }
+}
+
 .mod_facetoface-assetlist,
 .mod_facetoface-roomlist,
 .mod_facetoface-facilitatorlist {
@@ -944,10 +968,6 @@ select.menuf2f-select {
             margin-right: calc(var(--gap-10) - var(--gap-6));
           }
 
-          #id_submitbutton {
-            width: 100%;
-          }
-
           .fitem {
             margin-bottom: 1em;
 
@@ -1090,6 +1110,10 @@ select.menuf2f-select {
 
     &--inactive {
       background: var(--color-neutral-2);
+    }
+
+    &__button {
+      text-align: center;
     }
   }
 }
@@ -1548,9 +1572,16 @@ a.mod_facetoface__action_goback {
       margin-right: 0;
     }
     .fitemtitle,
-    .felement {
+    .felement,
+    legend {
       padding-left: 0;
     }
+
+    legend {
+      // reset to totara dialog modal colour
+      color: inherit;
+    }
+
     .felement {
       padding-right: 0;
     }

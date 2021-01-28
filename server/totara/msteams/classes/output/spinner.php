@@ -35,10 +35,12 @@ final class spinner extends template {
      * Creating a loading spinner.
      *
      * @param boolean $fullscreen
+     * @param string $id
      * @return self
      */
-    public static function create_loading(bool $fullscreen = true): self {
+    public static function create_loading(bool $fullscreen = true, string $id = ''): self {
         return new self([
+            'id' => $id,
             'fullscreen' => $fullscreen,
             'label' => get_string('spinner_loading', 'totara_msteams'),
         ]);
@@ -48,10 +50,12 @@ final class spinner extends template {
      * Creating a loading spinner.
      *
      * @param boolean $fullscreen
+     * @param string $id
      * @return self
      */
-    public static function create_signingin(bool $fullscreen = true): self {
+    public static function create_signingin(bool $fullscreen = true, string $id = ''): self {
         return new self([
+            'id' => $id,
             'fullscreen' => $fullscreen,
             'label' => get_string('spinner_signingin', 'totara_msteams'),
         ]);

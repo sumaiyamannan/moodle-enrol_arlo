@@ -1,4 +1,5 @@
 .tui-weka {
+  position: relative;
   display: flex;
   flex-direction: column;
   width: 100%;
@@ -35,7 +36,6 @@
   }
 
   .ProseMirror {
-    position: relative;
     padding: var(--gap-4);
     white-space: pre-wrap;
     white-space: break-spaces;
@@ -160,7 +160,6 @@
   margin: 0 0 10px;
 
   &__content {
-    position: relative;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -241,9 +240,16 @@
   }
 
   &__inner {
+    position: relative;
     display: inline-block;
     max-width: 100%;
     white-space: normal;
+
+    &-addAltButton {
+      position: absolute;
+      right: var(--gap-2);
+      bottom: var(--gap-7);
+    }
 
     .tui-imageBlock {
       margin: 0;
@@ -437,6 +443,41 @@
 
   &--selected {
     @extend .tui-wekaToolbarButton--selected;
+  }
+}
+
+.tui-captionUploadModal {
+  &__title {
+    display: flex;
+  }
+
+  &__upload {
+    margin-top: var(--gap-2);
+  }
+
+  &__errorHandler {
+    margin-top: 0;
+  }
+
+  &__file {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--gap-2);
+    background: var(--color-neutral-3);
+  }
+
+  &__helpText {
+    margin: 0;
+    margin-top: var(--gap-2);
+    color: var(--color-neutral-6);
+    font-size: var(--font-size-13);
+  }
+
+  &__buttonGroup {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: var(--gap-8);
   }
 }
 

@@ -24,7 +24,6 @@ import ImageBlock from 'editor_weka/components/nodes/ImageBlock';
 import VideoBlock from 'editor_weka/components/nodes/VideoBlock';
 import AudioBlock from 'editor_weka/components/nodes/AudioBlock';
 import ImageIcon from 'tui/components/icons/Image';
-import { getMediaType } from '../api';
 import { IMAGE, VIDEO } from '../helpers/media';
 import { getJsonAttrs } from './util';
 import { notify } from 'tui/notifications';
@@ -86,8 +85,8 @@ class MediaExtension extends BaseExtension {
           updateImage: this._updateImage.bind(this),
           hasAttachmentNode: this._hasAttachmentsNode.bind(this),
           removeNode: this.removeNode.bind(this),
-          getFileUrl: this._getFileUrl.bind(this),
           getItemId: this._getItemId.bind(this),
+          getDownloadUrl: this._getDownloadUrl.bind(this),
         },
       },
 
@@ -102,6 +101,7 @@ class MediaExtension extends BaseExtension {
             // server side to reformat the plugin file url.
             url: { default: undefined },
             mime_type: { default: undefined },
+            subtitle: { default: undefined },
           },
 
           parseDOM: [
@@ -116,15 +116,21 @@ class MediaExtension extends BaseExtension {
           ],
 
           toDOM(node) {
+            let dataAttrs = {
+              filename: node.attrs.filename,
+              url: node.attrs.url,
+              mime_type: node.attrs.mime_type,
+            };
+
+            if (node.attrs.subtitle) {
+              dataAttrs.subtitle = node.attrs.subtitle;
+            }
+
             return [
               'div',
               {
                 class: 'tui-wekaNodeVideoBlock',
-                'data-attrs': JSON.stringify({
-                  filename: node.attrs.filename,
-                  url: node.attrs.url,
-                  mime_type: node.attrs.mime_type,
-                }),
+                'data-attrs': JSON.stringify(dataAttrs),
               },
             ];
           },
@@ -134,8 +140,12 @@ class MediaExtension extends BaseExtension {
           replaceWithAttachment: this._replaceVideoWithAttachment.bind(this),
           hasAttachmentNode: this._hasAttachmentNode.bind(this),
           removeNode: this.removeNode.bind(this),
-          getFileUrl: this._getFileUrl.bind(this),
+          /** @deprecated since Totara 13.3 */
+          getFileUrl: () => null,
           getItemId: this._getItemId.bind(this),
+          getDownloadUrl: this._getDownloadUrl.bind(this),
+          getContextId: this._getContextId.bind(this),
+          updateVideoWithSubtitle: this._updateVideoWithSubtitle.bind(this),
         },
       },
 
@@ -152,6 +162,7 @@ class MediaExtension extends BaseExtension {
 
             // This is needed to display embedded audio file.
             mime_type: { default: undefined },
+            transcript: { default: undefined },
           },
 
           parseDOM: [
@@ -185,8 +196,12 @@ class MediaExtension extends BaseExtension {
           hasAttachmentNode: this._hasAttachmentNode.bind(this),
           replaceWithAttachment: this._replaceAudioWithAttachment.bind(this),
           removeNode: this.removeNode.bind(this),
-          getFileUrl: this._getFileUrl.bind(this),
+          /** @deprecated since Totara 13.3 */
+          getFileUrl: () => null,
           getItemId: this._getItemId.bind(this),
+          getDownloadUrl: this._getDownloadUrl.bind(this),
+          getContextId: this._getContextId.bind(this),
+          updateAudioWithTranscript: this._updateAudioWithTranscript.bind(this),
         },
       },
     };
@@ -236,39 +251,26 @@ class MediaExtension extends BaseExtension {
 
       const schema = this.editor.state.schema;
       const images = await Promise.all(
-        submitFiles.map(({ file, id, url }) => {
-          return getMediaType({
-            filename: file,
-            itemId: id,
-          }).then(
-            /**
-             *
-             * @param {String} mediaType
-             * @param {String} mimeType
-             * @return {*}
-             */
-            ({ mediaType, mimeType }) => {
-              if (IMAGE === mediaType) {
-                return schema.node('image', {
-                  filename: file,
-                  alttext: '',
-                  url: url,
-                });
-              } else if (VIDEO === mediaType) {
-                return schema.node('video', {
-                  filename: file,
-                  url: url,
-                  mime_type: mimeType,
-                });
-              } else {
-                return schema.node('audio', {
-                  url: url,
-                  filename: file,
-                  mime_type: mimeType,
-                });
-              }
-            }
-          );
+        submitFiles.map(({ filename, url, media_type, mime_type }) => {
+          if (IMAGE === media_type) {
+            return schema.node('image', {
+              filename: filename,
+              alttext: null,
+              url: url,
+            });
+          } else if (VIDEO === media_type) {
+            return schema.node('video', {
+              filename: filename,
+              url: url,
+              mime_type: mime_type,
+            });
+          } else {
+            return schema.node('audio', {
+              url: url,
+              filename: filename,
+              mime_type: mime_type,
+            });
+          }
         })
       );
 
@@ -332,14 +334,16 @@ class MediaExtension extends BaseExtension {
    *
    * @private
    */
-  _replaceImageWithAttachment(getRange, { filename, alttext, size }) {
+  async _replaceImageWithAttachment(getRange, { filename, alttext, size }) {
+    const info = await this._getFileInfo(filename);
+
     this.editor.execute((state, dispatch) => {
       const transaction = state.tr,
         range = getRange();
 
       let attachment = state.schema.node('attachment', {
         filename: filename,
-        url: this._getFileUrl(filename),
+        url: info.url,
         size: size,
         option: {
           alttext: alttext,
@@ -358,22 +362,34 @@ class MediaExtension extends BaseExtension {
 
   /**
    *
-   * @param {Function} getRange
-   * @param {String}  filename
-   * @param {Number}  size
+   * @param {Function}  getRange
+   * @param {String}    filename
+   * @param {Number}    size
+   * @param {?Object}   subtitle
    * @private
    */
-  _replaceVideoWithAttachment(getRange, { filename, size }) {
+  async _replaceVideoWithAttachment(getRange, { filename, size, subtitle }) {
+    const info = await this._getFileInfo(filename);
+
     this.editor.execute((state, dispatch) => {
       const transaction = state.tr,
         range = getRange();
 
-      let attachment = state.schema.node('attachment', {
+      let attachmentAttrs = {
         filename: filename,
-        url: this._getFileUrl(filename),
+        url: info.url,
         size: size,
         option: {},
-      });
+      };
+
+      if (subtitle) {
+        attachmentAttrs.option.subtitle = {
+          url: subtitle.url,
+          filename: subtitle.filename,
+        };
+      }
+
+      let attachment = state.schema.node('attachment', attachmentAttrs);
 
       dispatch(
         transaction.replaceWith(
@@ -386,20 +402,58 @@ class MediaExtension extends BaseExtension {
   }
 
   /**
+   *
+   * @param {Function}    getRange
+   * @param {String}      filename
+   * @param {String}      url
+   * @param {String}      mime_type
+   * @param {Object|null} subtitle
+   * @return {Promise<void>}
+   * @private
+   */
+  async _updateVideoWithSubtitle(
+    getRange,
+    { filename, url, mime_type, subtitle }
+  ) {
+    this.editor.execute((state, dispatch) => {
+      const transaction = state.tr,
+        range = getRange();
+
+      let nodeAttributes = {
+        filename: filename,
+        url: url,
+        mime_type: mime_type,
+      };
+
+      if (subtitle) {
+        nodeAttributes.subtitle = {
+          filename: subtitle.filename,
+          url: subtitle.url,
+        };
+      }
+
+      const video = state.schema.node('video', nodeAttributes);
+      dispatch(transaction.replaceWith(range.from, range.to, video));
+    });
+  }
+
+  /**
    * @param {Function} getRange
    * @param {String} altText
    * @param {String} filename
    *
    * @private
    */
-  _updateImage(getRange, { filename, alttext }) {
+  async _updateImage(getRange, { filename, alttext }) {
+    const info = await this._getFileInfo(filename);
+
     this.editor.execute((state, dispatch) => {
       const transaction = state.tr,
         range = getRange();
 
       let node = state.schema.node('image', {
         filename: filename,
-        url: this._getFileUrl(filename),
+        url: info.url,
         alttext: alttext,
       });
 
@@ -415,17 +469,28 @@ class MediaExtension extends BaseExtension {
    * @param {Number}    size
    * @private
    */
-  _replaceAudioWithAttachment(getRange, { filename, size }) {
+  async _replaceAudioWithAttachment(getRange, { filename, size, transcript }) {
+    const info = await this._getFileInfo(filename);
+
     this.editor.execute((state, dispatch) => {
       const transaction = state.tr,
         range = getRange();
 
-      let attachment = state.schema.node('attachment', {
+      let attachmentAttrs = {
         filename: filename,
-        url: this._getFileUrl(filename),
+        url: info.url,
         size: size,
         option: {},
-      });
+      };
+
+      if (transcript) {
+        attachmentAttrs.option.transcript = {
+          url: transcript.url,
+          filename: transcript.filename,
+        };
+      }
+
+      let attachment = state.schema.node('attachment', attachmentAttrs);
 
       dispatch(
         transaction.replaceWith(
@@ -434,6 +499,32 @@ class MediaExtension extends BaseExtension {
           state.schema.node('attachments', null, [attachment])
         )
       );
+    });
+  }
+
+  async _updateAudioWithTranscript(
+    getRange,
+    { filename, url, mime_type, transcript }
+  ) {
+    this.editor.execute((state, dispatch) => {
+      const transaction = state.tr,
+        range = getRange();
+
+      let nodeAttributes = {
+        filename: filename,
+        url: url,
+        mime_type: mime_type,
+      };
+
+      if (transcript) {
+        nodeAttributes.transcript = {
+          filename: transcript.filename,
+          url: transcript.url,
+        };
+      }
+
+      let audio = state.schema.node('audio', nodeAttributes);
+      dispatch(transaction.replaceWith(range.from, range.to, audio));
     });
   }
 
@@ -446,20 +537,20 @@ class MediaExtension extends BaseExtension {
   }
 
   /**
-   * Given the filename, then this API can return the url for the filename in the file storage.
-   *
-   * @param {String} filename
-   * @return {String|Null}
-   *
    * @private
+   * @param {string} filename
    */
-  _getFileUrl(filename) {
-    let file = this.editor.fileStorage.getFile(filename);
-    if (!file) {
-      return null;
-    }
+  async _getFileInfo(filename) {
+    return this.editor.fileStorage.getFileInfo(filename);
+  }
 
-    return file.url;
+  /**
+   * @private
+   * @param {string} filename
+   */
+  async _getDownloadUrl(filename) {
+    const info = await this._getFileInfo(filename);
+    return info.download_url;
   }
 
   /**
@@ -470,6 +561,10 @@ class MediaExtension extends BaseExtension {
    */
   _getItemId() {
     return this.editor.fileStorage.getFileStorageItemId();
+  }
+
+  _getContextId() {
+    return this.editor.identifier.contextId;
   }
 }
 

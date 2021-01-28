@@ -29,10 +29,11 @@ defined('MOODLE_INTERNAL') || die();
 /**
  * Returns users preferred editor for given format
  *
- * @param int $format text format or null of none
+ * @param int $format text Format, or null for none
+ * @param string $framework Name of front-end framework to get compatible editor for
  * @return texteditor object
  */
-function editors_get_preferred_editor($format = NULL) {
+function editors_get_preferred_editor($format = null, $framework = null) {
     global $USER, $CFG;
 
     if (!empty($CFG->adminsetuppending)) {
@@ -56,6 +57,10 @@ function editors_get_preferred_editor($format = NULL) {
     foreach ($enabled as $e) {
         if (!$e->supported_by_browser()) {
             // bad luck, this editor is not compatible
+            continue;
+        }
+        if (!empty($framework) && !$e->get_js_module($framework)) {
+            // no framework support
             continue;
         }
         if (!$supports = $e->get_supported_formats()) {
@@ -253,5 +258,15 @@ abstract class texteditor {
      * @return void the $result parameter is modified if necessary
      */
     public function totara_form_use_editor(&$result, array $editoroptions, array $fpoptions, array $fptemplates) {
+    }
+
+    /**
+     * Get JS module for front-end editor support for framework
+     *
+     * @param string $framework
+     * @return string|null
+     */
+    public function get_js_module(string $framework): ?string {
+        return null;
     }
 }

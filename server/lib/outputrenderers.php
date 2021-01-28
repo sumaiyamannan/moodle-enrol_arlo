@@ -823,7 +823,7 @@ class core_renderer extends renderer_base {
 
         if (isset($SESSION->justloggedin) && !empty($CFG->displayloginfailures)) {
             require_once($CFG->dirroot . '/user/lib.php');
-            // Set second parameter to false as we do not want reset the counter, the same message appears on footer.
+            // Set second parameter to false as we do not want reset the counter.
             if ($count = user_count_login_failures($USER, false)) {
                 $this->page->add_body_class('loginfailures');
             }
@@ -842,6 +842,13 @@ class core_renderer extends renderer_base {
             $this->page->add_body_class('tenant-user');
             $this->page->add_body_class('tenant-user-' . $tenant->id);
             $this->page->add_body_class('tenant-user-' . $tenant->idnumber);
+        } else if (!empty($CFG->tenantsenabled) && !empty($CFG->allowprelogintenanttheme)) {
+            if (!isloggedin() || isguestuser()) {
+                if (!empty($SESSION->themetenantid) && !empty($SESSION->themetenantidnumber)) {
+                    $this->page->add_body_class('tenant-user-' . $SESSION->themetenantid);
+                    $this->page->add_body_class('tenant-user-' . $SESSION->themetenantidnumber);
+                }
+            }
         }
         if (!empty($this->page->context->tenantid)) {
             $tenant = \core\record\tenant::fetch($this->page->context->tenantid);
@@ -916,7 +923,7 @@ class core_renderer extends renderer_base {
      * @return string HTML code
      */
     protected function render_page_layout($layoutfile) {
-        global $CFG, $SITE, $USER;
+        global $CFG, $SITE, $USER, $SESSION;
         // The next lines are a bit tricky. The point is, here we are in a method
         // of a renderer class, and this object may, or may not, be the same as
         // the global $OUTPUT object. When rendering the page layout file, we want to use
@@ -3983,7 +3990,8 @@ EOD;
         global $PAGE;
         $context = $form->export_for_template($this);
         $image = new \core\theme\file\login_image($PAGE->theme);
-        $image->set_context(\context_system::instance());
+        $tenantid = \core\theme\helper::get_prelogin_tenantid();
+        $image->set_tenant_id($tenantid);
 
         // Override because rendering is not supported in template yet.
         $context->cookieshelpiconformatted = $this->help_icon('cookiesenabled');

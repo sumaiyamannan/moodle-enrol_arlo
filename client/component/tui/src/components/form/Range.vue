@@ -27,7 +27,11 @@
     <!-- Slider -->
     <input
       :id="id"
-      :class="['tui-range__input', value && 'tui-range__input--selected']"
+      class="tui-range__input"
+      :class="{
+        'tui-range__input--selected': value,
+        'tui-range__input--noThumb': noThumb,
+      }"
       type="range"
       :aria-label="ariaLabel"
       :aria-labelledby="ariaLabelledby"
@@ -78,6 +82,7 @@ export default {
     showLabels: Boolean,
     lowLabel: String,
     highLabel: String,
+    noThumb: Boolean,
   },
 
   computed: {
@@ -121,6 +126,8 @@ export default {
   background: var(--color-neutral-4);
   border-radius: var(--border-radius-small);
   cursor: pointer;
+  -webkit-print-color-adjust: exact;
+  color-adjust: exact;
 }
 @mixin tui-range-thumb() {
   width: var(--form-range-thumb-size);
@@ -181,6 +188,8 @@ export default {
     }
     &:focus::-webkit-slider-runnable-track {
       background: var(--color-neutral-4);
+      -webkit-print-color-adjust: exact;
+      color-adjust: exact;
     }
     &::-moz-range-track {
       @include tui-range-track();
@@ -224,6 +233,19 @@ export default {
       }
       &::-ms-thumb {
         background: var(--color-state);
+      }
+    }
+
+    &.tui-range__input--noThumb {
+      &::-webkit-slider-thumb {
+        display: none;
+      }
+      &::-moz-range-thumb {
+        // Display none does not work.
+        opacity: 0;
+      }
+      &::-ms-thumb {
+        display: none;
       }
     }
   }

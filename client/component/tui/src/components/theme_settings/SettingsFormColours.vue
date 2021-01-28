@@ -27,6 +27,7 @@
   >
     <FormRowStack spacing="large">
       <FormRow
+        v-if="colorStatedEditable"
         :label="$str('formcolours_label_primary', 'totara_tui')"
         :is-stacked="true"
       >
@@ -53,6 +54,7 @@
       </FormRow>
 
       <FormRow
+        v-if="useOverridesEditable"
         :label="$str('formcolours_label_useoverrides', 'totara_tui')"
         :is-stacked="true"
       >
@@ -70,6 +72,7 @@
       <FormFieldset v-if="colourOverridesEnabled">
         <FormRowStack spacing="large">
           <FormRow
+            v-if="primaryAccentColorEditable"
             :label="$str('formcolours_label_primarybuttons', 'totara_tui')"
             :is-stacked="true"
           >
@@ -96,6 +99,7 @@
           </FormRow>
 
           <FormRow
+            v-if="accentColorEditable"
             :label="$str('formcolours_label_secondarybuttons', 'totara_tui')"
             :is-stacked="true"
           >
@@ -122,6 +126,7 @@
           </FormRow>
 
           <FormRow
+            v-if="linkColorEditable"
             :label="$str('formcolours_label_links', 'totara_tui')"
             :is-stacked="true"
           >
@@ -153,6 +158,7 @@
 
       <FormRowStack spacing="large">
         <FormRow
+          v-if="primaryColorEditable"
           :label="$str('formcolours_label_accent', 'totara_tui')"
           :is-stacked="true"
         >
@@ -182,6 +188,7 @@
       <Collapsible :label="$str('formcolours_moresettings', 'totara_tui')">
         <FormRowStack spacing="large">
           <FormRow
+            v-if="navBgColorEditable"
             :label="$str('formcolours_label_headerbg', 'totara_tui')"
             :is-stacked="true"
           >
@@ -208,6 +215,7 @@
           </FormRow>
 
           <FormRow
+            v-if="navTextColorEditable"
             :label="$str('formcolours_label_headertext', 'totara_tui')"
             :is-stacked="true"
           >
@@ -234,6 +242,7 @@
           </FormRow>
 
           <FormRow
+            v-if="textColorEditable"
             :label="$str('formcolours_label_pagetext', 'totara_tui')"
             :is-stacked="true"
           >
@@ -256,6 +265,60 @@
             </FormRowDefaults>
             <FormRowDetails :id="$id('formcolours-pagetext-details')">
               {{ $str('formcolours_details_pagetext', 'totara_tui') }}
+            </FormRowDetails>
+          </FormRow>
+
+          <FormRow
+            v-if="footerBgColorEditable"
+            :label="$str('formcolours_label_footerbg', 'totara_tui')"
+            :is-stacked="true"
+          >
+            <FormColor
+              :name="['footer-bg-color', 'value']"
+              :validations="v => [v.required(), v.colorValueHex()]"
+              :aria-describedby="
+                $id('formcolours-footerbg-details') +
+                  ' ' +
+                  $id('formcolours-footerbg-defaults')
+              "
+            />
+            <FormRowDefaults :id="$id('formcolours-footerbg-defaults')">
+              {{
+                theme_settings.getCSSVarDefault(
+                  mergedProcessedCssVariableData,
+                  'footer-bg-color'
+                )
+              }}
+            </FormRowDefaults>
+            <FormRowDetails :id="$id('formcolours-footerbg-details')">
+              {{ $str('formcolours_details_footerbg', 'totara_tui') }}
+            </FormRowDetails>
+          </FormRow>
+
+          <FormRow
+            v-if="footerTextColorEditable"
+            :label="$str('formcolours_label_footertext', 'totara_tui')"
+            :is-stacked="true"
+          >
+            <FormColor
+              :name="['footer-text-color', 'value']"
+              :validations="v => [v.required(), v.colorValueHex()]"
+              :aria-describedby="
+                $id('formcolours-footertext-details') +
+                  ' ' +
+                  $id('formcolours-footertext-defaults')
+              "
+            />
+            <FormRowDefaults :id="$id('formcolours-footertext-defaults')">
+              {{
+                theme_settings.getCSSVarDefault(
+                  mergedProcessedCssVariableData,
+                  'footer-text-color'
+                )
+              }}
+            </FormRowDefaults>
+            <FormRowDetails :id="$id('formcolours-footertext-details')">
+              {{ $str('formcolours_details_footertext', 'totara_tui') }}
             </FormRowDetails>
           </FormRow>
         </FormRowStack>
@@ -318,41 +381,58 @@ export default {
   },
 
   props: {
-    // Array of Objects, each describing the properties for fields that are part
-    // of this Form. There is only an Object present in this Array if it came
-    // from the server as it was previously saved
+    /**
+     * Array of Objects, each describing the properties for fields that are part
+     * of this Form. There is only an Object present in this Array if it came
+     * from the server as it was previously saved
+     */
     savedFormFieldData: {
       type: Array,
       default: function() {
         return [];
       },
     },
-    // Array of Objects, each describing the properties for fields that are part
-    // of this Form. There is only an Object present in this Array if it was
-    // present in Theme JSON data mapping (not GraphQL query), and the values
-    // within each Object are defaults, not previously saved data.
+    /**
+     * Array of Objects, each describing the properties for fields that are part
+     * of this Form. There is only an Object present in this Array if it was
+     * present in Theme JSON data mapping (not GraphQL query), and the values
+     * within each Object are defaults, not previously saved data.
+     */
     mergedDefaultCssVariableData: {
       type: Object,
       default: function() {
         return {};
       },
     },
-    // Array of Objects, each describing the properties for fields that are part
-    // of this Form. There is only an Object present in this Array if it was
-    // present in Theme JSON data mapping (not GraphQL query), and the values
-    // within each Object have processed/resolved values.
+    /**
+     *  Array of Objects, each describing the properties for fields that are part
+     * of this Form. There is only an Object present in this Array if it was
+     * present in Theme JSON data mapping (not GraphQL query), and the values
+     * within each Object have processed/resolved values.
+     */
     mergedProcessedCssVariableData: {
       type: Array,
       default: function() {
         return [];
       },
     },
-    // Saving state, controlled by parent component GraphQl mutation handling
+
+    /**
+     *  Saving state, controlled by parent component GraphQl mutation handling
+     */
     isSaving: {
       type: Boolean,
       default: function() {
         return false;
       },
+    },
+
+    /**
+     *  Customizable tenant settings
+     */
+    customizableTenantSettings: {
+      type: [Array, String],
+      required: false,
     },
   },
 
@@ -401,6 +481,14 @@ export default {
           value: null,
           type: null, // supplied by Theme-based JSON metadata
         },
+        'footer-bg-color': {
+          value: null,
+          type: null, // supplied by Theme-based JSON metadata
+        },
+        'footer-text-color': {
+          value: null,
+          type: null, // supplied by Theme-based JSON metadata
+        },
       },
       initialValuesSet: false,
       colourOverridesEnabled: false,
@@ -409,6 +497,42 @@ export default {
       resultForm: null,
       theme_settings: theme_settings,
     };
+  },
+
+  computed: {
+    colorStatedEditable() {
+      return this.canEditSetting('color-state');
+    },
+    useOverridesEditable() {
+      return this.canEditSetting('formcolours_field_useoverrides');
+    },
+    primaryAccentColorEditable() {
+      return this.canEditSetting('btn-prim-accent-color');
+    },
+    accentColorEditable() {
+      return this.canEditSetting('btn-accent-color');
+    },
+    linkColorEditable() {
+      return this.canEditSetting('link-color');
+    },
+    primaryColorEditable() {
+      return this.canEditSetting('color-primary');
+    },
+    navBgColorEditable() {
+      return this.canEditSetting('nav-bg-color');
+    },
+    navTextColorEditable() {
+      return this.canEditSetting('nav-text-color');
+    },
+    textColorEditable() {
+      return this.canEditSetting('color-text');
+    },
+    footerBgColorEditable() {
+      return this.canEditSetting('footer-bg-color');
+    },
+    footerTextColorEditable() {
+      return this.canEditSetting('footer-text-color');
+    },
   },
 
   /**
@@ -433,12 +557,42 @@ export default {
     this.colourOverridesEnabled = this.initialValues.formcolours_field_useoverrides.value;
 
     this.initialValuesSet = true;
+    this.$emit('mounted', {
+      category: 'colours',
+      values: this.formatDataForMutation(this.initialValues),
+    });
   },
 
   methods: {
     validate() {
       const errors = {};
       return errors;
+    },
+
+    /**
+     * Tenant ID or null if global/multi-tenancy not enabled.
+     */
+    selectedTenantId: Number,
+
+    /**
+     * Check whether the specific setting can be customized
+     * @param {String} key
+     * @return {Boolean}
+     */
+    canEditSetting(key) {
+      if (!this.selectedTenantId) {
+        return true;
+      }
+
+      if (!this.customizableTenantSettings) {
+        return false;
+      }
+
+      if (Array.isArray(this.customizableTenantSettings)) {
+        return this.customizableTenantSettings.includes(key);
+      }
+
+      return this.customizableTenantSettings === '*';
     },
 
     handleChange(values) {
@@ -595,6 +749,10 @@ export default {
     "formcolours_details_headertext",
     "formcolours_label_pagetext",
     "formcolours_details_pagetext",
+    "formcolours_label_footerbg",
+    "formcolours_details_footerbg",
+    "formcolours_label_footertext",
+    "formcolours_details_footertext",
     "tabcolours"
   ],
   "totara_core": [

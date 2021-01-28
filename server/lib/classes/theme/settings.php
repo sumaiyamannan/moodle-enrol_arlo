@@ -23,6 +23,7 @@
 
 namespace core\theme;
 
+use core\hook\tenant_customizable_theme_settings as tenant_customizable_theme_settings_hook;
 use core\theme\file\helper;
 use core\theme\file\theme_file;
 use core\theme\validation\property\property_validator;
@@ -42,6 +43,9 @@ final class settings {
     /** @var theme_file[] */
     private $file_instances = [];
 
+    /** @var tenant_customizable_theme_settings_hook */
+    private $tenant_settings_hook;
+
     /**
      * settings constructor.
      *
@@ -51,6 +55,17 @@ final class settings {
     public function __construct(theme_config $theme_config, int $tenant_id) {
         $this->theme_config = $theme_config;
         $this->tenant_id = $tenant_id;
+
+        $default_tenant_can_customize = [
+            'brand' => '*',
+            'colours' => '*',
+            'images' => ['sitelogin'],
+            'custom' => ['formcustom_field_customfooter'],
+            'tenant' => '*',
+        ];
+
+        $this->tenant_settings_hook = new tenant_customizable_theme_settings_hook($default_tenant_can_customize);
+        $this->tenant_settings_hook->execute();
     }
 
     /**
@@ -63,36 +78,25 @@ final class settings {
     public function get_categories($tenant_enabled = true): array {
         global $DB;
 
-        // Get theme inheritance.
-        $themes = $this->theme_config->parents;
-        $themes = array_reverse($themes);
+        $theme = $this->theme_config->name;
 
-        // Add current theme to array.
-        array_push($themes, $this->theme_config->name);
-
-        // For each theme in hierarchy get the settings for tenant.
         $categories = $this->get_default_categories();
-        foreach ($themes as $theme) {
-            // Get all variables for site.
-            $values = $DB->get_field('config_plugins', 'value', [
-                'name' => "tenant_0_settings",
-                'plugin' => "theme_{$theme}"
-            ]);
+        // Get all variables for site.
+        $values = $DB->get_field('config_plugins', 'value', [
+            'name' => "tenant_0_settings",
+            'plugin' => "theme_{$theme}"
+        ]);
+        if (!empty($values)) {
+            $theme_categories = json_decode($values, true);
+            $this->merge_categories($categories, $theme_categories);
+        }
+
+        // Get all variables for current tenant and override site.
+        if ($tenant_enabled && $this->tenant_id > 0) {
+            $values = $DB->get_field('config_plugins', 'value', $this->get_config_parameters($this->tenant_id, $theme));
             if (!empty($values)) {
                 $theme_categories = json_decode($values, true);
                 $this->merge_categories($categories, $theme_categories);
-            }
-
-            // Get all variables for current tenant and override site.
-            if ($tenant_enabled && $this->tenant_id > 0) {
-                $values = $DB->get_field('config_plugins', 'value', [
-                    'name' => "tenant_{$this->tenant_id}_settings",
-                    'plugin' => "theme_{$theme}"
-                ]);
-                if (!empty($values)) {
-                    $theme_categories = json_decode($values, true);
-                    $this->merge_categories($categories, $theme_categories);
-                }
             }
         }
 
@@ -165,19 +169,24 @@ final class settings {
      * @param array $categories
      */
     public function validate_categories(array $categories): void {
-        foreach ($categories as $category) {
-            foreach ($category['properties'] as $property) {
-                $this->validate_property($property);
+        // Check if category and its properties are allowed to be updated for tenant.
+        if ($this->tenant_id !== 0) {
+            foreach ($categories as $category) {
+                if (!$this->is_tenant_customizable_category($category['name'])) {
+                    throw new \invalid_parameter_exception("Category '{$category['name']}' is not allowed to be updated for tenant.");
+                }
+                foreach ($category['properties'] as $property) {
+                    if (!$this->is_tenant_customizable_setting($category['name'], $property['name'])) {
+                        throw new \invalid_parameter_exception("Property '{$property['name']}' is not allowed to be updated for tenant.");
+                    }
+                }
             }
         }
 
-        // Only brand and colours for tenants.
-        if ($this->tenant_id !== 0) {
-            $categories = array_filter($categories, function ($category) {
-                return !in_array($category['name'], ['brand', 'colours', 'tenant']);
-            });
-            if (sizeof($categories) > 0) {
-                throw new \invalid_parameter_exception('Tenants are only allowed to update brand and colours.');
+        // Confirm that properties have correct values.
+        foreach ($categories as $category) {
+            foreach ($category['properties'] as $property) {
+                $this->validate_property($property);
             }
         }
     }
@@ -220,10 +229,7 @@ final class settings {
     public function update_categories(array $categories): void {
         global $DB;
 
-        $condition = [
-            'name' => "tenant_{$this->tenant_id}_settings",
-            'plugin' => "theme_{$this->theme_config->name}"
-        ];
+        $condition = $this->get_config_parameters();
 
         // Update per category if found, otherwise insert new record.
         $cats = $categories;
@@ -246,17 +252,19 @@ final class settings {
 
     /**
      * @param array $files
+     * @param bool $copy_site_files
      */
-    public function update_files(array $files): void {
+    public function update_files(array $files, bool $copy_site_files = false): void {
         $instances = $this->get_file_instances();
 
         // Update files.
         foreach ($files as $file) {
-            foreach ($instances as $instance) {
+            foreach ($instances as $instance_key => $instance) {
                 if ($instance->get_ui_key() === $file['ui_key']) {
                     if (empty($file['action']) || $file['action'] === 'SAVE') {
                         // If draft ID is set we need to save it.
                         $instance->save_files($file['draft_id']);
+                        unset($instances[$instance_key]);
                     } else if (!empty($file['action']) && $file['action'] === 'RESET') {
                         // If draft ID is not set and current URL is empty we need to delete the
                         // current stored file and restore the theme file to its default.
@@ -266,6 +274,19 @@ final class settings {
                     continue 2;
                 }
             }
+        }
+
+        if ($this->tenant_id > 0 && $copy_site_files) {
+            // Make copy of customizable files not yet customized for the tenant
+            foreach ($instances as $instance_key => $instance) {
+                if ($this->is_tenant_customizable_setting($instance->get_ui_category(), $instance->get_ui_key())) {
+                    $instance->copy_site_file_to_tenant();
+                }
+            }
+
+            // Reset file instances
+            $this->file_instances = [];
+            $this->get_file_instances();
         }
     }
 
@@ -314,9 +335,9 @@ final class settings {
      *
      * @return array|null
      */
-    public function get_property(string $category, string $property): ?array {
-        $categories = $this->get_categories();
-        foreach($categories as $cat) {
+    public function get_property(string $category, string $property, ?array $categories = null): ?array {
+        $categories = $categories ?? $this->get_categories();
+        foreach ($categories as $cat) {
             if ($cat['name'] === $category) {
                 foreach ($cat['properties'] as $prop) {
                     if ($prop['name'] === $property) {
@@ -412,6 +433,15 @@ final class settings {
     }
 
     /**
+     * Check if tenant previously enabled
+     *
+     * @return bool
+     */
+    public function is_initial_tenant_branding(): bool {
+        return $this->tenant_id > 0 && $this->get_property('tenant', 'formtenant_field_tenant') === null;
+    }
+
+    /**
      * Check if tenant branding is enabled.
      *
      * @return bool
@@ -419,6 +449,36 @@ final class settings {
     public function is_tenant_branding_enabled(): bool {
         return $this->is_enabled('tenant', 'formtenant_field_tenant', false);
     }
+
+    /**
+     * Check whether tenant branding is being re-enabled
+     *
+     * @param array $categories
+     * @return bool
+     */
+    public function is_re_enabling_tenant_branding(array $categories): bool {
+        if ($this->tenant_id === 0) {
+            return false;
+        }
+
+        // Not previously set
+        $prop = $this->get_property('tenant', 'formtenant_field_tenant');
+        if ($prop === null) {
+            return false;
+        }
+
+        // Set but currently enabled
+        if (filter_var($prop['value'], FILTER_VALIDATE_BOOLEAN)) {
+            return false;
+        }
+
+        // Set but currently disabled
+        $new_prop = $this->get_property('tenant', 'formtenant_field_tenant', $categories);
+        return !empty($new_prop)
+            ? filter_var($new_prop['value'], FILTER_VALIDATE_BOOLEAN) ?? false
+            : false;
+    }
+
 
     /**
      * Confirm if a user has the capability required to manage a theme file.
@@ -436,4 +496,44 @@ final class settings {
         return has_capability('totara/tui:themesettings', $context);
     }
 
+    /**
+     * Return the list of theme settings that can be customized for tenants
+     *
+     * @return array
+     */
+    public function get_customizable_tenant_theme_settings(): array {
+        return $this->tenant_settings_hook->get_customizable_settings();
+    }
+
+    /**
+     * @param int|null $tenant_id
+     * @param string|null $theme_name
+     * @return array
+     */
+    private function get_config_parameters(?int $tenant_id = null, ?string $theme_name = null): array {
+        $tenant_id = $tenant_id ?? $this->tenant_id;
+        $theme_name = $theme_name ?? $this->theme_config->name;
+
+        return [
+            'name' => "tenant_{$tenant_id}_settings",
+            'plugin' => "theme_{$theme_name}"
+        ];
+    }
+
+    /**
+     * @param string $name
+     * @return bool
+     */
+    private function is_tenant_customizable_category(string $name): bool {
+        return $this->tenant_settings_hook->is_tenant_customizable_category($name);
+    }
+
+    /**
+     * @param string $category
+     * @param string $ui_key
+     * @return bool
+     */
+    private function is_tenant_customizable_setting(string $category, string $ui_key): bool {
+        return $this->tenant_settings_hook->is_tenant_customizable_category_setting($category, $ui_key);
+    }
 }

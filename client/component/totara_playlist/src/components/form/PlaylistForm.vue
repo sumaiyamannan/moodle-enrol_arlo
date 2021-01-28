@@ -31,7 +31,6 @@
         name="playlist-title"
         :maxlength="75"
         :placeholder="$str('entertitle', 'totara_playlist')"
-        :disabled="submitting"
         :required="true"
       />
     </FormRow>
@@ -47,8 +46,12 @@
         <Weka
           :id="id"
           v-model="summary"
-          component="totara_playlist"
-          area="summary"
+          :compact="true"
+          :usage-identifier="{
+            component: 'totara_playlist',
+            area: 'summary',
+          }"
+          variant="totara_playlist-summary"
           :placeholder="$str('adddescription', 'totara_playlist')"
           class="tui-playlistForm__description-textArea"
         />
@@ -64,7 +67,6 @@
 
     <ButtonGroup class="tui-playlistForm__buttons">
       <Button
-        :loading="submitting"
         :styleclass="{ primary: 'true' }"
         :disabled="disabled"
         :aria-label="$str('createplaylistshort', 'totara_playlist')"
@@ -72,32 +74,39 @@
         @click="submit"
       />
 
-      <CancelButton :disabled="submitting" @click="$emit('cancel')" />
+      <CancelButton @click="cancel" />
     </ButtonGroup>
+
+    <UnsavedChangesWarning
+      v-if="hasUnsavedChanges"
+      :value="{ hasUnsavedChanges }"
+    />
   </Form>
 </template>
 
 <script>
-import InputText from 'tui/components/form/InputText';
-import ButtonGroup from 'tui/components/buttons/ButtonGroup';
 import Button from 'tui/components/buttons/Button';
+import ButtonGroup from 'tui/components/buttons/ButtonGroup';
 import CancelButton from 'tui/components/buttons/Cancel';
-import FormRow from 'tui/components/form/FormRow';
 import Form from 'tui/components/form/Form';
+import FormRow from 'tui/components/form/FormRow';
 import InfoIconButton from 'tui/components/buttons/InfoIconButton';
+import InputText from 'tui/components/form/InputText';
+import UnsavedChangesWarning from 'totara_engage/components/form/UnsavedChangesWarning';
 import Weka from 'editor_weka/components/Weka';
 import WekaValue from 'editor_weka/WekaValue';
 import { FORMAT_JSON_EDITOR } from 'tui/format';
 
 export default {
   components: {
-    InputText,
-    ButtonGroup,
     Button,
+    ButtonGroup,
     CancelButton,
-    InfoIconButton,
-    FormRow,
     Form,
+    FormRow,
+    InfoIconButton,
+    InputText,
+    UnsavedChangesWarning,
     Weka,
   },
 
@@ -116,14 +125,29 @@ export default {
   data() {
     return {
       description: this.$id('engageContribute-description'),
-      submitting: false,
       summary: WekaValue.empty(),
+      hasUnsavedChanges: false,
     };
   },
 
   computed: {
     disabled() {
-      return this.playlist.name.length === 0 || this.submitting;
+      return this.playlist.name.length === 0;
+    },
+    name() {
+      return this.playlist.name;
+    },
+    hasFormData() {
+      return this.playlist.name.length > 0 || !this.summary.isEmpty;
+    },
+  },
+
+  watch: {
+    hasFormData(value) {
+      if (value) {
+        this.hasUnsavedChanges = true;
+        this.$emit('unsaved-changes');
+      }
     },
   },
 
@@ -136,8 +160,15 @@ export default {
           : JSON.stringify(this.summary.getDoc()),
         summary_format: FORMAT_JSON_EDITOR,
       };
-
+      this.hasUnsavedChanges = false;
       this.$emit('next', params);
+    },
+    cancel() {
+      this.hasUnsavedChanges = false;
+      // Emit event on next tick so the unload handler can be removed first.
+      this.$nextTick(() => {
+        this.$emit('cancel');
+      });
     },
   },
 };

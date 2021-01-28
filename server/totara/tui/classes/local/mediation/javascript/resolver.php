@@ -74,7 +74,11 @@ final class resolver extends \totara_tui\local\mediation\resolver {
      * @return string
      */
     protected function calculate_etag(): string {
-        $etag = sha1('tui ' . $this->get_rev() . ' ' . $this->component . ' ' . $this->suffix);
+        $content = 'tui ' . $this->get_rev() . ' ' . $this->component . ' ' . $this->suffix;
+        if ($this->should_use_dev_mode() && $this->suffix !== 'p' && $this->suffix !== 'pl') {
+            $content .= ' ' . $this->get_sha_for_etag_comparison();
+        }
+        $etag = sha1($content);
         return $etag;
     }
 
@@ -136,8 +140,8 @@ final class resolver extends \totara_tui\local\mediation\resolver {
     private function get_theme_sha_for_etag_comparison() {
         $chain = $this->get_theme_config()->get_tui_theme_chain();
         $shas = [];
-        foreach ($chain as $component) {
-            $file = bundle::get_bundle_js_file($component);
+        foreach ($chain as $theme) {
+            $file = bundle::get_bundle_js_file('theme_' . $theme);
             if ($file && file_exists($file)) {
                 $shas[] = sha1_file($file);
             }
@@ -150,7 +154,6 @@ final class resolver extends \totara_tui\local\mediation\resolver {
 
     /**
      * @inheritDoc
-     * @return string|file
      */
     protected function get_content_to_cache() {
         if ($this->get_theme_config()) {

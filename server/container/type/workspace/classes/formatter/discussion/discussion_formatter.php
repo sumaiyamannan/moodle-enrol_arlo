@@ -17,22 +17,25 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * @author Kian Nguyen <kian.nguyen@totaralearning.com>
+ * @author  Kian Nguyen <kian.nguyen@totaralearning.com>
  * @package container_workspace
  */
 namespace container_workspace\formatter\discussion;
 
+use cache;
 use container_workspace\workspace;
 use totara_engage\formatter\field\date_field_formatter;
 use container_workspace\discussion\discussion;
-use core\webapi\formatter\formatter;
 use core\webapi\formatter\field\text_field_formatter;
+use core\webapi\formatter\formatter;
+use stdClass;
 
 /**
  * Class discussion_formatter
  * @package container_workspace\formatter\discussion
  */
 final class discussion_formatter extends formatter {
+
     /**
      * discussion_formatter constructor.
      * @param discussion $discussion
@@ -40,7 +43,7 @@ final class discussion_formatter extends formatter {
     public function __construct(discussion $discussion) {
         $workspace_id = $discussion->get_workspace_id();
 
-        $record = new \stdClass();
+        $record = new stdClass();
         $record->id = $discussion->get_id();
         $record->workspace_id = $workspace_id;
         $record->content = $discussion->get_content();
@@ -52,7 +55,9 @@ final class discussion_formatter extends formatter {
         $record->deleted = $discussion->is_soft_deleted();
         $record->reason_deleted = $discussion->get_reason_deleted();
 
-        $context = \context_course::instance($workspace_id);
+        $context = $discussion->get_context();
+        $record->workspace_context_id = $context->id;
+
         parent::__construct($record, $context);
     }
 
@@ -61,7 +66,7 @@ final class discussion_formatter extends formatter {
      * @return bool
      */
     protected function has_field(string $field): bool {
-        if (in_array($field, ['time_description', 'draft_content'])) {
+        if (in_array($field, ['time_description', 'draft_content', 'draft_id'])) {
             return true;
         }
 
@@ -77,6 +82,12 @@ final class discussion_formatter extends formatter {
             // Using time_created as base.
             return parent::get_field('time_created');
         } else if ('draft_content' === $field) {
+            // Using the discussion's content as the base value for
+            // field 'draft_content'.
+            return parent::get_field('content');
+        } else if ('draft_id' === $field) {
+            // Using the discussion's content as base value for
+            // field 'draft_id'.
             return parent::get_field('content');
         }
 
@@ -96,6 +107,7 @@ final class discussion_formatter extends formatter {
             'total_reactions' => null,
             'total_comments' => null,
             'content_format' => null,
+            'workspace_context_id' => null,
             'time_description' => function (int $time_created, date_field_formatter $formatter) use ($that): string {
                 if (null !== $that->object->time_modified && 0 !== $that->object->time_modified) {
                     $formatter->set_timemodified($that->object->time_modified);
@@ -128,17 +140,19 @@ final class discussion_formatter extends formatter {
 
                 return $formatter->format($content);
             },
-            'draft_content' => function(?string $content, text_field_formatter $formatter) use ($that, $CFG): string {
+            'draft_content' => function (?string $content, text_field_formatter $formatter) use ($that, $CFG): string {
                 if (null === $content || '' === $content) {
                     return '';
                 }
+
+                $draft_id_cache = cache::make('container_workspace', 'draft_id');
+                $draft_id = $draft_id_cache->has($that->object->id) ? $draft_id_cache->get($that->object->id) : null;
 
                 require_once("{$CFG->dirroot}/lib/filelib.php");
 
                 $content_format = $that->object->content_format;
                 $component = workspace::get_type();
 
-                $draft_id = null;
                 $content = file_prepare_draft_area(
                     $draft_id,
                     $that->context->id,
@@ -149,6 +163,8 @@ final class discussion_formatter extends formatter {
                     $content
                 );
 
+                $draft_id_cache->set($that->object->id, $draft_id);
+
                 $formatter->set_pluginfile_url_options(
                     $that->context,
                     workspace::get_type(),
@@ -158,7 +174,35 @@ final class discussion_formatter extends formatter {
 
                 $formatter->set_text_format($content_format);
                 return $formatter->format($content);
-            }
+            },
+            'draft_id' => function (?string $content, text_field_formatter $formatter) use ($that, $CFG): string {
+                $draft_id_cache = cache::make('container_workspace', 'draft_id');
+                $draft_id = $draft_id_cache->has($that->object->id) ? $draft_id_cache->get($that->object->id) : null;
+
+                if (!empty($draft_id)) {
+                    return $draft_id;
+                }
+
+                require_once("{$CFG->dirroot}/lib/filelib.php");
+
+                $component = workspace::get_type();
+
+                // Move all the files into the draft area. If we subsequently get the draft_content and specify this
+                // draft_id then it assumes the files have already been copied into it.
+                file_prepare_draft_area(
+                    $draft_id,
+                    $that->context->id,
+                    $component,
+                    discussion::AREA,
+                    $that->object->id,
+                    null,
+                    $content
+                );
+
+                $draft_id_cache->set($that->object->id, $draft_id);
+
+                return $draft_id;
+            },
         ];
     }
 }

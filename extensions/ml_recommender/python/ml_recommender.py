@@ -16,10 +16,12 @@ Please contact [licensing@totaralearning.com] for more information.
 @package ml_recommender
 """
 
+from config import Config
 from subroutines.arg_parser import ArgParser
+from subroutines.data_reader import DataReader
+from subroutines.remove_external_interactions import RemoveExternalInteractions
 from subroutines.data_loader import DataLoader
 from subroutines.optimize_hyperparams import OptimizeHyperparams
-from subroutines.get_tenants import GetTenants
 from subroutines.build_model import BuildModel
 from subroutines.similar_items import SimilarItems
 from subroutines.user_to_items import UserToItems
@@ -36,8 +38,11 @@ def run_modelling_process():
     :return: None
     """
     # ---------------------------------------------------------------
+    # Instantiate the configuration object
+    cfg = Config()
+    # ---------------------------------------------------------------
     # Set up command line arguments
-    args = ArgParser().set_args()
+    args = ArgParser().set_args().parse_args()
 
     # Set runtime variables from arguments.
     query = args.query
@@ -46,16 +51,14 @@ def run_modelling_process():
     user_result_count = args.result_count_user
     item_result_count = args.result_count_item
 
-    # ------------------------------------------------------
-    # Minimum number of users in interactions set for whom to run the recommendation engine in a tenant
-    min_users = 10
-    # Minimum number of items in interactions set for which to run the recommendation engine in a tenant
-    min_items = 10
     # -------------------------------------------------------
     # Set path for the natural language processing libraries
     nl_libs = os.path.join(os.path.dirname(__file__), 'totara')
     # Get list of the tenants
-    tenants = GetTenants(data_home=data_home).get_tenants()
+    data_reader = DataReader(data_home=data_home)
+    tenants = data_reader.read_tenants().tenants.tolist()
+    if len(tenants) == 0:
+        tenants = [0]
     # ------------------------------------------------------
     # Check if the ML process has already started via the process control file 'ml_started',
     # exit the process if this had already started or crashed after starting. Create the
@@ -73,14 +76,36 @@ def run_modelling_process():
     # -------------------------------------------------------
     # Loop through the list of tenants
     for tenant in tenants:
+        print(f'Loading and processing/transforming data of tenant {tenant}')
         i2i_file_path = os.path.join(data_home, f'i2i_{tenant}.csv')
         i2u_file_path = os.path.join(data_home, f'i2u_{tenant}.csv')
         # Process the tenant's data from data_home directory and read into the memory
-        d_loader = DataLoader(data_home=data_home, nl_libs=nl_libs, query=query, tenant=tenant)
+        d_loader = DataLoader(nl_libs=nl_libs)
         t1 = time.time()
-        processed_data = d_loader.load_data()
-        print(f'The data loading/processing took {(time.time() - t1)/60: .2f} minutes.\n')
-        if processed_data['interactions'].shape[0] < min_users or processed_data['interactions'].shape[1] < min_items:
+        interactions_df = data_reader.read_interactions_file(tenant=tenant)
+        items_data = data_reader.read_items_file(tenant=tenant)
+        users_data = data_reader.read_users_file(tenant=tenant)
+        # Remove interactions by the users and items that are not in the current tenant
+        interactions_cleaner = RemoveExternalInteractions(
+            users_df=users_data,
+            items_df=items_data,
+            interactions_df=interactions_df
+        )
+        interactions_df = interactions_cleaner.clean_interactions()
+        processed_data = d_loader.load_data(
+            interactions_df=interactions_df,
+            items_data=items_data,
+            users_data=users_data,
+            query=query
+        )
+        m, s = divmod((time.time() - t1), 60)
+        print(
+            f'The data loading and processing/transformation of tenant {tenant} took'
+            f' {m: .0f} minutes and {s: .2f} seconds.\n'
+        )
+        min_data = cfg.get_property('min_data')
+        shape = processed_data['interactions'].shape
+        if shape[0] < min_data['min_users'] or shape[1] < min_data['min_items']:
             print(
                 "The number of users or items is too small to run the recommendation engine."
                 f" Skipping tenant {tenant}."
@@ -93,9 +118,8 @@ def run_modelling_process():
                 f.write("uid,iid,ranking")
 
         else:
-            # The item features' matrix being very sparse, does not need significant penalty
             if query in ['hybrid', 'partial']:
-                item_alpha = 1e-6
+                item_alpha = cfg.get_property('item_alpha')
             else:
                 item_alpha = 0.0
             # --------------------------------------------------
@@ -109,22 +133,26 @@ def run_modelling_process():
                 item_alpha=item_alpha
             )
             t2 = time.time()
-            epochs, comps, scores = opt_obj.run_optimization(lr=10)
+            epochs, comps, scores = opt_obj.run_optimization(lr=1000)
 
-            print(f'The hyper-parameters optimization took {(time.time() - t2) / 60: .2f} minutes to converge.\n')
+            m, s = divmod((time.time() - t2), 60)
             print(
-                f'The best hyper-parameters found:\n   epochs: {epochs[-1]}\n'
-                f'   n_components: {comps[-1]}\nThe best score: {scores[-1]: .3f}\n'
+                f'The hyper-parameters optimization of the model for tenant {tenant} took\n'
+                f'{m: .0f} minutes and {s: .2f} seconds to converge.\n'
+            )
+            print(
+                f'The best hyper-parameters found for tenant {tenant}:\n   epochs: {epochs[-1]}\n'
+                f'   n_components: {comps[-1]}\n   The best score: {scores[-1]: .3f}\n'
             )
             # --------------------------------------------------
             # Train the final model with the optimum number of 'epochs' and the 'no_components'
-            print('Training final model.\n')
+            print(f'Training final model for tenant {tenant}.\n')
             model_obj = BuildModel(
                 interactions=processed_data['interactions'],
                 weights=processed_data['weights'],
                 item_features=processed_data['item_features'],
                 num_threads=num_threads,
-                optimized_hparams={
+                optimized_hyperparams={
                     'epochs': epochs[-1],
                     'no_components': comps[-1]
                 },
@@ -133,7 +161,7 @@ def run_modelling_process():
             final_model = model_obj.build_model()
             # --------------------------------------------------
             # Items to item (I2I) recommendations.
-            print('Making I2I recommendations')
+            print(f'Making I2I recommendations for tenant {tenant}')
             item_representations = final_model.get_item_representations(features=processed_data['item_features'])[1]
             similar_items = SimilarItems(
                 item_mapping=processed_data['mapping'][2],
@@ -147,7 +175,7 @@ def run_modelling_process():
                 index=False
             )
 
-            print('Making I2U recommendations')
+            print(f'Making I2U recommendations for tenant {tenant}')
             # -----------------------------------------------------
             # Items to user (I2U) recommendations.
             might_like_items = UserToItems(
@@ -155,6 +183,7 @@ def run_modelling_process():
                 i_mapping=processed_data['mapping'][2],
                 item_type_map=processed_data['item_type_map'],
                 item_features=processed_data['item_features'],
+                positive_inter_map=processed_data['positive_inter_map'],
                 model=final_model,
                 num_items=user_result_count,
                 num_threads=num_threads
@@ -170,7 +199,7 @@ def run_modelling_process():
     # Write the process control file 'ml_completed'
     with open(file=os.path.join(data_home, 'ml_completed'), mode='w') as writer:
         writer.write(f'{time.time(): 0.0f}')
-    print("Done")
+    print("Done\n\n")
 
 
 if __name__ == '__main__':

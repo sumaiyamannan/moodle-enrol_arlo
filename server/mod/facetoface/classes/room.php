@@ -260,6 +260,16 @@ final class room implements seminar_iterator_item, seminar_attachment_item {
         $this->delete_customfields();
         $this->delete_embedded_files();
 
+        // Unlink this room from a virtual meeting.
+        room_virtualmeeting::delete_by_roomid($this->id);
+
+        // Get room date ids for this room
+        $roomdates = $DB->get_records('facetoface_room_dates', ['roomid' => $this->id]);
+        foreach ($roomdates as $roomdate) {
+            // Unlink this room from a room dates_virtual meeting.
+            room_dates_virtualmeeting::delete_by_roomdateid($roomdate->id);
+        }
+
         // Unlink this room from any session.
         $DB->delete_records('facetoface_room_dates', ['roomid' => $this->id]);
         // Finally delete the room record itself.
@@ -408,10 +418,10 @@ final class room implements seminar_iterator_item, seminar_attachment_item {
 
     /**
      * Link to use in virtual room
-     * @param string $url
+     * @param null|string $url
      * @return room this
      */
-    public function set_url(string $url): room {
+    public function set_url(?string $url): room {
         $this->url = $url;
         return $this;
     }

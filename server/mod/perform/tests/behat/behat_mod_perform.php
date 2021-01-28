@@ -50,18 +50,25 @@ class behat_mod_perform extends behat_base {
 
     public const PERFORM_ELEMENT_VALIDATION_ERROR_LOCATOR = '.tui-formFieldError';
     public const PERFORM_ELEMENT_LOCATOR = '.tui-participantContent__sectionItem';
+    public const PERFORM_ELEMENT_PRINT_LOCATOR = '.tui-participantContentPrint__sectionItem';
     public const PERFORM_ELEMENT_QUESTION_TEXT_LOCATOR = '.tui-participantContent__sectionItem-contentHeader';
+    public const PERFORM_ELEMENT_QUESTION_TEXT_PRINT_LOCATOR = '.tui-participantContentPrint__sectionItem-contentHeader';
     public const PERFORM_ELEMENT_QUESTION_OPTIONAL_LOCATOR = '.tui-performRequiredOptionalIndicator--optional';
     public const PERFORM_ELEMENT_QUESTION_REQUIRED_LOCATOR = '.tui-performRequiredOptionalIndicator--required';
     public const SHORT_TEXT_RESPONSE_LOCATOR = 'input';
-    public const LONG_TEXT_RESPONSE_LOCATOR = 'textarea';
-    public const MULTI_CHOICE_RESPONSE_LOCATOR = 'radio';
+    public const LONG_TEXT_RESPONSE_LOCATOR = '.tui-weka';
+    public const DATE_PICKER_RESPONSE_LOCATOR = '.tui-dateSelector';
+    public const MULTI_CHOICE_MULTI_RESPONSE_LOCATOR = '.tui-checkboxGroup';
+    public const MULTI_CHOICE_SINGLE_RESPONSE_LOCATOR = '.tui-radioGroup';
+    public const CUSTOM_RATING_SCALE_RESPONSE_LOCATOR = '.tui-radioGroup';
+    public const NUMERIC_RATING_SCALE_RANGE_RESPONSE_LOCATOR = 'input[type=range]';
+    public const NUMERIC_RATING_SCALE_NUMBER_RESPONSE_LOCATOR = 'input[type=number]';
     public const PERFORM_ELEMENT_OTHER_RESPONSE_CONTAINER_LOCATOR = '.tui-otherParticipantResponses';
     public const PERFORM_ELEMENT_OTHER_RESPONSE_RELATION_LOCATOR = '.tui-otherParticipantResponses .tui-formLabel';
     public const TUI_OTHER_PARTICIPANT_RESPONSES_ANONYMOUS_RESPONSE_PARTICIPANT_LOCATOR = '.tui-otherParticipantResponses__anonymousResponse-participant';
     public const PARTICIPANT_FORM_RESPONSE_DISPLAY_LOCATOR = '.tui-participantFormResponseDisplay';
     public const PARTICIPANT_FORM_HTML_VIEW_ONLY_RESPONSE_LOCATOR = '.tui-participantFormHtmlResponseDisplay';
-    public const PERFORM_ACTIVITY_PRINT_SECTION_LOCATOR = '.tui-participantContentPrint .tui-participantContentPrint__section .tui-participantContentPrint__section:nth-of-type(%d)';
+    public const PERFORM_ACTIVITY_PRINT_SECTION_LOCATOR = '.tui-participantContentPrint__section';
     public const PERFORM_ACTIVITY_YOUR_RELATIONSHIP_VALUE_EXTERNAL = '.tui-participantContent__user-relationshipValue';
     public const PERFORM_ACTIVITY_GENERAL_INFORMATION_RELATIONSHIP_LOCATOR = '.tui-participantGeneralInformation__relationship-heading';
     public const PERFORM_SHOW_OTHERS_RESPONSES_LOCATOR = '.tui-participantContent__sectionHeading-otherResponseSwitch button';
@@ -90,9 +97,11 @@ class behat_mod_perform extends behat_base {
     public const ADMIN_FORM_TITLE_INPUT = 'input[name=rawTitle]';
     public const ADMIN_FORM_DONE_BUTTON = '.tui-performAdminCustomElementEdit__submit';
     public const ADMIN_FORM = '.tui-performAdminCustomElement';
-    public const ADMIN_FORM_STATIC_CONTENT_WEKA = '.tui-weka';
+    public const ADMIN_FORM_STATIC_CONTENT_WEKA = '.tui-staticContentAdminEdit .tui-weka';
     public const FORM_BUILDER_ADD_ELEMENT_BUTTONS = '.tui-dropdownButton';
     public const FORM_BUILDER_RAW_TITLE_NAME = 'rawTitle';
+    public const TUI_NOTEPAD_LINES = '.tui-notepadLines';
+    public const TUI_PARTICIPANT_CONTENT_PRINT_PRINTED_TODO = '.tui-participantContentPrint__printedTodo';
 
     /**
      * Navigate to the specified page and wait for JS.
@@ -172,6 +181,41 @@ class behat_mod_perform extends behat_base {
     public function i_should_see_perform_question_is_unanswered(string $element_type, string $question_text): void {
          $this->i_should_see_perform_question_is_answered_with($element_type, $question_text, '');
     }
+
+    /**
+     * @Then /^I should see perform "([^"]*)" question "([^"]*)" is unanswered in print view$/
+     * @param string $element_type
+     * @param string $question_text
+     */
+    public function i_should_see_perform_question_is_unanswered_print(string $element_type, string $question_text): void {
+        $this->wait_for_pending_js();
+
+        $question = $this->find_question_from_text($question_text, true);
+        $is_inline_element_type = in_array($element_type, ['short text', 'long text', 'date picker']);
+        if ($is_inline_element_type) {
+            $notepad_lines = $question->find('css', self::TUI_NOTEPAD_LINES);
+            if ($notepad_lines === null) {
+                $this->fail('Question was not unanswered, notepad lines were not present');
+            }
+        }
+
+        $printed_todo_icon = $question->find('css', self::TUI_PARTICIPANT_CONTENT_PRINT_PRINTED_TODO);
+        if ($printed_todo_icon === null) {
+            $this->fail('Question was not unanswered, printed todo icon was not present');
+        }
+
+        if ($is_inline_element_type) {
+            $response_locator = $this->get_response_element_response_locator($element_type);
+            $form_response = $question->find('css', $response_locator);
+            if ($form_response !== null) {
+                $this->fail('Question was not unanswered, it had a response');
+            }
+        }
+    }
+
+    /**
+
+     */
 
     /**
      * @Then /^activity section "(?P<section_number>\d+)" should exist$/
@@ -321,10 +365,9 @@ class behat_mod_perform extends behat_base {
 
     /**
      * @Given /^I should see perform "([^"]*)" question "([^"]*)" is saved with options "([^"]*)"$/
-     * @param $question_text
-     * @param $question_options
-     *
-     * @throws ExpectationException
+     * @param string $type
+     * @param string $question_text
+     * @param string $question_options
      */
     public function i_should_see_multiple_answers_question_is_saved_with_options(
         string $type,
@@ -332,15 +375,17 @@ class behat_mod_perform extends behat_base {
         string $question_options
     ): void {
         /** @var behat_mod_perform $behat_mod_perform */
-        $locator = ($type == 'checkbox') ? '.tui-checkbox__label' : '.tui-radio__label';
+        $locator = $type === 'checkbox' ? '.tui-checkbox__label' : '.tui-radio__label';
         $question = $this->find_admin_question_from_text($question_text);
         $options = $question->findAll('css', $locator);
-        $expected_options = explode(",", $question_options);
+        $expected_options = explode(',', $question_options);
+        $expected_options = array_map('trim', $expected_options);
+
         $actual_options = [];
         foreach ($options as $option) {
             $actual_options[] = trim($option->getText());
         }
-        if ($expected_options != $actual_options) {
+        if ($expected_options !== $actual_options) {
             throw new ExpectationException("Question {$question_text} not found with options {$question_options}", $this->getSession());
         }
     }
@@ -434,28 +479,108 @@ class behat_mod_perform extends behat_base {
     }
 
     /**
-     * @Then /^I should see perform "([^"]*)" question "([^"]*)" is answered with "([^"]*)"$/
-     * @param $element_type
-     * @param $question_text
-     * @param $expected_answer_text
-     * @throws ExpectationException
+     * @Then /^I should see perform "([^"]*)" question "([^"]*)" is answered with "([^"]*)"(| in print view)$/
+     * @param string $element_type
+     * @param string $question_text
+     * @param string $expected_answer_text
+     * @param string $in_print_view
      */
     public function i_should_see_perform_question_is_answered_with(
         string $element_type,
         string $question_text,
-        string $expected_answer_text
+        string $expected_answer_text,
+        string $in_print_view = ''
     ): void {
         $this->wait_for_pending_js();
 
-        $response = $this->find_question_response($element_type, $question_text);
+        $response = $this->find_question_response($element_type, $question_text, $in_print_view === ' in print view');
 
-        $actual_answer_text = trim($response->getText());
+        switch ($element_type) {
+            case 'multi choice multi':
+            case 'multi choice single':
+            case 'custom rating scale':
+                $label_to_check = null;
+                foreach ($response->findAll('css', 'input') as $input) {
+                    if ($input->isChecked()) {
+                        $label_to_check = $input->getParent()->find('css', 'label');
+                        break;
+                    }
+                }
 
-        if ($expected_answer_text !== $actual_answer_text) {
+                if ($label_to_check !== null) {
+                    $actual_answer_text = $label_to_check->getText();
+                } else {
+                    $this->fail("No selected option found for '{$element_type}' question");
+                }
+                break;
+            case 'numeric rating scale':
+                $actual_answer_text = $response->getValue();
+                break;
+            default:
+                $actual_answer_text = $response->getText();
+        }
+
+        if ($expected_answer_text !== trim($actual_answer_text)) {
             throw new ExpectationException(
                 "Expected answer to be \"{$expected_answer_text}\"  found \"{$actual_answer_text}\"",
                 $this->getSession()
             );
+        }
+    }
+
+    /**
+     * @Then /^I should (|not )see "([^"]*)" in the perform activity question "([^"]*)"$/
+     * @param string $should_or_should_not
+     * @param string $expected_text
+     * @param string $question_text
+     */
+    public function i_should_see_in_the_perform_activity_question(
+        string $should_or_should_not,
+        string $expected_text,
+        string $question_text
+    ): void {
+        $should_contain_text = $should_or_should_not !== 'not ';
+        $question = $this->find_question_from_text($question_text);
+
+        if (!$should_contain_text && strpos($question->getText(), $expected_text) !== false) {
+            throw new ExpectationException("Text '$expected_text' was found in the question", $this->getSession());
+        }
+
+        if ($should_contain_text && strpos($question->getText(), $expected_text) === false) {
+            throw new ExpectationException("Text '$expected_text' was not found in the question", $this->getSession());
+        }
+    }
+
+    /**
+     * @Then /^I should (|not )see validation error "([^"]*)" in the perform activity question "([^"]*)"$/
+     * @param string $should_or_should_not
+     * @param string $expected_text
+     * @param string $question_text
+     */
+    public function i_should_see_validation_error_in_the_perform_activity_question(
+        string $should_or_should_not,
+        string $expected_text,
+        string $question_text
+    ): void {
+        $should_contain_text = $should_or_should_not !== 'not ';
+        $question = $this->find_question_from_text($question_text);
+
+        $errors = $question->findAll('css', '.tui-formFieldError');
+
+        $found = false;
+        foreach ($errors as $error) {
+            if (strpos($error->getText(), $expected_text) !== false) {
+                $found = true;
+                break;
+            }
+        }
+
+        if ($should_contain_text && !$found) {
+            new ExpectationException("Validation error '$expected_text' was found in the question", $this->getSession());
+        }
+
+        if (!$should_contain_text && $found) {
+            new ExpectationException("Validation error '$expected_text' was not found in the question", $this->getSession());
         }
     }
 
@@ -481,13 +606,21 @@ class behat_mod_perform extends behat_base {
      *
      * @param string $should_or_should_not
      * @param string $expected_text
-     * @param string $section_number
+     * @param int $section_number
      */
-    public function i_should_see_in_print_section(string $should_or_should_not, string $expected_text, string $section_number): void {
-        $method = $should_or_should_not === 'not ' ? 'assert_element_not_contains_text' : 'assert_element_contains_text';
-        $this->execute('behat_general::'. $method,
-            [$expected_text, sprintf(self::PERFORM_ACTIVITY_PRINT_SECTION_LOCATOR, $section_number), 'css_element']
-        );
+    public function i_should_see_in_print_section(string $should_or_should_not, string $expected_text, int $section_number): void {
+        $should_contain_text = $should_or_should_not !== 'not ';
+
+        /** @var NodeElement $node */
+        $node = $this->find_all('css', self::PERFORM_ACTIVITY_PRINT_SECTION_LOCATOR)[$section_number - 1];
+
+        if (!$should_contain_text && strpos($node->getText(), $expected_text) !== false) {
+            throw new ExpectationException("Text '$expected_text' was found in the section", $this->getSession());
+        }
+
+        if ($should_contain_text && strpos($node->getText(), $expected_text) === false) {
+            throw new ExpectationException("Text '$expected_text' was not found in the section", $this->getSession());
+        }
     }
 
     /**
@@ -653,9 +786,47 @@ class behat_mod_perform extends behat_base {
 
         $this->wait_for_pending_js();
 
+        // Please not setting the value on the actual range (using setValue()), does not work.
+        if ($element_type === 'numeric rating scale') {
+            $element_type .= ':number';
+        }
+
         $response = $this->find_question_response($element_type, $question_text);
 
-        $response->setValue($new_answer);
+        /** @var behat_totara_tui $behat_totara_tui */
+        $behat_totara_tui = behat_context_helper::get('behat_totara_tui');
+
+        switch ($element_type) {
+            case 'date picker':
+                $name = $response->getAttribute('name');
+                $behat_totara_tui->i_set_the_tui_date_selector_to($name, $new_answer);
+                break;
+            case 'multi choice single':
+            case 'custom rating scale':
+            case 'multi choice multi':
+                $element_to_click = null;
+                foreach ($response->findAll('css', 'label') as $label) {
+                    if (trim($label->getText()) === $new_answer) {
+                        $element_to_click = $label;
+                        break;
+                    }
+                }
+
+                if ($element_to_click !== null) {
+                    $element_to_click->click();
+                } else {
+                    $this->fail("No '{$new_answer}' option found for '{$element_type}' question");
+                }
+                break;
+            case 'long text':
+                $this->execute(
+                    'behat_weka::i_set_the_weka_editor_with_css_to',
+                    [self::LONG_TEXT_RESPONSE_LOCATOR, $new_answer]
+                );
+                break;
+            default:
+                $response->setValue($new_answer);
+        }
     }
 
     /**
@@ -919,8 +1090,14 @@ class behat_mod_perform extends behat_base {
         $this->find('css', self::SCHEDULE_SAVE_LOCATOR)->click();
     }
 
-    private function find_question_response(string $element_type, string $question_text) {
-        $question = $this->find_question_from_text($question_text);
+    /**
+     * @param string $element_type
+     * @param string $question_text
+     * @param bool $is_print
+     * @return NodeElement
+     */
+    private function find_question_response(string $element_type, string $question_text, bool $is_print = false): NodeElement {
+        $question = $this->find_question_from_text($question_text, $is_print);
 
         $response_locator = $this->get_response_element_response_locator($element_type);
 
@@ -941,7 +1118,12 @@ class behat_mod_perform extends behat_base {
         $map = [
             'short text' => self::SHORT_TEXT_RESPONSE_LOCATOR,
             'long text' => self::LONG_TEXT_RESPONSE_LOCATOR,
-            'multi choice' => self::MULTI_CHOICE_RESPONSE_LOCATOR
+            'date picker' => self::DATE_PICKER_RESPONSE_LOCATOR,
+            'multi choice multi' => self::MULTI_CHOICE_MULTI_RESPONSE_LOCATOR,
+            'multi choice single' => self::MULTI_CHOICE_SINGLE_RESPONSE_LOCATOR,
+            'custom rating scale' => self::CUSTOM_RATING_SCALE_RESPONSE_LOCATOR,
+            'numeric rating scale' => self::NUMERIC_RATING_SCALE_RANGE_RESPONSE_LOCATOR,
+            'numeric rating scale:number' => self::NUMERIC_RATING_SCALE_NUMBER_RESPONSE_LOCATOR,
         ];
 
         $locator =  $map[$element_type] ?? null;
@@ -953,12 +1135,12 @@ class behat_mod_perform extends behat_base {
         return $locator;
     }
 
-    private function find_question_from_text(string $question_text): NodeElement {
+    private function find_question_from_text(string $question_text, bool $is_print = false): NodeElement {
         /** @var NodeElement[] $questions */
-        $questions = $this->find_all('css', self::PERFORM_ELEMENT_LOCATOR);
+        $questions = $this->find_all('css', $is_print ? self::PERFORM_ELEMENT_PRINT_LOCATOR : self::PERFORM_ELEMENT_LOCATOR);
 
         foreach ($questions as $question) {
-            $found_question = $question->find('css', self::PERFORM_ELEMENT_QUESTION_TEXT_LOCATOR);
+            $found_question = $question->find('css', $is_print ? self::PERFORM_ELEMENT_QUESTION_TEXT_PRINT_LOCATOR : self::PERFORM_ELEMENT_QUESTION_TEXT_LOCATOR);
 
             if ($found_question === null) {
                 continue;
@@ -1009,7 +1191,7 @@ class behat_mod_perform extends behat_base {
 
             return $question;
         }
-        
+
 
         throw new ExpectationException("Required Question not found with text {$question_text}", $this->getSession());
     }
@@ -1450,7 +1632,7 @@ class behat_mod_perform extends behat_base {
 
         switch ($title) {
             case 'Multiple choice: multi-select':
-                $this->fill_multi_choice_multi_admin_form_settings($element_setting_container);
+                $this->fill_multi_choice_multi_admin_form_settings($element_setting_container, $required);
                 break;
             case 'Rating scale: Numeric':
                 $this->fill_numeric_rating_scale_admin_form_settings($element_setting_container);
@@ -1489,7 +1671,7 @@ class behat_mod_perform extends behat_base {
         }
     }
 
-    private function fill_multi_choice_multi_admin_form_settings(NodeElement $settings_container): void {
+    private function fill_multi_choice_multi_admin_form_settings(NodeElement $settings_container, bool $required): void {
         $answer_0 = $settings_container->find('css', 'input[name="options[0][value]"]');
         $answer_0->focus();
         $answer_0->setValue('Choice 0');
@@ -1497,6 +1679,12 @@ class behat_mod_perform extends behat_base {
         $answer_1 = $settings_container->find('css', 'input[name="options[1][value]"]');
         $answer_1->focus();
         $answer_1->setValue('Choice 1');
+
+        if ($required) {
+            $min = $settings_container->find('css', 'input[name="min"]');
+            $min->focus();
+            $min->setValue('1');
+        }
     }
 
     private function fill_numeric_rating_scale_admin_form_settings(NodeElement $settings_container): void {

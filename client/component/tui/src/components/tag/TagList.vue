@@ -17,7 +17,12 @@
 -->
 
 <template>
-  <Dropdown :close-on-click="false" :separator="separator" match-width>
+  <Dropdown
+    :close-on-click="false"
+    :separator="separator"
+    match-width
+    :fixed-height="!!virtualScrollOptions"
+  >
     <template v-slot:trigger="{ toggle, isOpen }">
       <div class="tui-tagList" @click="handleClick(toggle, isOpen)">
         <div class="tui-tagList__tags">
@@ -60,12 +65,13 @@
               </template>
               <div class="tui-tagList__input">
                 <InputText
-                  v-show="isOpen"
                   :ref="inputRef"
                   v-model="itemName"
                   :styleclass="{ transparent: true }"
                   :disabled="disabled"
+                  :placeholder="placeholderText"
                   :aria-label="$str('tag_list', 'totara_core')"
+                  @focus.native="!isOpen && toggle()"
                 />
               </div>
             </div>
@@ -90,11 +96,37 @@
           :styleclass="{ transparent: true }"
           @click.stop.prevent="expandList(toggle, isOpen)"
         >
-          <Expand />
+          <Expand custom-class="tui-tagList__caret" />
         </ButtonIcon>
       </div>
     </template>
-    <template v-for="(item, index) in items">
+    <template v-if="virtualScrollOptions">
+      <VirtualScroll
+        :data-key="virtualScrollOptions.dataKey"
+        :data-list="items"
+        :aria-label="virtualScrollOptions.ariaLabel"
+        :is-loading="virtualScrollOptions.isLoading || false"
+        :start="virtualScrollOptions.start"
+        :offset="virtualScrollOptions.offset"
+        :top-threshold="virtualScrollOptions.topThreshold"
+        :bottom-threshold="virtualScrollOptions.bottomThreshold"
+        :use-role="false"
+        @scrolltop="onScrollToTop"
+        @scrollbottom="onScrollToBottom"
+      >
+        <template v-slot:item="{ item, index }">
+          <DropdownItem :key="index" @click="dropdownItemClicked(item, index)">
+            <slot name="item" :item="item" :index="index" />
+          </DropdownItem>
+        </template>
+        <template v-slot:footer>
+          <div class="loader-wrapper">
+            <Loader :loading="virtualScrollOptions.isLoading" />
+          </div>
+        </template>
+      </VirtualScroll>
+    </template>
+    <template v-for="(item, index) in items" v-else>
       <DropdownItem :key="index" @click="dropdownItemClicked(item, index)">
         <slot name="item" :item="item" :index="index" />
       </DropdownItem>
@@ -111,6 +143,9 @@ import ButtonIcon from 'tui/components/buttons/ButtonIcon';
 import Close from 'tui/components/icons/Close';
 import Tag from 'tui/components/tag/Tag';
 import OverflowDetector from 'tui/components/util/OverflowDetector';
+import VirtualScroll from 'tui/components/virtualscroll/VirtualScroll';
+import { validatePropObject } from 'tui/vue_util';
+import Loader from 'tui/components/loading/Loader';
 
 export default {
   components: {
@@ -122,6 +157,8 @@ export default {
     Close,
     Tag,
     OverflowDetector,
+    VirtualScroll,
+    Loader,
   },
   props: {
     disabled: {
@@ -135,6 +172,36 @@ export default {
       type: Boolean,
       default: false,
     },
+
+    // Virtual scroll will be enabled when minimum options
+    // are passed (dataKey, ariaLabel)
+    virtualScrollOptions: {
+      type: Object,
+      validator: options => {
+        if (!options) {
+          return true;
+        }
+
+        const required = ['dataKey', 'ariaLabel'];
+        const properties = {
+          dataKey: 'string',
+          ariaLabel: 'string',
+          start: 'number',
+          offset: 'number',
+          topThreshold: 'number',
+          bottomThreshold: 'number',
+          isLoading: 'boolean',
+        };
+
+        return validatePropObject({ options, properties, required });
+      },
+    },
+    inputPlaceholder: {
+      type: String,
+      default() {
+        return this.$str('tag_list_placeholder', 'totara_core');
+      },
+    },
   },
 
   data() {
@@ -144,6 +211,12 @@ export default {
       itemName: this.filter || '',
       visible: Infinity,
     };
+  },
+
+  computed: {
+    placeholderText() {
+      return this.tags.length === 0 ? this.inputPlaceholder : null;
+    },
   },
   watch: {
     itemName() {
@@ -155,6 +228,7 @@ export default {
       }
     },
   },
+
   methods: {
     overflowChanged({ visible }) {
       this.visible = visible;
@@ -202,6 +276,14 @@ export default {
         });
       });
     },
+
+    onScrollToTop() {
+      this.$emit('scrolltop');
+    },
+
+    onScrollToBottom() {
+      this.$emit('scrollbottom');
+    },
   },
 };
 </script>
@@ -215,6 +297,7 @@ export default {
   "totara_core": [
     "n_more",
     "tag_list",
+    "tag_list_placeholder",
     "tag_remove",
     "tags_selected"
   ]
@@ -270,6 +353,10 @@ export default {
 
   &__expandArrow {
     height: calc(var(--tag-height) + (2 * var(--border-width-thin)));
+  }
+
+  &__caret {
+    fill: var(--color-neutral-7);
   }
 }
 </style>

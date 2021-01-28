@@ -42,6 +42,23 @@
   }
 }
 
+.tui-performElementResponse {
+  &__section {
+    display: flex;
+  }
+
+  @media (max-width: $tui-screen-sm) {
+    &__section {
+      display: block;
+    }
+  }
+
+  &__label {
+    @include tui-font-heading-label();
+    flex-basis: 22rem;
+  }
+}
+
 .tui-performElementParticipantResponse {
   display: flex;
   &__name {
@@ -378,7 +395,7 @@
     margin-top: var(--gap-4);
 
     &--autoSave {
-      margin-top: var(--gap-4);
+      padding-bottom: var(--gap-4);
       border-bottom: var(--border-width-thin) solid var(--card-border-color);
     }
   }
@@ -779,10 +796,10 @@
 }
 
 .tui-participantContentPrint {
-  @include tui-font-body();
+  @include tui-font-body-small;
 
-  @media screen {
-    padding: var(--gap-10);
+  &__printedOnDate {
+    text-align: center;
   }
 
   &__user {
@@ -799,29 +816,72 @@
     }
   }
 
+  &__activityType {
+    @include tui-font-heading-small;
+    margin: 0;
+  }
+
+  &__activityName {
+    @include tui-font-heading-medium;
+  }
+
   &__header {
-    @include tui-font-heading-medium();
-    margin: var(--gap-12) 0 var(--gap-4) 0;
-    padding: var(--gap-2) var(--gap-4);
+    margin-top: var(--gap-12);
+    padding: var(--gap-4);
     text-align: center;
     border: var(--border-width-thin) solid var(--color-primary);
 
-    &-date {
-      @include tui-font-body-small();
-      padding: var(--gap-6) var(--gap-4) 0;
-      color: var(--color-neutral-6);
+    & > * + * {
+      margin: var(--gap-6) 0 0 0;
     }
   }
 
+  &__participantGeneralInformation {
+    margin-top: var(--gap-4);
+  }
+
+  &__legendKey {
+    margin-top: var(--gap-2);
+
+    & > * + * {
+      margin-top: var(--gap-2);
+    }
+  }
+
+  &__sectionHeading {
+    margin: var(--gap-4) 0 0;
+    @include tui-font-heading-small;
+  }
+
   &__section {
+    margin-top: var(--gap-8);
+
+    & > * + * {
+      margin-top: var(--gap-4);
+    }
+
     &-requiredContainer {
       margin-top: var(--gap-2);
     }
 
     &-responseRequired {
       display: inline-flex;
-      @include tui-font-heading-label();
+      @include tui-font-heading-label;
       color: var(--color-primary);
+    }
+  }
+
+  &__instanceDetails {
+    text-align: center;
+
+    &-detail {
+      display: inline-block;
+
+      &:not(:last-child):after {
+        margin: 0 var(--gap-1);
+        border-left: solid 1px var(--color-text);
+        content: '';
+      }
     }
   }
 
@@ -833,6 +893,12 @@
     }
   }
 
+  &__sectionItems {
+    & > * + * {
+      margin-top: var(--gap-8);
+    }
+  }
+
   &__sectionItem {
     &-content {
       & > * {
@@ -841,20 +907,34 @@
     }
 
     &-contentHeader {
-      display: inline-flex;
-      @include tui-font-heading-x-small();
+      @include tui-font-heading-x-small;
+      display: inline;
+      margin-top: 0;
       margin-left: 0;
     }
   }
 
+  &__otherParticipantResponses {
+    margin-top: var(--gap-8);
+  }
+
   &__actionButtons {
+    position: fixed;
+    bottom: 0;
+    left: 0;
     display: flex;
     justify-content: center;
-    padding-bottom: var(--gap-12);
+    width: 100%;
+    padding: var(--gap-2) 0;
+    background: rgba(247, 247, 247, 0.8);
+  }
 
-    & > * + * {
-      margin-left: var(--gap-4);
-    }
+  @media screen {
+    max-width: 21cm;
+    margin: auto auto var(--gap-12);
+    padding: var(--gap-12);
+    border: var(--border-width-thin) solid var(--color-border);
+    box-shadow: var(--shadow-4);
   }
 
   @media print {
@@ -900,14 +980,12 @@
 }
 
 .tui-performUserActivityList {
-  &__selectRelationshipLink {
-    text-align: left;
-    @include tui-font-link();
+  & > * + * {
+    margin-top: var(--gap-2);
   }
 
-  &__loadMore {
-    margin-top: var(--gap-2);
-    text-align: center;
+  &__selectRelationshipLink {
+    @include tui-font-link();
   }
 
   &__expandedRow {
@@ -919,6 +997,31 @@
 
     &-dateSummary {
       color: var(--color-neutral-6);
+    }
+  }
+
+  &__loadMore {
+    margin-top: var(--gap-3);
+    text-align: center;
+  }
+}
+
+.tui-performUserActivitiesFilter {
+  & > * + * {
+    margin-top: var(--gap-8);
+  }
+
+  &__after {
+    &-total {
+      @include tui-font-heading-x-small;
+    }
+  }
+}
+
+@media (min-width: $tui-screen-sm) {
+  .tui-performUserActivitiesFilter {
+    &__after {
+      display: flex;
     }
   }
 }

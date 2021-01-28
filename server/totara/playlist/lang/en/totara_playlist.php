@@ -36,7 +36,7 @@ $string['createplaylistshort'] = "Create Playlist";
 $string['creator'] = "Playlist creator";
 $string['defaultlabel'] = "Playlist";
 $string['deletewarningmsg'] = 'This action is permanent. People with access to this playlist will no longer be able to view it. This action will NOT delete the playlist contents.';
-$string['deletewarningtitle'] = 'Are you sure you want to delete the playlist?';
+$string['deletewarningtitle'] = 'Delete playlist?';
 $string['edit_playlist_title'] = 'Edit playlist title';
 $string['entertitle'] = "Enter playlist title";
 $string['image_alt'] = 'The image for the playlist {$a}';
@@ -45,6 +45,7 @@ $string['mentionbody:comment'] = '<strong>{$a->fullname}</strong> has commented 
 $string['mentionbody:playlist'] = '<strong>{$a->fullname}</strong> has mentioned you in the playlist {$a->title}.';
 $string['mentiontitle:playlist'] = '{$a} has mentioned you in a playlist';
 $string['mentionview:playlist'] = 'View playlist';
+$string['move_element'] = 'Move {$a}';
 $string['privacywarningtitle'] = 'This will result in a change';
 $string['privacychangeprivatetorestrictedorpublic'] = 'Some of the resources in this playlist are only visible to you. If you share this playlist, the resources will become visible to all people and workspaces you share it with.';
 $string['privacychangerestrictedtopublic'] = 'Some of the resources in this playlist are only visible to limited people and workspaces. If you change the visibility to everyone, all resources in this playlist will become visible.';
@@ -96,6 +97,7 @@ $string['error:update_order'] = "Order is out of bounds";
 $string['field:name'] = 'Name';
 $string['field:resourcenames'] = 'Resource Name(s)';
 $string['field:summary'] = 'Summary';
+$string['field:timecreated'] = 'Time created';
 $string['field:topics'] = 'Topics';
 
 // Capability strings

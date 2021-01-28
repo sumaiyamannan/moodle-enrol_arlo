@@ -23,6 +23,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+use core\hook\tenant_customizable_theme_settings;
 use core\theme\file\favicon_image;
 use core\theme\file\login_image;
 use core\theme\file\logo_image;
@@ -33,6 +34,8 @@ use totara_tui\local\mediation\resolver;
 use totara_tui\local\mediation\styles\resolver as styles_resolver;
 use totara_tui\local\mediation\styles\mediator;
 use totara_webapi\phpunit\webapi_phpunit_helper;
+use totara_core\hook\manager as hook_manager;
+
 
 class core_theme_settings_testcase extends advanced_testcase {
     use webapi_phpunit_helper;
@@ -360,6 +363,13 @@ class core_theme_settings_testcase extends advanced_testcase {
         $this->assertEquals('Totara Logo Updated', $alt_text);
         $this->assertEquals(true, $logo_image->is_available());
 
+        // Confirm that the default URL is still pointing to the correct default image.
+        $url = $logo_image->get_default_url();
+        $this->assertEquals(
+            "https://www.example.com/moodle/theme/image.php/_s/ventura/totara_core/1/logo",
+            $url->out()
+        );
+
         // Confirm that new logo and alternative text load through master header.
         $mastheadlogo = new totara_core\output\masthead_logo();
         $mastheaddata = $mastheadlogo->export_for_template($OUTPUT);
@@ -427,6 +437,13 @@ class core_theme_settings_testcase extends advanced_testcase {
         $this->assertEquals(
             "https://www.example.com/moodle/pluginfile.php/1/totara_core/favicon/{$favicon_image->get_item_id()}/new_favicon.png",
             $url
+        );
+
+        // Confirm that the default URL is still pointing to the correct default image.
+        $url = $favicon_image->get_default_url();
+        $this->assertEquals(
+            "https://www.example.com/moodle/theme/image.php/_s/ventura/theme/1/favicon",
+            $url->out()
         );
 
         // Confirm that new favicon loads through master header.
@@ -581,6 +598,13 @@ class core_theme_settings_testcase extends advanced_testcase {
         );
         $this->assertEquals(true, $login_image->is_available());
         $this->assertEquals('Totara Login', $login_image->get_alt_text());
+
+        // Confirm that the default URL is still pointing to the correct default image.
+        $url = $login_image->get_default_url();
+        $this->assertEquals(
+            "https://www.example.com/moodle/theme/image.php/_s/ventura/totara_core/1/default_login",
+            $url->out()
+        );
 
         // Disable site login image and update alternative text.
         $categories = [
@@ -889,6 +913,291 @@ class core_theme_settings_testcase extends advanced_testcase {
         self::assertFalse($settings->is_tenant_branding_enabled());
         $settings = new settings($theme_config, $tenant2->id);
         self::assertTrue($settings->is_tenant_branding_enabled());
+    }
+
+    public function test_is_initial_tenant_branding() {
+        $theme_config = theme_config::load('ventura');
+        $site_settings = new settings($theme_config, 0);
+        self::assertFalse($site_settings->is_initial_tenant_branding());
+
+        $generator = self::getDataGenerator();
+        $tenant_generator = $generator->get_plugin_generator('totara_tenant');
+        $tenant_generator->enable_tenants();
+        $tenant = $tenant_generator->create_tenant();
+
+        $tenant_settings = new settings($theme_config, $tenant->id);
+        self::assertTrue($tenant_settings->is_initial_tenant_branding());
+
+        // Now enable custom tenant branding
+        $categories = [
+            [
+                'name' => 'tenant',
+                'properties' => [
+                    [
+                        'name' => 'formtenant_field_tenant',
+                        'type' => 'boolean',
+                        'value' => 'true',
+                    ]
+                ]
+            ],
+        ];
+        $tenant_settings->validate_categories($categories);
+        $tenant_settings->update_categories($categories);
+        self::assertFalse($tenant_settings->is_initial_tenant_branding());
+    }
+
+    public function test_is_re_enabling_tenant_branding() {
+        $categories = [
+            [
+                'name' => 'tenant',
+                'properties' => [
+                    [
+                        'name' => 'formtenant_field_tenant',
+                        'type' => 'boolean',
+                        'value' => 'true',
+                    ]
+                ]
+            ],
+        ];
+
+        $theme_config = theme_config::load('ventura');
+        $site_settings = new settings($theme_config, 0);
+        self::assertFalse($site_settings->is_re_enabling_tenant_branding($categories));
+
+        $generator = self::getDataGenerator();
+        $tenant_generator = $generator->get_plugin_generator('totara_tenant');
+        $tenant_generator->enable_tenants();
+        $tenant = $tenant_generator->create_tenant();
+
+        // Enable twice
+        $tenant_settings = new settings($theme_config, $tenant->id);
+        self::assertFalse($tenant_settings->is_re_enabling_tenant_branding($categories));
+
+        $tenant_settings->validate_categories($categories);
+        $tenant_settings->update_categories($categories);
+        self::assertFalse($tenant_settings->is_re_enabling_tenant_branding($categories));
+
+        // Disable first and then re-able
+        $categories[0]['properties'][0]['value'] = 'false';
+        self::assertFalse($tenant_settings->is_re_enabling_tenant_branding($categories));
+
+        $tenant_settings->validate_categories($categories);
+        $tenant_settings->update_categories($categories);
+
+        $categories[0]['properties'][0]['value'] = 'true';
+        self::assertTrue($tenant_settings->is_re_enabling_tenant_branding($categories));
+    }
+
+    public function test_enabling_tenant_also_copies_site_files() {
+        global $USER;
+
+        $generator = $this->getDataGenerator();
+
+        // Create tenants.
+        $tenant_generator = $generator->get_plugin_generator('totara_tenant');
+        $tenant_generator->enable_tenants();
+        $tenant1 = $tenant_generator->create_tenant();
+
+        $this->setAdminUser();
+        $admin_context = context_user::instance($USER->id);
+
+        // Add a logo for the site
+        $files = [
+            [
+                'ui_key' => 'sitelogo',
+                'draft_id' => $this->create_image('new_site_logo', $admin_context),
+            ]
+        ];
+
+        $theme_config = theme_config::load('ventura');
+        $site_settings = new settings($theme_config, 0);
+        $site_settings->update_files($files);
+
+        $site_files = $site_settings->get_files();
+        $site_logo = array_filter($site_files, function ($file) {
+            return $file instanceof logo_image;
+        });
+        $this->assertCount(1, $site_logo);
+        /** @var logo_image $site_logo */
+        $site_logo = reset($site_logo);
+
+        $tenant_settings = new settings($theme_config, $tenant1->id);
+        $tenant_files = $tenant_settings->get_files();
+        $tenant_logo = array_filter($tenant_files, function ($file) {
+            return $file instanceof logo_image;
+        });
+        $this->assertCount(1, $tenant_logo);
+        /** @var logo_image $tenant_logo */
+        $tenant_logo = reset($tenant_logo);
+
+        $site_item_id = $site_logo->get_item_id();
+        $tenant_item_id = $tenant_logo->get_item_id();
+
+        // tenant should not have a file
+        $site_file_record = $this->get_logo_file_record($site_item_id);
+        $tenant_file_record = $this->get_logo_file_record($tenant_item_id);
+        $this->assertNotNull($site_file_record);
+        $this->assertNull($tenant_file_record);
+
+        // Update the tenant files without copying site files should have no effect
+        $tenant_settings->update_files([], false);
+        $site_file_record = $this->get_logo_file_record($site_item_id);
+        $tenant_file_record = $this->get_logo_file_record($tenant_item_id);
+        $this->assertNotNull($site_file_record);
+        $this->assertNull($tenant_file_record);
+
+        // Now update the tenant files without passing a file
+        $tenant_settings->update_files([], true);
+        // The tenant should now have a copy of the site file
+        $site_file_record = $this->get_logo_file_record($site_item_id);
+        $tenant_file_record = $this->get_logo_file_record($tenant_item_id);
+        $this->assertNotNull($site_file_record);
+        $this->assertNotNull($tenant_file_record);
+        $this->assertNotEqualsCanonicalizing($site_file_record, $tenant_file_record);
+    }
+
+    public function test_get_categories() {
+        $this->setAdminUser();
+        $ventura_config = theme_config::load('ventura');
+        $base_config = theme_config::load('base');
+        $ventura_settings = new settings($ventura_config, 0);
+        $base_settings = new settings($base_config, 0);
+
+        $test_base_categories = [
+            [
+                'name' => 'test_base_category',
+                'properties' => [
+                    [
+                        'name' => 'test_category',
+                        'type' => 'text',
+                        'value' => '123',
+                    ],
+                ],
+            ]
+        ];
+        $base_settings->update_categories($test_base_categories);
+        $categories = $ventura_settings->get_categories(false);
+
+        $category_names = array_map(function ($category) {
+            return $category['name'];
+        }, $categories);
+
+        $this->assertFalse(in_array('test_base_category', $category_names));
+    }
+
+    public function test_tenant_theme_hooks_default() {
+        $this->setAdminUser();
+        $theme_config = theme_config::load('ventura');
+        $theme_settings = new settings($theme_config, 0);
+
+        $expected = [
+            'brand' => '*',
+            'colours' => '*',
+            'images' => ['sitelogin'],
+            'custom' => ['formcustom_field_customfooter'],
+            'tenant' => '*',
+        ];
+        $this->assertEqualsCanonicalizing($expected, $theme_settings->get_customizable_tenant_theme_settings());
+    }
+
+    public function test_tenant_theme_hooks_custom() {
+        // Replace the customizable categories and image keys
+        hook_manager::phpunit_replace_watchers([
+            [
+                'hookname' => tenant_customizable_theme_settings::class,
+                'callback' => [__CLASS__, 'custom_theme_settings_watcher']
+            ],
+        ]);
+
+        $theme_config = theme_config::load('ventura');
+        $theme_settings = new settings($theme_config, 0);
+
+        $expected = [
+            'A' => '*',
+            'B' => ['a', 'b', 'c'],
+            'C' => ['whatever'],
+        ];
+        $this->assertEqualsCanonicalizing($expected, $theme_settings->get_customizable_tenant_theme_settings());
+    }
+
+    public static function custom_theme_settings_watcher(tenant_customizable_theme_settings $hook) {
+        $new = [
+            'A' => '*',
+            'B' => ['a', 'b', 'c'],
+            'C' => ['whatever'],
+        ];
+        $hook->set_customizable_settings($new);
+    }
+
+    /**
+     * @param int $item_id
+     * @return Object|null
+     */
+    private function get_logo_file_record(int $item_id): ?object {
+        global $DB;
+
+        $rows = $DB->get_records('files',
+            [
+                'component' => 'totara_core',
+                'filearea' => 'logo',
+                'itemid' => $item_id,
+            ]
+        );
+        if (!$rows) {
+            return null;
+        }
+
+        $rows = array_filter($rows, function ($row) {
+            return $row->filename !== '.';
+        });
+
+        return reset($rows);
+    }
+
+    public function test_helper_get_prelogin_tenantid() {
+        global $SESSION;
+
+        $generator = $this->getDataGenerator();
+        $user1 = $generator->create_user();
+        $tenant_generator = $generator->get_plugin_generator('totara_tenant');
+        $tenant_generator->enable_tenants();
+        $tenant1 = $tenant_generator->create_tenant();
+        $tenant2 = $tenant_generator->create_tenant();
+
+        // Default - unconfigured not set
+        self::assertEquals(0, helper::get_prelogin_tenantid());
+
+        // Configured and set
+        set_config('allowprelogintenanttheme', '1');
+        $SESSION->themetenantid = $tenant2->id;
+        $SESSION->themetenantidnumber = $tenant2->idnumber;
+        self::assertEquals($tenant2->id, helper::get_prelogin_tenantid());
+
+        // Configured not set
+        set_config('allowprelogintenanttheme', '1');
+        unset($SESSION->themetenantid);
+        unset($SESSION->themetenantidnumber);
+        self::assertEquals(0, helper::get_prelogin_tenantid());
+
+        // Unconfigured and set
+        set_config('allowprelogintenanttheme', '0');
+        $SESSION->themetenantid = $tenant2->id;
+        $SESSION->themetenantidnumber = $tenant2->idnumber;
+        self::assertEquals(0, helper::get_prelogin_tenantid());
+
+        // Configured and set guest user
+        set_config('allowprelogintenanttheme', '1');
+        $this->setGuestUser();
+        $SESSION->themetenantid = $tenant2->id;
+        $SESSION->themetenantidnumber = $tenant2->idnumber;
+        self::assertEquals($tenant2->id, helper::get_prelogin_tenantid());
+
+        // Configured and set authenticated user
+        set_config('allowprelogintenanttheme', '1');
+        $this->setUser($user1->id);
+        $SESSION->themetenantid = $tenant2->id;
+        $SESSION->themetenantidnumber = $tenant2->idnumber;
+        self::assertEquals(0, helper::get_prelogin_tenantid());
     }
 
     private function skip_if_build_not_present() {

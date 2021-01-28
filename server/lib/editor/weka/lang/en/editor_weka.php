@@ -24,7 +24,7 @@
 $string['add_image_alt_text'] = 'Add alt text';
 $string['attachment'] = 'Attachment';
 $string['actions_menu_for'] = 'Actions menu for {$a}';
-$string['cachedef_editorconfig'] = 'Editor configuration cache';
+$string['audio_alt_help'] = 'A transcript is a text version of audio information, used for people who are deaf or can\'t hear audio, and people who process written information better than audio. It is displayed below the audio file and will open in a modal.';
 $string['displayas'] = 'Display as';
 $string['display_as_attachment'] = 'Display as attachment';
 $string['display_as_card'] = 'Display as card';
@@ -42,23 +42,35 @@ $string['error_textarea_not_found'] = 'Failed to initialise Weka editor. The tex
 $string['error_no_url_info'] = 'This URL does not have enough information available.';
 $string['error_upload_failed'] = 'Upload failed.';
 $string['file_with_size'] = '{$a->filename} ({$a->size})';
-$string['file_size_exceed'] = 'The maximum file size you can upload is {$a}MB.';
+$string['file_size_exceed'] = 'The maximum file size you can upload is {$a}.';
 $string['format_as_blocktype_status'] = 'Format as: {$a}';
 $string['go_to_link_label'] = 'Go to link';
 $string['hashtag'] = '#{$a}';
-$string['image_alt_help'] = 'Alt text will be used for screen readers or when the image cannot be loaded.';
+$string['image_alt_help'] = 'Add a clear description of the image and its context. This will be used by screen readers for people with visual or cognitive impairments, or when the image cannot be downloaded.';
 $string['insert_link_label'] = 'Insert link';
 $string['invalid_response'] = 'Invalid response from server';
 $string['label_toolbar'] = 'Weka editor toolbar';
 $string['link'] = 'Link';
+$string['meta_upload_generic_error'] = 'Your file could not be uploaded, please try again.';
 $string['matching_hashtags'] = 'Matching hashtags';
 $string['matching_users'] = 'Matching users';
 $string['more_items'] = 'More';
 $string['pluginname'] = 'Weka editor';
+$string['transcript_modal_title_help'] = 'If your transcript is in a Word document format, select "Save as" and choose .txt';
 $string['unknown_attachment'] = 'Unknown attachment';
+$string['upload_captions'] = 'Upload captions';
+$string['upload_caption_confirmation'] = 'Captions have been added to the video';
+$string['upload_transcript'] = 'Upload transcript';
+$string['upload_video_caption'] = 'Upload captions (file format .vtt)';
+$string['upload_audio_transcript'] = 'Upload transcript (file format .txt file)';
+$string['upload_caption_transcript_button'] = 'Upload {$a} file';
+$string['video_alt_help'] = 'Captions are a text version of audio information, used for people who are deaf or can\'t hear audio, and people who process written information better than audio. They are displayed within the media player and are synchronized with the audio.';
 $string['view_search_results'] = 'View search results';
 
 // Dperecated since Totara 13.2.
 $string['edit_link'] = 'Edit link';
 $string['go_to_link'] = 'Go to link';
 $string['insert_link'] = 'Insert link';
+
+// Deprecated since Totara 13.3
+$string['cachedef_editorconfig'] = 'Editor configuration cache';

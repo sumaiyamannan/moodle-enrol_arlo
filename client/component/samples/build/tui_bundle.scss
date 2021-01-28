@@ -253,6 +253,16 @@
   }
 }
 
+.tui-sampleEditor {
+  &__editor {
+    height: 100%;
+  }
+
+  &__source {
+    white-space: pre;
+  }
+}
+
 .tui-testRange {
   &__code {
     display: inline-block;

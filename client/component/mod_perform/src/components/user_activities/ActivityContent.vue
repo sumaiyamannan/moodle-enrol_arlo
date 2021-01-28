@@ -21,7 +21,7 @@
     :is="showSidePanel ? 'LayoutSidePanel' : 'Layout'"
     class="tui-participantContent"
     :loading="$apollo.loading"
-    :title="activity.name"
+    :title="getActivityTitle()"
     :outer-first-loader="true"
   >
     <template v-slot:content-nav>
@@ -177,6 +177,8 @@
                     "
                     :accessible-label="sectionElement.element.title"
                     :required="sectionElement.element.is_required"
+                    :aria-describedby="checkboxGroupId"
+                    :active-section-is-closed="activeSectionIsClosed"
                   >
                     <template v-slot:content="{ labelId }">
                       <component
@@ -188,6 +190,7 @@
                           sectionElement.response_data_formatted_lines
                         "
                         :aria-labelledby="labelId"
+                        :label-id="checkboxGroupId"
                       />
                       <component
                         :is="sectionElement.formComponent"
@@ -197,6 +200,10 @@
                         :path="['sectionElements', sectionElement.id]"
                         :error="errors && errors[sectionElement.id]"
                         :aria-labelledby="labelId"
+                        :label-id="checkboxGroupId"
+                        :section-element-id="sectionElement.id"
+                        :participant-instance-id="participantInstanceId"
+                        :is-external-participant="isExternalParticipant"
                       />
                     </template>
                   </ElementParticipantForm>
@@ -210,6 +217,9 @@
                       :element="sectionElement.element"
                       :path="['sectionElements', sectionElement.id]"
                       :error="errors && errors[sectionElement.id]"
+                      :section-element-id="sectionElement.id"
+                      :participant-instance-id="participantInstanceId"
+                      :is-external-participant="isExternalParticipant"
                     />
                   </div>
                   <OtherParticipantResponses
@@ -313,7 +323,7 @@
 
 <script>
 // Util
-import { uniqueId } from 'tui/util';
+import { formatParams, getQueryStringParam, uniqueId } from 'tui/util';
 import { RELATIONSHIP_SUBJECT } from 'mod_perform/constants';
 import { redirectWithPost } from 'mod_perform/redirect';
 import { notify } from 'tui/notifications';
@@ -345,14 +355,12 @@ import ToggleSwitch from 'tui/components/toggle/ToggleSwitch';
 import { Uniform } from 'tui/components/uniform';
 import MiniProfileCard from 'tui/components/profile/MiniProfileCard';
 import ParticipantGeneralInformation from 'mod_perform/components/user_activities/participant/ParticipantGeneralInformation';
-
 // graphQL
 import SectionResponsesQuery from 'mod_perform/graphql/participant_section';
 import viewOnlyReportModeSectionResponsesQuery from 'mod_perform/graphql/view_only_section_responses';
 import SectionResponsesQueryExternal from 'mod_perform/graphql/participant_section_external_participant_nosession';
 import UpdateSectionResponsesMutation from 'mod_perform/graphql/update_section_responses';
 import UpdateSectionResponsesMutationExternalParticipant from 'mod_perform/graphql/update_section_responses_external_participant_nosession';
-import { formatParams, getQueryStringParam } from 'tui/util';
 
 const PARTICIPANT_SECTION_STATUS_COMPLETE = 'COMPLETE';
 
@@ -393,6 +401,14 @@ export default {
     activity: {
       required: true,
       type: Object,
+    },
+
+    /**
+     * Created day of activity.
+     */
+    createdAt: {
+      type: String,
+      required: true,
     },
 
     /**
@@ -492,6 +508,7 @@ export default {
       selectedParticipantSectionId: this.participantSectionId,
       selectedSectionId: this.selectedSectionId || null,
       isDraft: false,
+      checkboxGroupId: this.$id('label'),
     };
   },
   computed: {
@@ -925,11 +942,14 @@ export default {
         //assign errors to individual elements
         this.errors = submittedParticipantSection.section_element_responses
           .filter(item => item.validation_errors)
-          .reduce((acc, cur) => {
-            cur.validation_errors.forEach(error => {
-              acc[cur.section_element.id] = error.error_message;
+          .reduce((accumulator, current) => {
+            current.validation_errors.forEach(error => {
+              if (accumulator == null) {
+                accumulator = {};
+              }
+              accumulator[current.section_element_id] = error.error_message;
             });
-            return acc;
+            return accumulator;
           }, null);
 
         //show validation if no errors
@@ -1007,6 +1027,27 @@ export default {
      */
     async reloadData() {
       await this.$apollo.queries.section.refetch();
+    },
+
+    /**
+     * Returns the activity title.
+     */
+    getActivityTitle() {
+      var title = this.activity.name.trim();
+      var suffix = this.createdAt ? this.createdAt.trim() : '';
+
+      if (suffix) {
+        return this.$str(
+          'activity_title_with_subject_creation_date',
+          'mod_perform',
+          {
+            title: title,
+            date: suffix,
+          }
+        );
+      }
+
+      return title;
     },
 
     /**
@@ -1097,6 +1138,7 @@ export default {
       if (shouldChange) {
         this.navModel = newNavModel;
         this.updateUrl();
+        this.updateTitle();
         this.reloadData();
       }
     },
@@ -1141,6 +1183,20 @@ export default {
 
       // Note we push state by default (a new history entry) not replace it on section change.
       window.history.pushState(null, null, url);
+    },
+    updateTitle() {
+      if (this.activity.settings.multisection && !this.viewOnlyReportMode) {
+        const currentParticipantSection = this.activeParticipantSection.participant_instance.participant_sections.find(
+          section => this.selectedParticipantSectionId === section.id
+        );
+        window.document.title =
+          this.activity.name +
+          ' - ' +
+          currentParticipantSection.section.display_title;
+
+        return;
+      }
+      window.document.title = this.activity.name;
     },
     popstateHandler() {
       const urlNavModelKey = this.viewOnlyReportMode
@@ -1208,6 +1264,7 @@ export default {
 <lang-strings>
   {
     "mod_perform": [
+      "activity_title_with_subject_creation_date",
       "back_to_user_activities",
       "button_close",
       "next_section",

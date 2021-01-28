@@ -38,10 +38,12 @@
 <script>
 import tui from 'tui/tui';
 import { throttle } from 'tui/util';
+import pending from 'tui/pending';
 import Editor from '../js/Editor';
 import Toolbar from 'editor_weka/components/toolbar/Toolbar';
 import { loadLangStrings } from 'tui/i18n';
 import editorWeka from 'editor_weka/graphql/weka';
+import editorWekaNoSession from 'editor_weka/graphql/weka_nosession';
 import FileStorage from '../js/helpers/file';
 import WekaValue from '../js/WekaValue';
 import { createImmutablePropWatcher } from 'tui/vue_util';
@@ -59,6 +61,10 @@ export default {
       type: String,
       default: '',
     },
+    /**
+     * This property had been deprecated, please use usageIdentifier instead.
+     * @deprecated since Totara 13.3
+     */
     instanceId: [Number, String],
     fileItemId: [Number, String],
     /**
@@ -70,34 +76,67 @@ export default {
      * prop and decide whether to fetch from the server or not.
      */
     contextId: [Number, String],
+    /**
+     * This property had been deprecated, please use usageIdentifier instead.
+     * @deprecated since Totara 13.3
+     */
     component: String,
+    /**
+     * This property had been deprecated, please use usageIdentifier instead.
+     * @deprecated since Totara 13.3
+     */
     area: String,
-
+    usageIdentifier: {
+      type: Object,
+      validator: prop => 'component' in prop && 'area' in prop,
+      default() {
+        // Backward compatible.
+        return {
+          component: this.component || 'editor_weka',
+          area: this.area || 'learn',
+          instanceId: this.instanceId,
+        };
+      },
+    },
+    variant: String,
     /**
      * @value {
      *   context_id: Number
-     *   showtoolbar: Boolean,
      *   extensions: Object[]
      * }
      */
     options: {
       type: Object,
-      validator: prop =>
-        prop.showtoolbar !== undefined && prop.extensions !== undefined,
+      validator: prop => prop.extensions !== undefined,
     },
     value: WekaValue,
+    /**
+     * The compact mode is to determine whether we are showing the tool bar or not.
+     */
+    compact: Boolean,
+    /**
+     * If false, loads the editor without a user logged in and disables file support.
+     */
+    isLoggedIn: {
+      type: Boolean,
+      default: true,
+    },
   },
 
   data() {
     return {
       toolbarItems: [],
-      toolbarEnabled: false,
+
+      /**
+       * @deprecated since Totara 13.3
+       */
+      toolbarEnabled: !this.compact,
     };
   },
 
   computed: {
     showToolbar() {
-      if (!this.toolbarEnabled) {
+      if (this.compact) {
         return false;
       }
 
@@ -118,6 +157,7 @@ export default {
 
     component: warnChange('component'),
     area: warnChange('area'),
+    variant: warnChange('variant'),
     instanceId: warnChange('instanceId'),
     options: warnChange('options'),
 
@@ -125,7 +165,9 @@ export default {
      * @param {Number|String} value
      */
     fileItemId(value) {
-      this.editor.updateFileItemId(value);
+      if (this.editor && this.isLoggedIn) {
+        this.editor.updateFileItemId(value);
+      }
     },
   },
 
@@ -140,6 +182,24 @@ export default {
   },
 
   mounted() {
+    if (this.component) {
+      console.warn(
+        "The prop 'component' had been deprecated, please use 'usageIdentifier' instead"
+      );
+    }
+
+    if (this.area) {
+      console.warn(
+        "The prop 'area' had been deprecated, please use 'usageIdentifier' instead"
+      );
+    }
+
+    if (this.instanceId) {
+      console.warn(
+        "The prop 'instanceId' had been deprecated, please use 'usageIdentifier' instead"
+      );
+    }
+
     this.createEditor();
   },
 
@@ -156,25 +216,25 @@ export default {
     async setupOptions() {
       if (this.options) {
         this.finalOptions = Object.assign({}, this.options);
-        this.toolbarEnabled = this.finalOptions.showtoolbar;
         return;
       }
 
       // Start populating the options from the graphql call.
       const result = await this.$apollo.query({
-        query: editorWeka,
+        query: this.isLoggedIn ? editorWeka : editorWekaNoSession,
         fetchPolicy: 'no-cache',
         variables: {
-          instance_id: this.instanceId,
-          component: this.component,
-          area: this.area,
-          draft_id: this.fileItemId,
+          instance_id: this.usageIdentifier.instanceId,
+          component: this.usageIdentifier.component,
+          area: this.usageIdentifier.area,
           context_id: this.contextId || undefined,
+          variant_name:
+            this.variant ||
+            `${this.usageIdentifier.component}-${this.usageIdentifier.area}`,
         },
       });
 
       this.finalOptions = Object.assign({}, result.data.editor);
-      this.toolbarEnabled = this.finalOptions.showtoolbar;
     },
 
     /**
@@ -192,13 +252,17 @@ export default {
           this.finalOptions.extensions.map(({ tuicomponent, options }) => {
             let opt = {};
 
-            if (options !== undefined && options !== null) {
-              opt = JSON.parse(options);
+            if (options != null) {
+              if (typeof options === 'object') {
+                opt = options;
+              } else {
+                opt = JSON.parse(options);
+              }
             }
 
             return tui
               .import(tuicomponent)
-              .then(component => component.default(opt));
+              .then(ext => tui.defaultExport(ext)(opt));
           })
         );
       }
@@ -207,23 +271,31 @@ export default {
     },
 
     /**
-     * @return {Promise<{
-     *   item_id: {Number},
-     *   repository_id: {Number},
-     *   url: {String}
-     * }|null>}
+     * This function had been deprecated and no longer used.
+     *
+     * @return {Promise}
+     * @deprecated since Totara 13.3
      */
     async getRepositoryData() {
-      await this.setupOptions();
-      return this.finalOptions.repository_data || null;
+      console.warn(
+        '[editor_weka] The function getRepositoryData had been deprecated and no longer used.'
+      );
+
+      return Promise.resolve(null);
     },
 
     /**
+     * This function had been deprecated and no longer used.
+     *
      * @return {Promise}
+     * @deprecated since Totara 13.3
      */
-    async getCurrentDraftFiles() {
-      await this.setupOptions();
-      return this.finalOptions.draft_files || [];
+    async getCurrentFiles() {
+      console.warn(
+        '[editor_weka] The function getCurrentFiles had been deprecated and no longer used.'
+      );
+
+      return Promise.resolve([]);
     },
 
     async createEditor() {
@@ -231,25 +303,13 @@ export default {
         return;
       }
 
-      const extensions = await this.getExtensions(),
-        repositoryData = await this.getRepositoryData();
+      let pendingDone = pending('weka');
+
+      const extensions = await this.getExtensions();
 
       let fileStorage = new FileStorage({
         itemId: this.fileItemId,
         contextId: this.finalOptions.context_id || null,
-      });
-
-      if (repositoryData !== null) {
-        fileStorage.setRepositoryData(repositoryData);
-      }
-
-      let files = await this.getCurrentDraftFiles();
-      Array.prototype.forEach.call(files, ({ filename, url, file_size }) => {
-        fileStorage.addFile({
-          file: filename,
-          url: url,
-          size: file_size,
-        });
       });
 
       this.editor = new Editor({
@@ -262,9 +322,9 @@ export default {
         fileStorage: fileStorage,
         onUpdate: this.$_onUpdate.bind(this),
         contextId: this.finalOptions.context_id || null,
-        component: this.component || null,
-        area: this.area || null,
-        instanceId: this.instanceId || null,
+        component: this.usageIdentifier.component || null,
+        area: this.usageIdentifier.area || null,
+        instanceId: this.usageIdentifier.instanceId || null,
         onTransaction: () => {
           this.updateToolbarThrottled();
         },
@@ -286,6 +346,8 @@ export default {
       this.view = this.editor.createView(this.$refs.editorHost);
 
       this.updateToolbar();
+
+      pendingDone();
 
       // Event emitted to make the parent component knowing that this editor has been mounted properly.
       this.$emit('ready');
@@ -310,6 +372,7 @@ export default {
 
 <style lang="scss">
 .tui-weka {
+  position: relative;
   display: flex;
   flex-direction: column;
   width: 100%;
@@ -346,7 +409,6 @@ export default {
   }
 
   .ProseMirror {
-    position: relative;
     padding: var(--gap-4);
     white-space: pre-wrap;
     white-space: break-spaces;

@@ -21,6 +21,8 @@
  * @package totara_tenant
  */
 
+$string['allowprelogintenanttheme'] = 'Enable pre-login tenant themes';
+$string['allowprelogintenanttheme_desc'] = 'If enabled then "?tenanttheme=tenantidentifier" can be added to any URL to specify tenant theming should be applied before user logs in. Current tenant theme is be also retained after tenant user logs out.';
 $string['cannotdisable'] = 'All tenants must be deleted before multitenancy can be disabled.';
 $string['categoryname'] = 'Tenant category name';
 $string['cohortname'] = 'Tenant participants audience name';
@@ -39,6 +41,7 @@ $string['errorcsvcolumnsextra'] = 'Following unknown columns cannot be present i
 $string['eventtenantcreated'] = 'Tenant created';
 $string['eventtenantdeleted'] = 'Tenant deleted';
 $string['eventtenantupdated'] = 'Tenant updated';
+$string['loginlink'] = 'Tennant login page';
 $string['membercount'] = 'Number of members';
 $string['migrationtomemberwarning'] = 'Warning: user account will be migrated to dedicated Tenant account, participation in all other tenants will be terminated.';
 $string['migrationtononmemberwarning'] = 'Warning: dedicated tenant user account will be migrated to global user account.';

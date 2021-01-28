@@ -17,6 +17,10 @@ type container_workspace_discussion {
   """
   draft_content(format: core_format!): String!
   """
+  The draft id used to format the draft files in draft_content.
+  """
+  draft_id: Int!
+  """
   Time description that follows engage's convention
   """
   time_description: String!
@@ -52,6 +56,10 @@ type container_workspace_discussion {
   A magic value for content's format. Normally it would be FORMAT_JSON_EDITOR which is 42.
   """
   content_format: Int!
+  """
+  The context's id of a discussion.
+  """
+  workspace_context_id: Int!
 }
 
 """

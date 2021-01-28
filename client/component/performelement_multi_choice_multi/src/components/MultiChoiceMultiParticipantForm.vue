@@ -17,10 +17,12 @@
 -->
 <template>
   <FormScope :path="path" :process="process">
-    <div>
-      <span v-for="(settingString, i) in settingStrings" :key="i">
-        {{ settingString }} <br v-if="i < settingString.length" />
-      </span>
+    <div class="tui-multiChoiceMultiParticipantForm">
+      <FormRowDetails :id="labelId">
+        <span v-for="(settingString, i) in settingStrings" :key="i">
+          {{ settingString }} <br v-if="i < settingString.length" />
+        </span>
+      </FormRowDetails>
       <FormCheckboxGroup :validations="validations" name="response">
         <Checkbox
           v-for="item in element.data.options"
@@ -38,6 +40,7 @@
 import FormScope from 'tui/components/reform/FormScope';
 import FormCheckboxGroup from 'tui/components/uniform/FormCheckboxGroup';
 import Checkbox from 'tui/components/form/Checkbox';
+import FormRowDetails from 'tui/components/form/FormRowDetails';
 import { v as validation } from 'tui/validation';
 
 export default {
@@ -45,12 +48,14 @@ export default {
     Checkbox,
     FormScope,
     FormCheckboxGroup,
+    FormRowDetails,
   },
   props: {
     path: [String, Array],
     error: String,
     isDraft: Boolean,
     element: Object,
+    labelId: String,
   },
   computed: {
     /**
@@ -61,7 +66,7 @@ export default {
     minSelectionRestriction() {
       const value = this.element.data.min;
 
-      if (value === '') {
+      if (!value) {
         return null;
       }
 
@@ -75,7 +80,7 @@ export default {
     maxSelectionRestriction() {
       const value = this.element.data.max;
 
-      if (value === '') {
+      if (!value) {
         return null;
       }
 
@@ -92,6 +97,20 @@ export default {
       }
 
       const strings = [];
+
+      if (
+        this.minSelectionRestriction !== null &&
+        this.maxSelectionRestriction !== null &&
+        this.minSelectionRestriction === this.maxSelectionRestriction
+      ) {
+        return [
+          this.$str(
+            'participant_restriction_min_max',
+            'performelement_multi_choice_multi',
+            this.minSelectionRestriction
+          ),
+        ];
+      }
 
       if (this.minSelectionRestriction !== null) {
         strings.push(
@@ -163,6 +182,11 @@ export default {
         return null;
       }
 
+      // If the question is not required skip this validation if no answers have been selected.
+      if (value.length === 0 && this.element && !this.element.is_required) {
+        return null;
+      }
+
       if (value.length < minRestriction || value.length > maxRestriction) {
         return this.$str(
           'participant_restriction_min_max',
@@ -187,6 +211,11 @@ export default {
       const minRestriction = this.minSelectionRestriction;
 
       if (minRestriction === null) {
+        return null;
+      }
+
+      // If the question is not required skip this validation if no answers have been selected.
+      if (value.length === 0 && this.element && !this.element.is_required) {
         return null;
       }
 

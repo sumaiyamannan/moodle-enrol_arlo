@@ -58,6 +58,7 @@
             content-spacing="large"
           >
             <Tab
+              v-if="canEditCategory('brand')"
               :id="'themesettings-tab-0'"
               :name="$str('tabbrand', 'totara_tui')"
               :always-render="true"
@@ -68,10 +69,16 @@
                 :file-form-field-data="embeddedFormData.fileData"
                 :is-saving="isSaving"
                 :context-id="embeddedFormData.contextId"
+                :selected-tenant-id="selectedTenantId"
+                :customizable-tenant-settings="
+                  customizableTenantCategorySettings('brand')
+                "
+                @mounted="setInitialTenantCategoryValues"
                 @submit="submit"
               />
             </Tab>
             <Tab
+              v-if="canEditCategory('colours')"
               :id="'themesettings-tab-1'"
               :name="$str('tabcolours', 'totara_tui')"
               :always-render="true"
@@ -86,11 +93,15 @@
                   embeddedFormData.mergedProcessedCSSVariableData
                 "
                 :is-saving="isSaving"
+                :customizable-tenant-settings="
+                  customizableTenantCategorySettings('colours')
+                "
+                @mounted="setInitialTenantCategoryValues"
                 @submit="submit"
               />
             </Tab>
             <Tab
-              v-if="!selectedTenantId"
+              v-if="canEditCategory('images')"
               :id="'themesettings-tab-2'"
               :name="$str('tabimages', 'totara_tui')"
               :always-render="true"
@@ -102,11 +113,16 @@
                 :file-form-field-data="embeddedFormData.fileData"
                 :is-saving="isSaving"
                 :context-id="embeddedFormData.contextId"
+                :selected-tenant-id="selectedTenantId"
+                :customizable-tenant-settings="
+                  customizableTenantCategorySettings('images')
+                "
+                @mounted="setInitialTenantCategoryValues"
                 @submit="submit"
               />
             </Tab>
             <Tab
-              v-if="!selectedTenantId"
+              v-if="canEditCategory('custom')"
               :id="'themesettings-tab-3'"
               :name="$str('tabcustom', 'totara_tui')"
               :always-render="true"
@@ -116,6 +132,11 @@
                 v-if="embeddedFormData.formFieldData.custom"
                 :saved-form-field-data="embeddedFormData.formFieldData.custom"
                 :is-saving="isSaving"
+                :selected-tenant-id="selectedTenantId"
+                :customizable-tenant-settings="
+                  customizableTenantCategorySettings('custom')
+                "
+                @mounted="setInitialTenantCategoryValues"
                 @submit="submit"
               />
             </Tab>
@@ -179,6 +200,11 @@ export default {
      * Tenant Name or null if global/multi-tenancy not enabled.
      */
     selectedTenantName: String,
+
+    /**
+     * Customizable tenant settings
+     */
+    customizableTenantSettings: Object,
   },
 
   data() {
@@ -214,6 +240,8 @@ export default {
       isSaving: false,
       // raw CSS variable data, this is handled via fetch, not GraphQL
       rawCSSVariableData: null,
+      // Categories to add when tenant is enabled
+      tenantCategories: {},
     };
   },
 
@@ -291,20 +319,26 @@ export default {
      * inheritance chain.
      **/
     async loadCSSVariableData() {
-      this.rawCSSVariableData = await Promise.all(
-        this.totara_tui_themes_with_variables.map(theme => {
-          return fetch(
+      let result = await Promise.all(
+        this.totara_tui_themes_with_variables.map(async theme => {
+          const response = await fetch(
             this.$url('/totara/tui/json.php', {
               bundle: 'theme_' + theme,
               file: 'css_variables',
             })
-          )
-            .then(response => response.json())
-            .then(data => {
-              return data.vars;
-            });
+          );
+          const data = await response.json();
+          if (!data) {
+            console.error(
+              `[ThemeSettings] Configuration error: 'css_variables' file is missing for the selected theme.` +
+                `Please follow the TUI build instructions in order to generate the required file.`
+            );
+            return {};
+          }
+          return data.vars;
         })
       );
+      this.rawCSSVariableData = result.filter(response => response !== null);
     },
 
     /**
@@ -365,11 +399,42 @@ export default {
     },
 
     /**
+     * Check whether the specific category can be customized
+     *
+     * @param {String} category
+     * @return {Boolean}
+     */
+    canEditCategory(category) {
+      return (
+        !this.selectedTenantId ||
+        (this.customizableTenantSettings &&
+          !!this.customizableTenantSettings[category])
+      );
+    },
+
+    /**
+     * Return customizable settings in a specific category
+     *
+     * @param {String} category
+     * @return {String|Object|null}
+     */
+    customizableTenantCategorySettings(category) {
+      if (
+        !this.customizableTenantSettings ||
+        !this.customizableTenantSettings[category]
+      ) {
+        return null;
+      }
+
+      return this.customizableTenantSettings[category];
+    },
+
+    /**
      * Takes Form field data and formats it to meet GraphQL mutation expectations
      *
      * @param {Object} currentValues The submitted form data.
      * @return {Object}
-     **/
+     */
     formatDataForMutation(currentValues) {
       let data = {
         form: 'tenant',
@@ -408,8 +473,28 @@ export default {
           currentValues.formtenant_field_tenant.value;
       }
 
+      // If enabling custom tenant override, we also pass brand and colours
       let dataToMutate = this.formatDataForMutation(currentValues);
-      this.submit(dataToMutate);
+      this.submit(
+        dataToMutate,
+        this.selectedTenantId && this.tenantOverridesEnabled
+      );
+    },
+
+    /**
+     * Set initial tenant category data to add when custom configuration is enabled
+     *
+     * @param {Object} categoryData
+     */
+    setInitialTenantCategoryValues(categoryData) {
+      let category = categoryData.category;
+
+      if (
+        this.customizableTenantSettings &&
+        !!this.customizableTenantSettings[category]
+      ) {
+        this.tenantCategories[category] = categoryData.values;
+      }
     },
 
     /**
@@ -419,14 +504,27 @@ export default {
      *
      * @param {Object} payload The submitted form data expressed in full data
      *                          structure expected by mutation.
+     * @param {Boolean} addTenantDefaults
      */
-    async submit(payload) {
+    async submit(payload, addTenantDefaults) {
       let categoryData = [
         {
           name: payload.form,
           properties: payload.fields,
         },
       ];
+
+      if (addTenantDefaults) {
+        Object.keys(this.tenantCategories).forEach(function(category) {
+          if (this.tenantCategories[category].form) {
+            categoryData.push({
+              name: this.tenantCategories[category].form,
+              properties: this.tenantCategories[category].fields,
+            });
+          }
+        }, this);
+      }
+
       let fileData = [];
       if (payload.files) {
         fileData = payload.files.map(file => {

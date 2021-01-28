@@ -112,6 +112,26 @@
       "type": "var",
       "value": "color-text"
     },
+    "footer-bg-color": {
+      "type": "value",
+      "value": "#ffffff"
+    },
+    "footer-text-color": {
+      "type": "var",
+      "value": "color-text"
+    },
+    "footer-text-color-hover": {
+      "type": "var",
+      "value": "footer-text-color",
+      "transform": {
+        "source": "footer-text-color",
+        "type": "var",
+        "call": "adjust-hex-value-brightness",
+        "args": [
+          -10
+        ]
+      }
+    },
     "btn-accent-color": {
       "type": "var",
       "value": "color-state"

@@ -17,12 +17,14 @@
 -->
 <template>
   <WorkspaceDiscussionForm
-    v-if="!$apollo.loading"
+    v-if="discussion"
     :content="discussion.draft_content"
     :content-format="discussion.content_format"
+    :draft-id="discussion.draft_id"
     :submit-button-text="$str('done', 'container_workspace')"
     :submitting="submitting"
     :discussion-id="discussionId"
+    :workspace-context-id="discussion.workspace_context_id"
     class="tui-workspaceEditPostDiscussionForm"
     @submit="submitUpdate"
     @cancel="$emit('cancel')"
@@ -65,7 +67,7 @@ export default {
 
   data() {
     return {
-      discussion: {},
+      discussion: null,
     };
   },
 

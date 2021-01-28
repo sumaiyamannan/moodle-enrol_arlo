@@ -53,7 +53,7 @@ export default class WekaValue {
   /**
    * Create a WekaValue from a serialized document.
    *
-   * @param {string} doc
+   * @param {object} doc
    */
   static fromDoc(doc) {
     const ws = new WekaValue();
@@ -134,13 +134,37 @@ export default class WekaValue {
 
   /**
    * Convert to JSON doc format.
+   * @param {Boolean} applyFormatter
    */
-  getDoc() {
+  getDoc(applyFormatter = true) {
+    if (applyFormatter) {
+      this.applyFormatters();
+      this._doc = null;
+    }
+
     if (this._doc) {
       return this._doc;
     }
+
     this._doc = this._state.toJSON().doc;
     return this._doc;
+  }
+
+  applyFormatters() {
+    if (!this._editor || !this._state) {
+      return;
+    }
+
+    let formatters = this._editor.extensionFormatters;
+    formatters.forEach(
+      /**
+       *
+       * @param {Function} formatter
+       */
+      formatter => {
+        this._state = formatter(this._state);
+      }
+    );
   }
 
   /**

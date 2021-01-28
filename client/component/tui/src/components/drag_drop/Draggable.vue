@@ -82,6 +82,7 @@ export default {
       required: true,
     },
     disabled: Boolean,
+    ariaLabel: String,
   },
 
   // ensure manager strings are loaded
@@ -314,7 +315,7 @@ export default {
       if (e.button !== 0) return;
       if (e.target.tagName === 'SELECT') return;
       if (this.dragging) {
-        this.defaultDragDropManager.endDrag(this.dragId);
+        defaultDragDropManager.endDrag(this.dragId);
       }
       this.mouseDown = new Point(e.pageX, e.pageY);
       document.addEventListener('mouseup', this.handleDocumentMouseUp);
@@ -591,6 +592,7 @@ export default {
         'totara_core'
       ),
       'aria-describedby': defaultDragDropManager.getDragInstructionsId(),
+      'aria-label': this.ariaLabel,
     };
 
     const moveMenu = h(DraggableMoveMenu, {

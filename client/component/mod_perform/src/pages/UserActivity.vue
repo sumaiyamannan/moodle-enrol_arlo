@@ -34,12 +34,14 @@
       :created-at="subjectInstance.created_at"
       :due-date="subjectInstance.due_date"
       :job-assignments="jobAssignments"
+      :printed-on-date="printedOnDate"
     />
     <ActivityContent
       v-else-if="!print && subjectInstance"
       :current-user-id="currentUserId"
       :user-activities-url="userActivitiesUrl"
       :activity="subjectInstance.activity"
+      :created-at="subjectInstance.created_at"
       :participant-instance-id="participantInstanceId"
       :participant-section-id="participantSectionId"
       :subject-user="subjectInstance.subject_user"
@@ -75,7 +77,7 @@ export default {
       default: null,
     },
     userActivitiesUrl: {
-      required: true,
+      required: false,
       type: String,
     },
     participantInstanceId: {
@@ -95,11 +97,8 @@ export default {
       type: String,
       default: '',
     },
-    print: {
-      required: false,
-      type: Boolean,
-      default: false,
-    },
+    print: Boolean,
+    printedOnDate: String,
   },
 
   data() {

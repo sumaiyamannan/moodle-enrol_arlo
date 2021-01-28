@@ -28,7 +28,7 @@
         @submit="submit"
       />
 
-      <Separator />
+      <Separator :normal="true" />
     </template>
 
     <DiscussionFilter
@@ -39,7 +39,6 @@
       class="tui-workspaceDiscussionTab__filter"
       @update-search-term="searchTerm = $event"
       @update-sort="sort = $event"
-      @clear="searchTerm = $event"
     />
 
     <div
@@ -83,6 +82,7 @@
           :aria-setsize="setSize"
           :aria-labelledby="$id(`item-${item.id}`)"
           :label-id="$id(`item-${item.id}`)"
+          :workspace-context-id="item.workspace_context_id"
           class="tui-workspaceDiscussionTab__card"
           @update-discussion-react-status="updateDiscussionReactStatus"
           @update-discussion="updateDiscussion"

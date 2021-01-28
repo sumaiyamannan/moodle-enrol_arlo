@@ -345,7 +345,7 @@ require(['core/autoinitialise'], function(ai) {
         $instances = [];
         foreach (\core_component::get_namespace_classes('output', \core\output\framework::class) as $class) {
             /** @var \core\output\framework $class */
-            $instance = $class::new_instance($this);
+            $instance = $class::new_instance();
             $instances[get_class($instance)] = $instance;
         }
         return $instances;
@@ -836,13 +836,15 @@ require(['core/autoinitialise'], function(ai) {
                                         'escape', 'moodle-core_filepicker', 'moodle-core-notification-dialogue'
                                     ),
                                     'strings'  => array(array('lastmodified', 'moodle'), array('name', 'moodle'), array('type', 'repository'), array('size', 'repository'),
-                                                        array('invalidjson', 'repository'), array('error', 'moodle'), array('info', 'moodle'),
-                                                        array('nofilesattached', 'repository'), array('filepicker', 'repository'), array('logout', 'repository'),
-                                                        array('nofilesavailable', 'repository'), array('norepositoriesavailable', 'repository'),
-                                                        array('fileexistsdialogheader', 'repository'), array('fileexistsdialog_editor', 'repository'),
-                                                        array('fileexistsdialog_filemanager', 'repository'), array('renameto', 'repository'),
-                                                        array('referencesexist', 'repository'), array('select', 'repository')
-                                                    ));
+                                        array('displayfileiconaslinks', 'repository'), array('displayfiledetailsintable', 'repository'),
+                                        array('displayfiletreeintable', 'repository'), array('invalidjson', 'repository'), array('error', 'moodle'), 
+                                        array('info', 'moodle'), array('nofilesattached', 'repository'), array('filepicker', 'repository'), 
+                                        array('logout', 'repository'), array('nofilesavailable', 'repository'), array('norepositoriesavailable', 'repository'),
+                                        array('fileexistsdialogheader', 'repository'), array('fileexistsdialog_editor', 'repository'),
+                                        array('fileexistsdialog_filemanager', 'repository'), array('renameto', 'repository'),
+                                        array('referencesexist', 'repository'), array('select', 'repository'), array('changedisplay', 'repository')
+                                    )
+                    );
                     break;
                 case 'core_comment':
                     $module = array('name'     => 'core_comment',
@@ -1771,6 +1773,7 @@ require(['core/autoinitialise'], function(ai) {
             'context' => ['id' => $contextid],
             'locale' => [
                 'language' => $currentlanguage,
+                'debugstringids' => get_config('core', 'debugstringids'),
             ],
         ];
         if (defined('BEHAT_SITE_RUNNING')) {

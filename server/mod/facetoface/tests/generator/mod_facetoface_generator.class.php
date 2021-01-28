@@ -318,6 +318,58 @@ class mod_facetoface_generator extends testing_module_generator {
     }
 
     /**
+     * Add a virtualmeeting room.
+     *
+     * @param stdClass|array $record
+     * @param array $options
+     * @return stdClass
+     */
+    public function add_virtualmeeting_room($record, $options = array()): stdClass {
+        global $DB, $USER;
+
+        // Insert a room.
+        $record = (object)$record;
+        $record->custom = 1;
+        $room = $this->add_room($record);
+
+        // Insert room_virtualmeeting
+        $frvm = new stdClass();
+        if (empty($options['userid'])) {
+            $options['userid'] = $USER->id;
+        }
+        if (empty($options['plugin'])) {
+            $options['plugin'] = 'poc_app';
+        }
+        $frvm->userid = $options['userid'];
+        $frvm->plugin = $options['plugin'];
+        $frvm->roomid = $room->id;
+        $DB->insert_record('facetoface_room_virtualmeeting', $frvm);
+
+        return $room;
+    }
+
+    /**
+     * Join virtual room and virtual meeting.
+     *
+     * @param integer $roomid
+     * @param integer $sessionid
+     * @param integer $virtualmeetingid
+     * @return stdClass
+     */
+    public function create_room_dates_virtualmeeting(int $roomid, int $sessionid, int $virtualmeetingid) {
+        global $DB;
+
+        $room_date = $DB->get_record('facetoface_room_dates', ['roomid' => $roomid, 'sessionsdateid' => $sessionid], '*', MUST_EXIST);
+
+        $frdvm = new stdClass();
+        $frdvm->roomid = $roomid;
+        $frdvm->roomdateid = $room_date->id;
+        $frdvm->virtualmeetingid = $virtualmeetingid;
+        $id = $DB->insert_record('facetoface_room_dates_virtualmeeting', $frdvm);
+        return $DB->get_record('facetoface_room_dates_virtualmeeting', ['id' => $id], '*', MUST_EXIST);
+    }
+
+    /**
      * Validate record fields for behat.
      *
      * @param array $record

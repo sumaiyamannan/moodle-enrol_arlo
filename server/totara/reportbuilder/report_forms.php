@@ -397,7 +397,7 @@ class report_builder_edit_filters_form extends moodleform {
         $mform->addHelpButton('toolbarsearch', 'toolbarsearch', 'totara_reportbuilder');
         $mform->setExpanded('toolbarsearch');
 
-        $mform->addElement('advcheckbox', 'toolbarsearchdisabled', get_string('toolbarsearchdisabled', 'totara_reportbuilder'));
+        $mform->addElement('advcheckbox', 'toolbarsearchdisabled', get_string('toolbarsearchdisabled', 'totara_reportbuilder'), '', ['aria-label' => get_string('toolbarsearchdisabled', 'totara_reportbuilder')]);
         $mform->setDefault('toolbarsearchdisabled', !$report->toolbarsearch);
         $mform->addHelpButton('toolbarsearchdisabled', 'toolbarsearchdisabled', 'totara_reportbuilder');
 
@@ -1055,11 +1055,13 @@ class report_builder_edit_content_form extends moodleform {
             // display any content restriction form sections that are enabled for
             // this source
             foreach ($contentoptions as $option) {
-                $classname = '\totara_reportbuilder\rb\content\\' . $option->classname;
-                if (class_exists($classname)) {
-                    $obj = new $classname();
-                    $obj->form_template($mform, $id, $option->title);
+                $classname = $report->src->resolve_content_classname($option->classname);
+                if (!$classname) {
+                    debugging("The content class '{$option->classname}' does not exist", DEBUG_DEVELOPER);
+                    continue;
                 }
+                $obj = new $classname();
+                $obj->form_template($mform, $id, $option->title);
             }
 
             $mform->addElement('hidden', 'id', $id);

@@ -473,6 +473,7 @@
 }
 
 .tui-engageStarRating {
+  position: relative;
   display: flex;
 
   &--rtl {
@@ -597,21 +598,6 @@
     flex-grow: 1;
     min-height: 0;
     padding: var(--gap-8);
-  }
-}
-
-.tui-engageWarningModal {
-  &__container {
-    display: flex;
-  }
-
-  &__title {
-    @include tui-font-heading-x-small();
-    margin-bottom: var(--gap-2);
-  }
-
-  &__box {
-    padding-left: var(--gap-4);
   }
 }
 

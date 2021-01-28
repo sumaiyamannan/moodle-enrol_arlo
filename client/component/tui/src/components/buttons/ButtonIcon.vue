@@ -21,8 +21,9 @@
     class="tui-iconBtn"
     :aria-describedby="ariaDescribedby"
     :aria-expanded="ariaExpanded"
+    :aria-haspopup="ariaHaspopup"
     :aria-label="ariaLabel"
-    :autofocus="autofocus"
+    :aria-disabled="ariaDisabled"
     :class="{
       'tui-formBtn--alert': styleclass.alert,
       'tui-iconBtn--prim': styleclass.primary,
@@ -33,7 +34,6 @@
       'tui-iconBtn--stealth': styleclass.stealth,
       'tui-iconBtn--textFirst': styleclass.textFirst,
       'tui-iconBtn--toggle': styleclass.toggle,
-      'tui-iconBtn--toolbar': styleclass.toolbar,
       'tui-iconBtn--xsmall': styleclass.xsmall,
       'tui-iconBtn--transparent-noPadding': styleclass.transparentNoPadding,
     }"
@@ -59,16 +59,24 @@
         </span>
       </span>
       <Caret v-if="caret" class="tui-iconBtn__caret" />
+      <Loading
+        v-if="loading"
+        :size="styleclass.xsmall ? 100 : 200"
+        class="tui-iconBtn__loading"
+        :alt="'(' + $str('loading', 'core') + ')'"
+      />
     </span>
   </button>
 </template>
 
 <script>
 import Caret from 'tui/components/decor/Caret';
+import Loading from 'tui/components/icons/Loading';
 
 export default {
   components: {
     Caret,
+    Loading,
   },
 
   props: {
@@ -77,6 +85,8 @@ export default {
       type: [Boolean, String],
       default: false,
     },
+    ariaDisabled: Boolean,
+    ariaHaspopup: [Boolean, String],
     ariaLabel: {
       type: [Boolean, String],
       required: true,
@@ -124,6 +134,7 @@ export default {
         return allowedOptions.indexOf(value) !== -1;
       },
     },
+    loading: Boolean,
     name: String,
     text: String,
     title: String,
@@ -144,8 +155,26 @@ export default {
       return this.text !== this.ariaLabel ? this.ariaLabel : false;
     },
   },
+  mounted() {
+    if (this.autofocus && this.$el) {
+      // Make the input element to be focused, when the prop autofocus is set.
+      // We are moving away from the native attribute for element, because
+      // different browser will treat autofocus different. Furthermore,
+      // the slow performing browser will not make the element focused due
+      // to the element is not rendered on time.
+      this.$el.focus();
+    }
+  },
 };
 </script>
+
+<lang-strings>
+{
+  "core": [
+    "loading"
+  ]
+}
+</lang-strings>
 
 <style lang="scss">
 .tui-iconBtn {
@@ -169,6 +198,10 @@ export default {
 
     > .tui-iconBtn__caret {
       margin: 0 var(--gap-1);
+    }
+
+    > .tui-iconBtn__loading {
+      margin-left: var(--gap-1);
     }
   }
 

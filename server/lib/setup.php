@@ -239,6 +239,7 @@ core_date::store_default_php_timezone();
 
 // Add PHP compatibility lib files
 require_once($CFG->libdir . '/compatibility/php72lib.php'); // PHP 7.2
+require_once($CFG->libdir . '/compatibility/php74lib.php'); // PHP 7.4
 
 // Load up standard libraries
 require_once($CFG->libdir .'/filterlib.php');       // Functions for filtering test as it is output
@@ -552,6 +553,22 @@ if (!empty($CFG->allowthemechangeonurl) and !empty($_GET['theme'])) {
     }
 }
 unset($urlthemename);
+// Pre-login tenant themes.
+if (!empty($CFG->tenantsenabled) && !empty($CFG->allowprelogintenanttheme)) {
+    if (!isloggedin() || isguestuser()) {
+        if (isset($_GET['tenanttheme'])) {
+            $themedtenant = $DB->get_record('tenant', ['idnumber' => clean_param($_GET['tenanttheme'], PARAM_RAW)]);
+            if ($themedtenant) {
+                $SESSION->themetenantid = $themedtenant->id;
+                $SESSION->themetenantidnumber = $themedtenant->idnumber;
+            } else {
+                unset($SESSION->themetenantid);
+                unset($SESSION->themetenantidnumber);
+            }
+            unset($themedtenant);
+        }
+    }
+}
 
 // Ensure a valid theme is set.
 if (!isset($CFG->theme)) {

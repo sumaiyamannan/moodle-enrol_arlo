@@ -20,10 +20,27 @@
   <div class="tui-wekaVideoBlock">
     <template v-if="!$apollo.loading">
       <div class="tui-wekaVideoBlock__inner">
+        <ModalPresenter :open="showModal" @request-close="hideModal">
+          <ExtraFileUploadModal
+            :item-id="itemId"
+            :context-id="contextId"
+            :accepted-file-types="['.vtt']"
+            :modal-title="$str('upload_video_caption', 'editor_weka')"
+            :submit-button-text="
+              $str('upload_caption_transcript_button', 'editor_weka', '.vtt')
+            "
+            :modal-help-text="$str('video_alt_help', 'editor_weka')"
+            :filename="subtitleFilename"
+            @change="updateSubtitle"
+          />
+        </ModalPresenter>
+
         <CoreVideoBlock
+          :key="coreVideoBlockKey"
           :mime-type="file.mime_type"
           :url="file.url"
           :filename="filename"
+          :subtitle-url="subtitleUrl"
         />
 
         <NodeBar
@@ -46,11 +63,16 @@ import BaseNode from 'editor_weka/components/nodes/BaseNode';
 import CoreVideoBlock from 'tui/components/json_editor/nodes/VideoBlock';
 import getDraftFile from 'editor_weka/graphql/get_draft_file';
 import NodeBar from 'editor_weka/components/toolbar/NodeBar';
+import ModalPresenter from 'tui/components/modal/ModalPresenter';
+import ExtraFileUploadModal from 'editor_weka/components/upload/ExtraFileUploadModal';
+import { notify } from 'tui/notifications';
 
 export default {
   components: {
     CoreVideoBlock,
     NodeBar,
+    ModalPresenter,
+    ExtraFileUploadModal,
   },
 
   extends: BaseNode,
@@ -70,56 +92,63 @@ export default {
   data() {
     return {
       file: {},
+      showModal: false,
     };
   },
 
   computed: {
     hasAttachmentNode() {
-      if (!this.context.hasAttachmentNode) {
-        return false;
-      }
-
       return this.context.hasAttachmentNode();
     },
 
-    actions() {
-      let rtn = [];
-
-      if (this.hasAttachmentNode) {
-        rtn.push({
-          label: this.$str('display_as_attachment', 'editor_weka'),
-          action: () => {
-            this.$_toAttachment();
-          },
-        });
+    /**
+     * This text is to help enforcing the video block that contains videojs to rerender
+     * when the subtitle is uploaded.
+     *
+     * @return {String}
+     */
+    coreVideoBlockKey() {
+      if (!this.attrs.subtitle) {
+        return this.attrs.filename;
       }
 
-      rtn = rtn.concat([
+      const {
+        filename,
+        subtitle: { filename: subtitleFilename, url: subtitleUrl },
+      } = this.attrs;
+      return `${filename}-${subtitleFilename}-${subtitleUrl}`;
+    },
+
+    actions() {
+      return [
+        this.hasAttachmentNode && {
+          label: this.$str('display_as_attachment', 'editor_weka'),
+          action: this.$_toAttachment,
+        },
+        {
+          label: this.$str('upload_captions', 'editor_weka'),
+          action: this.$_showModal,
+        },
         {
           label: this.$str('remove', 'core'),
-          action: () => {
-            this.$_removeNode();
-          },
+          action: this.$_removeNode,
         },
-      ]);
-
-      if (this.downloadUrl) {
-        rtn.push({
+        {
           label: this.$str('download', 'core'),
-          action: () => {
-            window.document.location.href = this.downloadUrl;
-          },
-        });
-      }
-
-      return rtn;
+          action: this.$_download,
+        },
+      ].filter(Boolean);
     },
-    itemId() {
-      if (!this.context.getItemId) {
-        throw new Error("No function 'getItemId' was found from extension");
-      }
 
+    itemId() {
       return this.context.getItemId();
+    },
+
+    contextId() {
+      if (!this.context.getContextId) {
+        throw new Error("No function 'getContextId' was found from extension");
+      }
+      return this.context.getContextId();
     },
 
     filename() {
@@ -130,12 +159,24 @@ export default {
       return this.attrs.filename;
     },
 
-    downloadUrl() {
-      if (!this.context.getFileUrl) {
+    /**
+     * Getting the subtitle filename.
+     * @return {String|?}
+     */
+    subtitleFilename() {
+      if (!this.attrs.subtitle) {
         return null;
       }
 
-      return this.context.getFileUrl(this.filename);
+      return this.attrs.subtitle.filename;
+    },
+
+    subtitleUrl() {
+      if (!this.attrs.subtitle) {
+        return null;
+      }
+
+      return this.attrs.subtitle.url;
     },
   },
 
@@ -148,6 +189,7 @@ export default {
       const params = {
         filename: this.filename,
         size: this.file.file_size,
+        subtitle: this.attrs.subtitle || null,
       };
 
       this.context.replaceWithAttachment(this.getRange, params);
@@ -159,6 +201,58 @@ export default {
       }
 
       this.context.removeNode(this.getRange);
+    },
+
+    async $_download() {
+      window.open(await this.context.getDownloadUrl(this.filename));
+    },
+
+    $_showModal() {
+      this.showModal = true;
+    },
+
+    hideModal() {
+      this.showModal = false;
+    },
+
+    /**
+     *
+     * @param {Object|null} subtitleFile
+     */
+    async updateSubtitle(subtitleFile) {
+      this.hideModal();
+
+      if (!this.context.updateVideoWithSubtitle) {
+        return;
+      }
+
+      let videoAttrs = Object.assign({}, this.attrs),
+        oldSubtitleFilename = null,
+        changeSubtitle = false;
+
+      if (videoAttrs.subtitle) {
+        oldSubtitleFilename = videoAttrs.subtitle.filename;
+      }
+
+      videoAttrs.subtitle = null;
+
+      if (subtitleFile) {
+        changeSubtitle = oldSubtitleFilename !== subtitleFile.filename;
+
+        videoAttrs.subtitle = {
+          filename: subtitleFile.filename,
+          url: subtitleFile.url,
+        };
+      }
+
+      this.context.updateVideoWithSubtitle(this.getRange, videoAttrs);
+
+      if (changeSubtitle) {
+        await notify({
+          message: this.$str('upload_caption_confirmation', 'editor_weka'),
+          type: 'success',
+        });
+      }
     },
   },
 };
@@ -174,7 +268,12 @@ export default {
 
   "editor_weka": [
     "display_as_attachment",
-    "actions_menu_for"
+    "actions_menu_for",
+    "upload_captions",
+    "video_alt_help",
+    "upload_caption_transcript_button",
+    "upload_video_caption",
+    "upload_caption_confirmation"
   ]
 }
 </lang-strings>

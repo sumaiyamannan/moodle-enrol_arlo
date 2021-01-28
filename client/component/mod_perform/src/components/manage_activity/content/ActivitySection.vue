@@ -450,6 +450,13 @@ export default {
         });
       }
     },
+
+    section: function() {
+      this.title = this.section.title;
+      this.displayedParticipants = this.getParticipantsFromSection(
+        this.section
+      );
+    },
   },
 
   mounted() {
@@ -754,7 +761,7 @@ export default {
     margin-top: var(--gap-4);
 
     &--autoSave {
-      margin-top: var(--gap-4);
+      padding-bottom: var(--gap-4);
       border-bottom: var(--border-width-thin) solid var(--card-border-color);
     }
   }

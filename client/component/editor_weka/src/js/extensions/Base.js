@@ -57,19 +57,19 @@ export default class BaseExtension {
   /**
    * Get nodes defined by this extension.
    *
-   * @returns {Array}
+   * @returns {Object}
    */
   nodes() {
-    return [];
+    return {};
   }
 
   /**
    * Get marks defined by this extension.
    *
-   * @returns {Array}
+   * @returns {Object}
    */
   marks() {
-    return [];
+    return {};
   }
 
   /**
@@ -112,6 +112,14 @@ export default class BaseExtension {
    */
   getSchema() {
     return this.editor.schema;
+  }
+
+  /**
+   *
+   * @param {EditorState} state
+   */
+  applyFormatters(state) {
+    return state;
   }
 
   /**
