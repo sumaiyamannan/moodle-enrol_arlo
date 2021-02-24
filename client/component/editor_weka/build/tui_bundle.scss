@@ -192,6 +192,7 @@
   }
 
   &__inner {
+    position: relative;
     display: inline-block;
 
     .tui-audioBlock {
@@ -202,6 +203,13 @@
         /* Removing self outlininga*/
         outline: none;
       }
+    }
+
+    &-addtranscriptButton {
+      position: absolute;
+      top: var(--gap-2);
+      right: var(--gap-2);
+      z-index: 1;
     }
   }
 }
@@ -320,12 +328,20 @@
   }
 
   &__inner {
+    position: relative;
     max-width: 100%;
 
     .tui-videoBlock {
       /* Reset margin*/
       margin: 0;
       white-space: normal;
+    }
+
+    &-addCaptionButton {
+      position: absolute;
+      right: var(--gap-2);
+      bottom: var(--gap-7);
+      z-index: 1;
     }
   }
 }

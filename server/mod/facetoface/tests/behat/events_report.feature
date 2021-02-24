@@ -7,6 +7,9 @@ Feature: Check the seminar events and sessions reports display correctly
       | username | firstname | lastname | email               |
       | teacher1 | Terry1    | Teacher1 | teacher1@moodle.com |
       | student1 | Sam1      | Student1 | student1@moodle.com |
+      | student2 | Sam2      | Student2 | student2@example.com |
+      | student3 | Sam3      | Student3 | student3@example.com |
+      | student4 | Sam4      | Student4 | student4@example.com |
     And the following "courses" exist:
       | fullname | shortname | category |
       | Course 1 | C1        | 0        |
@@ -14,11 +17,15 @@ Feature: Check the seminar events and sessions reports display correctly
       | user     | course | role           |
       | teacher1 | C1     | editingteacher |
       | student1 | C1     | student        |
+      | student2 | C1     | student        |
+      | student3 | C1     | student        |
+      | student4 | C1     | student        |
     When I log in as "admin"
     And I am on "Course 1" course homepage with editing mode on
     And I add a "Seminar" to section "1" and I fill the form with:
       | Name        | Test seminar name        |
       | Description | Test seminar description |
+    And I turn editing mode off
     And I follow "View all events"
     And I follow "Add event"
     And I click on "Edit session" "link"
@@ -167,3 +174,72 @@ Feature: Check the seminar events and sessions reports display correctly
     Then "Test JSON" "link" should exist
     But I should not see "https://www.totaralearning.com/products"
     And I should not see "paragraph"
+
+  Scenario: Check the Seminar events report displays the Number of Attendees correctly when the students over booked with enabled waitlist
+    When I am on "Course 1" course homepage
+    And I follow "View all events"
+    And I click on the seminar event action "Edit event" in row "#1"
+    And I set the following fields to these values:
+      | Enable waitlist  | 1 |
+      | Maximum bookings | 3 |
+    And I press "Save changes"
+    And I click on the seminar event action "Attendees" in row "#1"
+    And I set the field "Attendee actions" to "Add users"
+    And I set the field "potential users" to "Sam1 Student1, student1@moodle.com,Sam2 Student2, student2@example.com,Sam3 Student3, student3@example.com"
+    And I press "Add"
+    And I press "Continue"
+    And I press "Confirm"
+
+    And I set the field "Attendee actions" to "Add users"
+    And I set the field "potential users" to "Sam4 Student4, student4@example.com"
+    And I press "Add"
+    And I press "Continue"
+    And I press "Confirm"
+    When I navigate to "Events report" node in "Site administration > Seminars"
+    Then I should see "Test seminar name" in the "Course 1" "table_row"
+    When I click on "Edit this report" "button"
+    And I follow "Columns"
+    And I set the field "newcolumns" to "Number of Attendees (inc Waiting Approval, Approved and Wait-listed)"
+    And I press "Add"
+    Then I press "Save changes"
+    And I click on "View" "link"
+    Then the following should exist in the "facetoface_events" table:
+    | Seminar Name      | Course Name | Event Maximum Bookings | Overbooking allowed | Number of Attendees (linked to attendee page) | Booking Status | Number of Attendees (inc Waiting Approval, Approved and Wait-listed) |
+    | Test seminar name | Course 1    | 3                      | Yes                 | 3                                             | Booking full   | 4                                                                    |
+
+  Scenario: Check the Seminar events report displays the booking status correctly when Sign-up opens is used
+    When I am on "Course 1" course homepage
+    And I follow "View all events"
+
+    And I click on the seminar event action "Delete event" in row "#1"
+    And I press "Delete"
+
+    And I follow "Add event"
+    And I set the following fields to these values:
+      | registrationtimestart[enabled]   | 1                    |
+      | registrationtimestart[month]     | July                 |
+      | registrationtimestart[day]       | 1                    |
+      | registrationtimestart[year]      | ## next year ## Y ## |
+      | registrationtimestart[hour]      | 01                   |
+      | registrationtimestart[minute]    | 00                   |
+    And I click on "Edit session" "link"
+    And I set the following fields to these values:
+      | timestart[month]     | July                 |
+      | timestart[day]       | 20                   |
+      | timestart[year]      | ## next year ## Y ## |
+      | timestart[hour]      | 09                   |
+      | timestart[minute]    | 00                   |
+      | timefinish[month]    | July                 |
+      | timefinish[day]      | 20                   |
+      | timefinish[year]     | ## next year ## Y ## |
+      | timefinish[hour]     | 10                   |
+      | timefinish[minute]   | 00                   |
+    And I click on "OK" "button" in the "Select date" "totaradialogue"
+    And I wait "1" seconds
+    And I press "Save changes"
+
+    # Check reports.
+    When I navigate to "Events report" node in "Site administration > Seminars"
+    Then I should see "Test seminar name" in the "Course 1" "table_row"
+    And I should see "Booking not open" in the "Test seminar name" "table_row"
+    And I should not see "Booking open" in the "Test seminar name" "table_row"

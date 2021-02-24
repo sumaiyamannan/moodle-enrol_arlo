@@ -37,12 +37,14 @@ class airnotifier_device_discovery extends \totara_core\hook\base {
 
     /**
      * Recipient user
-     * @var \stdClass
+     *
+     * @var \stdClass user record
      */
     private $recipient;
 
     /**
      * Device keys belonging to recipient
+     *
      * @var array of strings
      */
     private $device_keys;
@@ -50,25 +52,45 @@ class airnotifier_device_discovery extends \totara_core\hook\base {
     /**
      * The airnotifier_device_discovery hook constructor.
      *
-     * @param \stdClass $recipient
+     * @param \stdClass $recipient user record
      */
     public function __construct(\stdClass $recipient) {
         $this->recipient = $recipient;
         $this->device_keys = [];
     }
 
+    /**
+     * Gets the user for discovering device keys
+     *
+     * @return \stdClass user record
+     */
     public function get_user(): \stdClass {
         return $this->recipient;
     }
 
+    /**
+     * Indicates whether any devices have been discovered for the user
+     *
+     * @return bool
+     */
     public function has_devices(): bool {
         return (bool) count($this->device_keys);
     }
 
+    /**
+     * Gets a list of discovered device keys
+     *
+     * @return array
+     */
     public function get_device_keys(): array {
         return $this->device_keys;
     }
 
+    /**
+     * Adds keys to the list of discovered device keys
+     *
+     * @param array $keys
+     */
     public function add_device_keys(array $keys): void {
         $this->device_keys = array_merge($this->device_keys, array_values($keys));
     }

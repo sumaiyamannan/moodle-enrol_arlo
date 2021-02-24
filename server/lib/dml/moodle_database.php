@@ -939,8 +939,16 @@ abstract class moodle_database {
      * @return string The sql with tablenames being prefixed with $CFG->prefix
      */
     protected function fix_table_names($sql) {
-        $sql = preg_replace('/"ttr_([a-z][a-z0-9_]*)"/', '{$1}', $sql);
-        $sql = preg_replace('/{([a-z][a-z0-9_]*)}/', $this->prefix.'$1', $sql);
+        $ttr_pattern = '/"ttr_([a-z][a-z0-9_]*)"/';
+        $bracket_pattern = '/{([a-z][a-z0-9_]*)}/';
+        $replacement = $this->prefix.'$1';
+
+        // If ttr_ is not present in the sql then don't run this regex
+        if (strpos($sql, 'ttr_') !== false) {
+            $sql = preg_replace($ttr_pattern, $replacement, $sql);
+        }
+        $sql = preg_replace($bracket_pattern, $replacement, $sql);
+
         return $sql;
     }
 
@@ -1151,7 +1159,7 @@ abstract class moodle_database {
 
         // Totara: this may be used from shutdown handler after $CFG is released, we need to prevent notices here!
         if (!empty($CFG->debugdeveloper)) {
-            if (!is_numeric($limitfrom)) {
+            if (!is_number($limitfrom)) {
                 $strvalue = var_export($limitfrom, true);
                 debugging("Non-numeric limitfrom parameter detected: $strvalue, did you pass the correct arguments?",
                     DEBUG_DEVELOPER);
@@ -1160,7 +1168,7 @@ abstract class moodle_database {
                     DEBUG_DEVELOPER);
             }
 
-            if (!is_numeric($limitnum)) {
+            if (!is_number($limitnum)) {
                 $strvalue = var_export($limitnum, true);
                 debugging("Non-numeric limitnum parameter detected: $strvalue, did you pass the correct arguments?",
                     DEBUG_DEVELOPER);
@@ -1763,6 +1771,39 @@ abstract class moodle_database {
     }
 
     /**
+     * Given an array of records, produces a associative array where the key is the first property and the value is the second.
+     * @param stdClass[] $records
+     * @return string[]
+     */
+    protected final function build_menu_from_records(array $records): array {
+        $menu = [];
+        if (!$records || empty($records)) {
+            return $menu;
+        }
+        $first = reset($records);
+        // This will silently and efficiently discard all but the first two properties.
+        $fieldnames = array_keys(get_object_vars($first));
+        switch (count($fieldnames)) {
+            case 0:
+                throw new coding_exception('Records passed to build_menu_from_records() have no properties.');
+            case 1:
+                // This is legit, the caller may not care about the value at this point in time.
+                $prop_key = $fieldnames[0];
+                $prop_value = null;
+                break;
+            case 2:
+            default:
+                $prop_key = $fieldnames[0];
+                $prop_value = $fieldnames[1];
+                break;
+        }
+        foreach ($records as $record) {
+            $menu[$record->{$prop_key}] = isset($record->{$prop_value}) ? $record->{$prop_value} : null;
+        }
+        return $menu;
+    }
+
+    /**
      * Get the first two columns from a number of records as an associative array where all the given conditions met.
      *
      * Arguments are like {@link function get_recordset}.
@@ -1782,16 +1823,11 @@ abstract class moodle_database {
      * @throws dml_exception A DML specific exception is thrown for any errors.
      */
     public function get_records_menu($table, array $conditions=null, $sort='', $fields='*', $limitfrom=0, $limitnum=0) {
-        $menu = array();
-        if ($records = $this->get_records($table, $conditions, $sort, $fields, $limitfrom, $limitnum)) {
-            foreach ($records as $record) {
-                $record = (array)$record;
-                $key   = array_shift($record);
-                $value = array_shift($record);
-                $menu[$key] = $value;
-            }
+        $records = $this->get_records($table, $conditions, $sort, $fields, $limitfrom, $limitnum);
+        if (!$records) {
+            return [];
         }
-        return $menu;
+        return $this->build_menu_from_records($records);
     }
 
     /**
@@ -1811,16 +1847,11 @@ abstract class moodle_database {
      * @throws dml_exception A DML specific exception is thrown for any errors.
      */
     public function get_records_select_menu($table, $select, array $params=null, $sort='', $fields='*', $limitfrom=0, $limitnum=0) {
-        $menu = array();
-        if ($records = $this->get_records_select($table, $select, $params, $sort, $fields, $limitfrom, $limitnum)) {
-            foreach ($records as $record) {
-                $record = (array)$record;
-                $key   = array_shift($record);
-                $value = array_shift($record);
-                $menu[$key] = $value;
-            }
+        $records = $this->get_records_select($table, $select, $params, $sort, $fields, $limitfrom, $limitnum);
+        if (!$records) {
+            return [];
         }
-        return $menu;
+        return $this->build_menu_from_records($records);
     }
 
     /**
@@ -1837,16 +1868,11 @@ abstract class moodle_database {
      * @throws dml_exception A DML specific exception is thrown for any errors.
      */
     public function get_records_sql_menu($sql, array $params=null, $limitfrom=0, $limitnum=0) {
-        $menu = array();
-        if ($records = $this->get_records_sql($sql, $params, $limitfrom, $limitnum)) {
-            foreach ($records as $record) {
-                $record = (array)$record;
-                $key   = array_shift($record);
-                $value = array_shift($record);
-                $menu[$key] = $value;
-            }
+        $records = $this->get_records_sql($sql, $params, $limitfrom, $limitnum);
+        if (!$records) {
+            return [];
         }
-        return $menu;
+        return $this->build_menu_from_records($records);
     }
 
     /**

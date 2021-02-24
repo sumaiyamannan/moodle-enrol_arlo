@@ -120,11 +120,8 @@ class MediaExtension extends BaseExtension {
               filename: node.attrs.filename,
               url: node.attrs.url,
               mime_type: node.attrs.mime_type,
+              subtitle: node.attrs.subtitle,
             };
-
-            if (node.attrs.subtitle) {
-              dataAttrs.subtitle = node.attrs.subtitle;
-            }
 
             return [
               'div',
@@ -185,6 +182,7 @@ class MediaExtension extends BaseExtension {
                   filename: node.attrs.filename,
                   url: node.attrs.url,
                   mime_type: node.attrs.mime_type,
+                  transcript: node.attrs.transcript,
                 }),
               },
             ];
@@ -263,12 +261,14 @@ class MediaExtension extends BaseExtension {
               filename: filename,
               url: url,
               mime_type: mime_type,
+              subtitle: null,
             });
           } else {
             return schema.node('audio', {
               url: url,
               filename: filename,
               mime_type: mime_type,
+              transcript: null,
             });
           }
         })
@@ -430,6 +430,9 @@ class MediaExtension extends BaseExtension {
           filename: subtitle.filename,
           url: subtitle.url,
         };
+      } else {
+        // set subtitle if subtitleFile is not an object
+        nodeAttributes.subtitle = subtitle;
       }
 
       const video = state.schema.node('video', nodeAttributes);

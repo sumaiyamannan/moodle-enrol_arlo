@@ -963,7 +963,7 @@ $string['managenotificationtemplates'] = 'Manage notification templates';
 $string['managerooms'] = 'Manage rooms';
 $string['managerbookings'] = 'Bookings / reservations made by {$a}';
 $string['managername'] = 'Manager\'s name';
-$string['managername_help'] = 'Your manager will receive a notification about your request to book into this session. If the name and email address shown here do not belong not your manager, please contact the Site Administrator.';
+$string['managername_help'] = 'Your manager will receive a notification about your request to book into this session. If the name and email address shown here do not belong to your manager, please contact the Site Administrator.';
 $string['managereservations'] = 'Manage reservations';
 $string['managerprefix'] = 'Manager copy prefix';
 $string['managerreservationdeleted'] = 'Manager reservation deleted successfully';
@@ -1180,6 +1180,7 @@ $string['roomhide'] = 'Hide from users when choosing a room on the Add/Edit even
 $string['roomhost'] = 'Host meeting';
 $string['roomhostx'] = 'Start meeting as host of \'{$a}\'';
 $string['roomhostjoin'] = 'Join as attendee';
+$string['roomhostjoinx'] = 'Join \'{$a}\' as attendee';
 $string['roomidentifier_nameonly'] = 'Room name';
 $string['roomidentifier_name_building'] = 'Room name and building';
 $string['roomidentifier_name_building_address'] = 'Room name, building and address';
@@ -2294,7 +2295,7 @@ Event times and virtual meeting details:
 [session:startdate], [session:starttime] - [session:finishdate], [session:finishtime] [session:timezone]
 Duration: [session:duration]
 Room: [session:room:name]
-[session:room:link]
+[seminareventdetailslink] 
 [/sessions]';
 $string['setting:defaultwaitlistautocleansubjectdefault'] = 'Waitlisted signup expired';
 $string['setting:defaultwaitlistautocleanmessagedefault'] = 'This is to advise you that your waitlisted signup for the following course has been cancelled due to the event starting:
@@ -2682,6 +2683,7 @@ $string['virtualroom_card_unavailable'] = 'Virtual room is unavailable';
 $string['virtualroom_card_over'] = 'Virtual room is no longer available';
 $string['virtualroom_creator'] = 'Virtual room creator';
 $string['virtualroom_heading'] = 'Virtual room';
+$string['virtualroom_headingx'] = 'Virtual room: {$a}';
 $string['virtualroom_details_seminar'] = 'Seminar';
 $string['virtualroom_details_session_time'] = 'Session time';
 $string['waitlistautoclean'] = 'Clear expired waitlists';

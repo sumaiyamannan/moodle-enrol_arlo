@@ -53,7 +53,7 @@ Feature: Validation in a seminar virtual room meeting
     When I click on "Virtual Room" "link" in the "Christmas" "table_row"
     And I set the field "Add virtual room link" to "Custom virtual room link"
     Then the "Connect" "button_exact" should be disabled
-    And I set the field "Virtual room link" to "/mod/facetoface/tests/fixtures/bph4svcr.php"
+    And I set the field "Virtual room link" to local url "/mod/facetoface/tests/fixtures/bph4svcr.php"
     And I click on "OK" "button_exact" in the "Edit room" "totaradialogue"
     And I press "Save changes"
     Then I should not see "Editing event in"
@@ -183,7 +183,7 @@ Feature: Validation in a seminar virtual room meeting
     And I set the following fields to these values:
       | Name                  | Another virtual site-wide room              |
       | Add virtual room link | Custom virtual room link                    |
-      | Virtual room link     | /mod/facetoface/tests/fixtures/bph4svcr.php |
+    And I set the field "Virtual room link" to local url "/mod/facetoface/tests/fixtures/bph4svcr.php"
     And I press "Save changes"
 
     Given I click on "Edit room" "link" in the "Virtual site-wide room" "table_row"
@@ -283,3 +283,44 @@ Feature: Validation in a seminar virtual room meeting
     When I click on "OK" "button_exact" in the "Edit room" "totaradialogue"
     And I press "Save changes"
     Then I should not see "Editing event in"
+
+  Scenario: mod_facetoface_virtualmeeting_109:Only one virtual room per event
+    Given I log in as "admin"
+    And I am on "Virtual seminar" seminar homepage
+    When I click on the seminar event action "Edit event" in row "#1"
+    And I click on "Select rooms" "link"
+    And I click on "Create" "link" in the "Choose rooms" "totaradialogue"
+    And I set the following fields to these values:
+      | Name                  | Room 1   |
+      | Capacity              | 10       |
+      | Add virtual room link | PoC User |
+    And I click on "Connect" "button"
+    And I switch to "virtualmeeting_connect" window
+    And I set the following fields to these values:
+      | username | admin |
+      | password | admin |
+    And I click on "Log in" "button"
+    And I switch to the main window
+    And I click on "//*[@class='ui-dialog-buttonset']/button[contains(.,'OK')]" "xpath_element" in the "Create new room" "totaradialogue"
+    Then I should not see " Too many virtual meetings. Please ensure that only one virtual meeting is assigned per session"
+
+    # Create second room (which should throw an error)
+    And I click on "Select rooms" "link"
+    And I click on "Create" "link" in the "Choose rooms" "totaradialogue"
+    And I set the following fields to these values:
+      | Name                  | Room 2   |
+      | Capacity              | 5        |
+      | Add virtual room link | PoC User |
+    And I click on "Connect" "button"
+    And I switch to "virtualmeeting_connect" window
+    And I set the following fields to these values:
+      | username | admin |
+      | password | admin |
+    And I click on "Log in" "button"
+    And I switch to the main window
+    And I click on "//*[@class='ui-dialog-buttonset']/button[contains(.,'OK')]" "xpath_element" in the "Create new room" "totaradialogue"
+    Then I should see "Too many virtual meetings. Please ensure that only one virtual meeting is assigned per session"
+
+    # Remove the second room and the error should disappear
+    When I click on "Remove room Room 2 from session" "link"
+    Then I should not see " Too many virtual meetings. Please ensure that only one virtual meeting is assigned per session"

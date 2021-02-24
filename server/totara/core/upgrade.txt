@@ -1,6 +1,11 @@
 List of upgrade and API changes in Totara core,
 information provided here is intended especially for developers.
 
+=== 13.5 ===
+
+* Added converted accordion icon to a button in totara_core/accordion_item template and added aria-label
+* Added expandlabel to the external API return for quick access menu groups
+
 === 13.4 ===
 
 * totara_core\virtualmeeting\dto\meeting_edit_dto::create_with_user_timezone(), an internal function previously marked as 'do not use', has been removed

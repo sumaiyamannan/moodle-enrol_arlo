@@ -24,7 +24,6 @@
 namespace totara_mobile\watcher;
 
 use message_totara_airnotifier\hook\airnotifier_device_discovery;
-use totara_mobile\local\util as mobile_util;
 use core\orm\query\builder;
 
 defined('MOODLE_INTERNAL') || die();
@@ -34,7 +33,7 @@ defined('MOODLE_INTERNAL') || die();
  */
 final class message_totara_airnotifier_watcher {
     /**
-     * A watcher to add the mobile app banner to the standard html footer.
+     * A watcher to discover a user's devices.
      *
      * @param airnotifier_device_discovery $hook
      * @return void

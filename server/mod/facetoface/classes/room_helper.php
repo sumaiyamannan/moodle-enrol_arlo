@@ -74,6 +74,8 @@ final class room_helper {
             // Clear the value if the update is changing the value
             // from 'internal' plugin to 'none/zoom/msteams'
             $data->url = '';
+        } else if (!filter_var($data->url, FILTER_VALIDATE_URL)) {
+            throw new coding_exception('the url is not in a valid format');
         }
         $room->set_url($data->url);
         if (empty($data->custom)) {
@@ -113,7 +115,7 @@ final class room_helper {
             // Lets check if this room a new or an update.
             if ($data->id) {
                 // Nobody can update or delete another user's virtual meeting room
-                if ($virtual_meeting->exists() && !self::can_update_virtualmeeting($room)) {
+                if ($virtual_meeting->exists() && !$virtual_meeting->can_manage()) {
                     throw new coding_exception("you cannot update or delete virtual meeting!");
                 }
                 // This is the update.
@@ -167,13 +169,18 @@ final class room_helper {
      * Is the current user capable to access the virtual room at any time?
      *
      * @param seminar_session $session
+     * @param integer $userid
      * @return boolean
      */
-    public static function has_access_at_any_time(seminar_session $session): bool {
-        if (self::has_join_room_capability($session->get_sessionid())) {
+    public static function has_access_at_any_time(seminar_session $session, int $userid = 0): bool {
+        global $USER;
+        if (!$userid) {
+            $userid = $USER->id;
+        }
+        if (self::has_join_room_capability($session->get_sessionid(), $userid)) {
             return true;
         }
-        if (self::is_user_facilitator($session)) {
+        if (self::is_user_facilitator($session, $userid)) {
             return true;
         }
         return false;
@@ -197,7 +204,7 @@ final class room_helper {
         if (signup_helper::is_booked($signup, false)) {
             return true;
         }
-        return self::has_access_at_any_time($session);
+        return self::has_access_at_any_time($session, $signup->get_userid());
     }
 
     /**
@@ -223,19 +230,12 @@ final class room_helper {
      *
      * @param room $room
      * @return boolean
+     * @deprecated since Totara 13.5
      */
     public static function can_update_virtualmeeting(room $room): bool {
-        global $USER;
-
-        /** @var room_virtualmeeting $virtual_meeting */
+        debugging('room_helper::' . __FUNCTION__ . '() is deprecated. Please use room_virtualmeeting::can_manage() instead.', DEBUG_DEVELOPER);
         $virtual_meeting = room_virtualmeeting::get_virtual_meeting($room);
-        $can_manage = true;
-        if ($virtual_meeting->exists()) {
-            if ($virtual_meeting->get_userid() != $USER->id) {
-                $can_manage = false;
-            }
-        }
-        return $can_manage;
+        return $virtual_meeting->can_manage();
     }
 
     /**
@@ -264,18 +264,12 @@ final class room_helper {
     }
 
     /**
-     * Check if a user has the joinanyvirtualroom capability
+     * Check if a user has the joinanyvirtualroom capability at the seminar module
      * @param integer $eventid
+     * @param integer $userid
      * @return bool
      */
-    private static function has_join_room_capability(int $eventid): bool {
-        global $USER;
-        // Private cache;
-        static $usercapabilitylist = [];
-        if (isset($usercapabilitylist[$eventid][$USER->id]) && (!defined('PHPUNIT_TEST') || !PHPUNIT_TEST)) {
-            return $usercapabilitylist[$eventid][$USER->id];
-        }
-
+    private static function has_join_room_capability(int $eventid, int $userid): bool {
         $cm = builder::table('course_modules', 'cm')
             ->join(['modules', 'md'], 'module', 'id')
             ->join(['facetoface', 'f'], 'instance', 'id')
@@ -286,37 +280,25 @@ final class room_helper {
             ->select('cm.id')
             ->one(true);
         $context = context_module::instance($cm->id);
-
-        $has_caps = has_capability('mod/facetoface:joinanyvirtualroom', $context, $USER);
-        $usercapabilitylist[$eventid][$USER->id] = $has_caps;
-        return $has_caps;
+        return has_capability('mod/facetoface:joinanyvirtualroom', $context, $userid);
     }
 
     /**
-     * Check if a user is the facilitator
+     * Check if a user is facilitating the session
      * @param seminar_session $session
+     * @param integer $userid
      * @return bool
      */
-    private static function is_user_facilitator(seminar_session $session): bool {
-        global $USER;
-        // Private cache.
-        static $facilitatorlist = [];
-        if (isset($facilitatorlist[$session->get_id()][$USER->id])) {
-            return (bool)$facilitatorlist[$session->get_id()][$USER->id];
-        }
-
-        $isfacilitator = builder::table('facetoface_facilitator', 'fa')
+    private static function is_user_facilitator(seminar_session $session, int $userid): bool {
+        return builder::table('facetoface_facilitator', 'fa')
             ->join(['user', 'u'], 'userid', 'id')
             ->join(['facetoface_facilitator_dates', 'fad'], 'fa.id', 'facilitatorid')
             ->join(['facetoface_sessions_dates', 'sd'], 'fad.sessionsdateid', 'id')
-            ->where('u.id', $USER->id)
+            ->where('u.id', $userid)
             ->where('u.deleted', 0)
             ->where('u.suspended', 0)
             ->where('fa.hidden', 0)
             ->where('sd.id', $session->get_id())
             ->exists();
-
-        $facilitatorlist[$session->get_id()][$USER->id] = $isfacilitator;
-        return (bool)$facilitatorlist[$session->get_id()][$USER->id];
     }
 }

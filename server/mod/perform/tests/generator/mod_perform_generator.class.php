@@ -600,7 +600,10 @@ class mod_perform_generator extends component_generator_base {
      * @return collection|activity[]
      */
     public function create_full_activities(mod_perform_activity_generator_configuration $configuration = null) {
-        global $USER;
+        // For the activity generation we need to make sure the admin user is set
+        if (!is_siteadmin()) {
+            throw new coding_exception('perform generator requires active user to be an administrator');
+        }
 
         // Create a default configuration if it wasn't provided
         if ($configuration === null) {
@@ -609,13 +612,6 @@ class mod_perform_generator extends component_generator_base {
 
         $tenant_id = $configuration->get_tenant_id();
         $category_id = $configuration->get_category_id() ?? util::get_default_category_id();
-
-        $previous_user = clone $USER;
-
-        // For the activity generation we need to make sure the admin user is set
-        $user = get_admin();
-        manager::init_empty_session();
-        manager::set_user($user);
 
         $manual_idnumbers = relationship::repository()
             ->where('type', relationship::TYPE_MANUAL)
@@ -749,8 +745,6 @@ class mod_perform_generator extends component_generator_base {
             }
         }
 
-        advanced_testcase::setUser($previous_user);
-
         return collection::new($activities);
     }
 
@@ -789,24 +783,16 @@ class mod_perform_generator extends component_generator_base {
     }
 
     /**
-     * Generate subject instance, for unit tests make sure no messages are being sent.
-     * If you need to intercept the messages use this function directly and the message sink it returns.
+     * Generate subject instance.
      *
-     * @return phpunit_message_sink|null
+     * NOTE: this used to have illegal dependency on PHPUnit message redirection,
+     *       use message sink in tests if necessary.
+     *
+     * @return void
      */
-    public function generate_subject_instances(): ?phpunit_message_sink {
-        $message_sink = null;
-        if (PHPUNIT_TEST) {
-            $message_sink = phpunit_util::start_message_redirection();
-        }
+    public function generate_subject_instances(): void {
         // Create subject instances for all user assignments
         (new subject_instance_creation())->generate_instances();
-
-        if ($message_sink !== null) {
-            $message_sink->close();
-        }
-
-        return $message_sink;
     }
 
     private function generate_fullname(): string {

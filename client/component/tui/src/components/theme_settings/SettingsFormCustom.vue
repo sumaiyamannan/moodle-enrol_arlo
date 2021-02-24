@@ -268,6 +268,7 @@ export default {
       };
 
       Object.keys(currentValues).forEach(field => {
+        if (!this.canEditSetting(field)) return;
         data.fields.push({
           name: field,
           type: currentValues[field].type,

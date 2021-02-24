@@ -412,9 +412,8 @@ abstract class rb_facetoface_base_source extends rb_base_source {
             "(SELECT su.sessionid, count(ss.id) AS number
                 FROM {facetoface_signups} su
                 {$global_restriction_join_su}
-                JOIN {facetoface_signups_status} ss
-                    ON su.id = ss.signupid
-                WHERE ss.superceded=0 AND ss.statuscode >= " . \mod_facetoface\signup\state\waitlisted::get_code() ."
+                JOIN {facetoface_signups_status} ss ON su.id = ss.signupid
+                WHERE ss.superceded = 0 AND ss.statuscode >= " . \mod_facetoface\signup\state\booked::get_code() ."
                 GROUP BY su.sessionid)",
             "attendees.sessionid = {$sessiondatejoin}.sessionid",
             REPORT_BUILDER_RELATION_ONE_TO_ONE,
@@ -594,6 +593,7 @@ abstract class rb_facetoface_base_source extends rb_base_source {
             get_string('bookingstatus', 'rb_source_facetoface_summary'),
             "(CASE WHEN {$now} > {$joindates}.timefinish AND cntsignups < {$joinsessions}.capacity THEN 'ended'
                    WHEN {$joinsessions}.registrationtimefinish <> 0 AND {$now} > {$joinsessions}.registrationtimefinish THEN 'ended'
+                   WHEN {$joinsessions}.registrationtimestart <> 0 AND {$now} < {$joinsessions}.registrationtimestart THEN 'notopen'
                    WHEN cancelledstatus <> 0 THEN 'cancelled'
                    WHEN cntsignups < {$joinsessions}.mincapacity THEN 'underbooked'
                    WHEN cntsignups < {$joinsessions}.capacity THEN 'available'
@@ -700,10 +700,11 @@ abstract class rb_facetoface_base_source extends rb_base_source {
      */
     protected static function get_bookingstatus_options() {
         $statusopts = array(
-            'underbooked' => get_string('status:underbooked', 'rb_source_facetoface_summary'),
             'available' => get_string('status:available', 'rb_source_facetoface_summary'),
+            'notopen' => get_string('status:notopen', 'rb_source_facetoface_summary'),
             'fullybooked' => get_string('status:fullybooked', 'rb_source_facetoface_summary'),
             'overbooked' => get_string('status:overbooked', 'rb_source_facetoface_summary'),
+            'underbooked' => get_string('status:underbooked', 'rb_source_facetoface_summary'),
         );
         return $statusopts;
     }
