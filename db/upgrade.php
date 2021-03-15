@@ -16,12 +16,13 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-function xmldb_auth_catadmin_upgrade($oldverison) {
+function xmldb_auth_catadmin_upgrade($oldversion) {
     global $CFG, $DB;
 
-    if ($oldverison < 2020042801) {
-        if ($DB->record_exists('user' , ['username' => 'catadmin', 'deleted' => 0, 'mnethostid' => $CFG->mnet_localhost_id])) {
-            $catadminid = $DB->get_field_select('user', 'id', 'username = ? and deleted = 0 and mnethostid = ?', array('catadmin', $CFG->mnet_localhost_id));
+    if ($oldversion < 2020042801) {
+        if ($DB->record_exists('user', ['username' => 'catadmin', 'deleted' => 0, 'mnethostid' => $CFG->mnet_localhost_id])) {
+            $catadminid = $DB->get_field_select('user', 'id', 'username = ? and deleted = 0 and mnethostid = ?',
+                array('catadmin', $CFG->mnet_localhost_id));
             $DB->update_record('user', ['id' => $catadminid, 'firstname' => 'Catalyst']);
             $DB->update_record('user', ['id' => $catadminid, 'lastname' => 'TestAccount']);
 
@@ -37,5 +38,13 @@ function xmldb_auth_catadmin_upgrade($oldverison) {
 
     if ($oldversion < 2020092300) {
         upgrade_plugin_savepoint(true, 2020092300, 'auth', 'catadmin');
+    }
+
+    if ($oldversion < 2021021800) {
+        upgrade_plugin_savepoint(true, 2021021800, 'auth', 'catadmin');
+    }
+
+    if ($oldversion < 2021022400) {
+        upgrade_plugin_savepoint(true, 2021022400, 'auth', 'catadmin');
     }
 }

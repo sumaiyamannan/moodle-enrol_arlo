@@ -1,4 +1,18 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 namespace auth_catadmin\admin;
 
@@ -14,6 +28,7 @@ defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
 require_once("{$CFG->libdir}/adminlib.php");
+require_once("{$CFG->libdir}/filelib.php");
 
 /**
  * Validates & processes IdP metadata
@@ -51,7 +66,9 @@ class setting_idpmetadata extends admin_setting_configtextarea {
             $idps = $this->get_idps_data($value);
             $this->process_all_idps_metadata($idps);
         } catch (setting_idpmetadata_exception $exception) {
+            // @codingStandardsIgnoreStart
             error_log('auth_catadmin: ' . $exception->getMessage());
+            // @codingStandardsIgnoreEnd
         }
 
         return true;
@@ -94,7 +111,7 @@ class setting_idpmetadata extends admin_setting_configtextarea {
     }
 
     private function process_idp_xml(idp_data $idp, DOMElement $idpelements, DOMXPath $xpath,
-                                     &$oldidps, $activedefault = 0) {
+        &$oldidps, $activedefault = 0) {
         global $DB;
         $entityid = $idpelements->getAttribute('entityID');
 
@@ -155,7 +172,7 @@ class setting_idpmetadata extends admin_setting_configtextarea {
                 continue;
             }
 
-            $rawxml = @file_get_contents($idp->idpurl);
+            $rawxml = \download_file_content($idp->idpurl);
             if ($rawxml === false) {
                 throw new setting_idpmetadata_exception(
                     get_string('idpmetadata_badurl', 'auth_catadmin', $idp->idpurl)

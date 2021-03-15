@@ -1,10 +1,11 @@
 # auth_catadmin
 
-This branch is only for Moodle 3.5 and up.
-Use the 27_34STABLE branch for 2.7-3.4. Take note of the auth_saml2 version you install as it must match what is mentioned in the README.md for the branch you are installing.
+Branches
+--------
 
-auth_catadmin contains large parts of auth_saml2 since it is a copy of it, just with the bits we don't need because the two plugins can share them removed.
- 
-auth_catadmin allows us run additional SSO logins without interfering with auth_saml2 settings or data.
-
-It requires auth_saml2 version 2020082101 to work.
+| Moodle verion     | Branch      | PHP  | auth_saml2 branch | auth_saml2 version |
+| ----------------- | ----------- | ---- | ----------------- | ------------------ |
+| Moodle 2.7 to 3.4 | 27_34STABLE | 5.5+ | 27_34STABLE       | 2019062601         |
+| Moodle 3.5+       | master      | 7.2+ | master            | 2021011500         |
+| Totara 11+        | master      | 7.2+ | master            | 2021011500         |
+| Totara 2.7 to 10  | 27_34STABLE | 5.5+ | 27_34STABLE       | 2019062601         |
