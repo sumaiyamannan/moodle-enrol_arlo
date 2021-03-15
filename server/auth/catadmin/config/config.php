@@ -1,13 +1,22 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 defined('MOODLE_INTERNAL') || die();
 
 global $CFG, $catadminsaml;
-
-$wwwroot = $CFG->wwwroot;
-if(!empty($CFG->loginhttps)) {
-    $wwwroot = str_replace('http:', 'https:', $CFG->wwwroot);
-}
 
 $metadatasources = [];
 foreach ($catadminsaml->metadataentities as $metadataurl => $idpentities) {
@@ -18,7 +27,7 @@ foreach ($catadminsaml->metadataentities as $metadataurl => $idpentities) {
 }
 
 $config = array(
-    'baseurlpath' => $wwwroot . '/auth/catadmin/sp/',
+    'baseurlpath' => $CFG->wwwroot . '/auth/catadmin/sp/',
     'certdir'           => $catadminsaml->get_catadmin_directory() . '/',
     'debug'             => $catadminsaml->config->debug ? true : false,
     'logging.level'     => $catadminsaml->config->debug ? SimpleSAML\Logger::DEBUG : SimpleSAML\Logger::ERR,

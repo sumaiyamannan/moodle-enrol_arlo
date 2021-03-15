@@ -1,4 +1,18 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -12,7 +26,7 @@ require_once($CFG->dirroot . '/auth/saml2/classes/idp_parser.php');
 /**
  * Class auth_plugin_catadmin
  *
- * @copyright Alex Morris <alex.morris@catadmin.net.nz>
+ * @copyright Alex Morris <alex.morris@catalyst.net.nz>
  */
 class auth_plugin_catadmin extends auth_plugin_base {
 
@@ -20,26 +34,18 @@ class auth_plugin_catadmin extends auth_plugin_base {
      * @var array Our hard coded values
      */
     public $defaults = [
-        'idpname'            => '',
-        'idpdefaultname'     => '', // Set in constructor.
-        'idpmetadata'        => '',
-        'multiidp'           => false,
-        'defaultidp'         => null,
-        'metadataentities'   => '',
-        'debug'              => 0,
-        'anyauth'            => 1,
-        'idpattr'            => 'uid',
-        'mdlattr'            => 'username',
-        'tolower'            => 0,
-        'autocreate'         => 0,
-        'spmetadatasign'     => true,
-        'showidplink'        => true,
-        'alterlogout'        => '',
-        'idpmetadatarefresh' => 1,
-        'logtofile'          => 0,
-        'logdir'             => '/tmp/',
-        'nameidasattrib'     => 0,
-        'groups'             => 'elearning',
+        'idpname' => '',
+        'idpmetadata' => '',
+        'multiidp' => false,
+        'metadataentities' => '',
+        'debug' => 0,
+        'idpattr' => 'uid',
+        'mdlattr' => 'username',
+        'tolower' => 0,
+        'spmetadatasign' => true,
+        'logtofile' => 0,
+        'logdir' => '/tmp/',
+        'groups' => 'elearning',
     ];
 
     public function __construct() {
@@ -48,12 +54,11 @@ class auth_plugin_catadmin extends auth_plugin_base {
 
     public function initialise() {
         global $CFG;
-        $this->defaults['idpdefaultname'] = get_string('idpnamedefault', 'auth_catadmin');
         $mdl = new moodle_url($CFG->wwwroot);
         $this->spname = $mdl->get_host();
         $this->certpem = $this->get_file("{$this->spname}.pem");
         $this->certcrt = $this->get_file("{$this->spname}.crt");
-        $this->config = (object) array_merge($this->defaults, (array) get_config('auth_catadmin') );
+        $this->config = (object) array_merge($this->defaults, (array) get_config('auth_catadmin'));
 
         $parser = new auth_saml2\idp_parser();
         $metadata = get_config('auth_catadmin', 'idpmetadata');
@@ -81,8 +86,16 @@ class auth_plugin_catadmin extends auth_plugin_base {
     }
 
     private function log($msg) {
-        if($this->config->debug) {
+        if ($this->config->debug) {
+            // @codingStandardsIgnoreStart
             error_log('auth_catadmin: ' . $msg);
+            // @codingStandardsIgnoreEnd
+
+            // If SSP logs to tmp file we want these to also go there.
+            if ($this->config->logtofile) {
+                require_once('setup.php');
+                SimpleSAML\Logger::debug('auth_saml2: ' . $msg);
+            }
         }
     }
 
@@ -125,11 +138,146 @@ class auth_plugin_catadmin extends auth_plugin_base {
             }
         }
 
-        if(empty(get_config('privatekeypass', 'auth_catadmin'))) {
+        if (empty(get_config('auth_catadmin', 'privatekeypass'))) {
             set_config('privatekeypass', get_site_identifier(), 'auth_catadmin');
         }
 
         return true;
+    }
+
+    public function pre_loginpage_hook() {
+        if (is_enabled_auth('catadmin')) {
+            $this->loginpage_hook();
+        }
+    }
+
+    public function loginpage_hook() {
+        if (!is_enabled_auth('catadmin')) {
+            return;
+        }
+
+        if ($this->should_login_redirect()) {
+            redirect(new moodle_url('/auth/catadmin/login.php'));
+        }
+    }
+
+    private function should_login_redirect() {
+        global $SESSION;
+
+        // Do not redirect if we aren't configured to.
+        if (get_config('auth_catadmin', 'ipsubnets') == null) {
+            return false;
+        }
+
+        // Do not redirect if we aren't in one of the specified IP ranges.
+        if (!remoteip_in_list(get_config('auth_catadmin', 'ipsubnets'))) {
+            return false;
+        }
+
+        $catadmin = optional_param('catadmin', null, PARAM_BOOL);
+        $noredirect = optional_param('noredirect', 0, PARAM_BOOL);
+        if (!empty($noredirect)) {
+            $catadmin = 0;
+        }
+
+        // Never redirect on POST.
+        if (isset($_SERVER['REQUEST_METHOD']) && ($_SERVER['REQUEST_METHOD'] == 'POST')) {
+            return false;
+        }
+
+        // Never redirect if requested so.
+        if ($catadmin === 0) {
+            $SESSION->catadmin = $catadmin;
+            return false;
+        }
+
+        // Never redirect if has error.
+        if (!empty($_GET['SimpleSAML_Auth_State_exceptionId'])) {
+            return false;
+        }
+
+        // If ?catadmin=on go directly to IdP.
+        if ($catadmin == 1) {
+            return true;
+        }
+
+        // Check whether we've skipped catadmin already.
+        // This is here because loginpage_hook is called again during form
+        // submission (all of login.php is processed) and ?catadmin=off is not
+        // preserved forcing us to the IdP.
+        if ((isset($SESSION->catadmin) && $SESSION->catadmin == 0)) {
+            return false;
+        }
+
+        // Remove force in session as we are redirecting to login page.
+        if (isset($SESSION->catadmin)) {
+            unset($SESSION->catadmin);
+        }
+
+        return true;
+    }
+
+    /**
+     * Return HTML code of admins table.
+     *
+     * @return string
+     */
+    public function get_admins_table() {
+        global $CFG, $DB;
+
+        $adminstable = '';
+
+        // Get all catalyst users.
+        $sql = "SELECT *
+                FROM {user}
+                WHERE (auth = 'catadmin'
+                  OR " . $DB->sql_like('email', '?') . ")
+                AND NOT (deleted = 1
+                  OR suspended = 1)
+                ORDER BY currentlogin DESC";
+
+        $catadmins = $DB->get_records_sql($sql, array('%@catalyst%'));
+
+        if (!empty($catadmins)) {
+            $table = new html_table();
+            $table->attributes['class'] = 'generaltable catalystadmins';
+            $table->head = array(
+                get_string('username', 'auth_catadmin'),
+                get_string('userprofile', 'auth_catadmin'),
+                get_string('lastlogin', 'auth_catadmin'),
+                get_string('ipaddress', 'auth_catadmin'),
+                get_string('loghistory', 'auth_catadmin'),
+            );
+
+            foreach ($catadmins as $catadmin) {
+                $profileurl = new moodle_url('/user/view.php', array('id' => $catadmin->id));
+                $logsurl = new moodle_url('/report/log/index.php', array(
+                        'user' => $catadmin->id,
+                        'chooselog' => '1',
+                        'id' => '1',
+                        'edulevel' => '-1',
+                        'logreader' => 'logstore_standard',
+                    )
+                );
+
+                $row = array();
+                $row[] = format_string($catadmin->username);
+                $row[] = html_writer::link($profileurl, fullname($catadmin)) . '<br>' . $catadmin->email;
+                $row[] = userdate($catadmin->currentlogin, get_string('strftimerecentfull'));
+                $row[] = $catadmin->lastip;
+                $row[] = html_writer::link($logsurl, get_string('userlogs', 'auth_catadmin'));
+
+                $table->data[] = $row;
+            }
+
+            $adminstable = html_writer::table($table);
+        }
+
+        // Append link to Deep admin report.
+        $url = new moodle_url('/auth/catadmin/admin_report.php');
+        $adminstable .= html_writer::link($url, get_string('adminreport', 'auth_catadmin'));
+
+        return $adminstable;
     }
 
     public function saml_login() {
@@ -190,11 +338,11 @@ class auth_plugin_catadmin extends auth_plugin_base {
         $attributes = $auth->getAttributes();
 
         $attr = $this->config->idpattr;
-        if (empty($attributes[$attr]) ) {
+        if (empty($attributes[$attr])) {
             $this->error_page(get_string('noattribute', 'auth_catadmin', $attr));
         }
 
-        // Check if user is in same group as site
+        // Check if user is in same group as site.
         $groups = explode(',', $this->config->groups);
         $ingroup = false;
         foreach ($groups as $group) {
@@ -208,14 +356,17 @@ class auth_plugin_catadmin extends auth_plugin_base {
             $this->error_page(get_string('noaccess', 'auth_catadmin', $group));
         }
 
-
         $user = null;
         foreach ($attributes[$attr] as $key => $uid) {
             if ($this->config->tolower) {
                 $this->log(__FUNCTION__ . " to lowercase for $key => $uid");
                 $uid = strtolower($uid);
             }
-            if ($user = $DB->get_record('user', array( $this->config->mdlattr => $uid, 'deleted' => 0 ))) {
+            if ($user = $DB->get_record('user', array($this->config->mdlattr => $uid, 'deleted' => 0))) {
+                if ($user->auth == 'catalyst') {
+                    $user->auth = 'catadmin';
+                    user_update_user($user, false);
+                }
                 if ($user->auth != 'catadmin') {
                     $this->log(__FUNCTION__ . " user '$uid' is not authtype catadmin but attempted to log in!");
                     $this->error_page(get_string('incorrectauthtype', 'auth_catadmin'));
@@ -250,39 +401,40 @@ class auth_plugin_catadmin extends auth_plugin_base {
                 $this->error_page(get_string('nouser', 'auth_catadmin', $uid));
             }
         } else {
-            // Revive users who are suspended
+            // Revive users who are suspended.
             if ($user->suspended) {
                 $user->suspended = 0;
                 user_update_user($user, false);
             }
             // Make sure all user data is fetched.
             $user = get_complete_user_data('username', $user->username);
-            $this->log(__FUNCTION__ . ' found user '.$user->username);
+            $this->log(__FUNCTION__ . ' found user ' . $user->username);
         }
 
-        if($newuser) {
+        if ($newuser) {
             $user->email = $attributes['catalystEmail'][0];
             $user->firstname = $attributes['catalystFirstName'][0];
             $user->lastname = $attributes['catalystLastName'][0];
             user_update_user($user, false, false);
         } else {
             if ($user->email !== $attributes['catalystEmail'][0]) {
-                // Change emails
+                // Change emails.
                 $user->email = $attributes['catalystEmail'][0];
                 user_update_user($user, false, false);
             }
         }
 
-        $admins = array();
-        foreach (explode(',', $CFG->siteadmins) as $admin) {
-            $admin = (int)$admin;
-            if ($admin) {
-                $admins[$admin] = $admin;
+        // Deny user admin rights based on SAML attribute.
+        if (isset($attributes['denyAdmin'])) {
+            $this->remove_admin_from_user($user->id);
+        } else {
+            // Only add as admin if config has not been set or it is turned on.
+            if (get_config('auth_catadmin', 'autoadmin') == null || get_config('auth_catadmin', 'autoadmin') === 'on') {
+                $this->give_user_admin($user->id);
+            } else {
+                $this->remove_admin_from_user($user->id);
             }
         }
-
-        $admins[$user->id] = $user->id;
-        set_config('siteadmins', implode(',', $admins));
 
         // Make sure all user data is fetched.
         $user = get_complete_user_data('username', $user->username);
@@ -294,15 +446,48 @@ class auth_plugin_catadmin extends auth_plugin_base {
 
         $urltogo = core_login_get_return_url();
         // If we are not on the page we want, then redirect to it.
-        if ( qualified_me() !== $urltogo ) {
+        if (qualified_me() !== $urltogo) {
             $this->log(__FUNCTION__ . " redirecting to $urltogo");
             redirect($urltogo);
             exit;
         } else {
-            $this->log(__FUNCTION__ . " continuing onto " . qualified_me() );
+            $this->log(__FUNCTION__ . " continuing onto " . qualified_me());
         }
 
         return;
+    }
+
+    public function remove_admin_from_user($userid) {
+        global $CFG;
+        $admins = explode(',', $CFG->siteadmins);
+        $key = array_search($userid, $admins);
+        if ($key !== false && $key !== null) {
+            unset($admins[$key]);
+        }
+        $logstringold = $CFG->siteadmins;
+        $newadmins = implode(',', $admins);
+        if ($newadmins != $logstringold) {
+            set_config('siteadmins', $newadmins);
+            add_to_config_log('siteadmins', $logstringold, $newadmins, 'core');
+        }
+    }
+
+    public function give_user_admin($userid) {
+        global $CFG;
+        $admins = array();
+        foreach (explode(',', $CFG->siteadmins) as $admin) {
+            $admin = (int) $admin;
+            if ($admin) {
+                $admins[$admin] = $admin;
+            }
+        }
+        $admins[$userid] = $userid;
+        $logstringold = $CFG->siteadmins;
+        $newadmins = implode(',', $admins);
+        if ($newadmins != $logstringold) {
+            set_config('siteadmins', implode(',', $admins));
+            add_to_config_log('siteadmins', $logstringold, implode(',', $admins), 'core');
+        }
     }
 
     public function prelogout_hook() {
@@ -346,10 +531,10 @@ class auth_plugin_catadmin extends auth_plugin_base {
     }
 
     public function get_file_idp_metadata_file($url) {
-        if(is_object($url)) {
-            $url = (array)$url;
+        if (is_object($url)) {
+            $url = (array) $url;
         }
-        if(is_array($url)) {
+        if (is_array($url)) {
             $url = array_keys($url);
             $url = implode("\n", $url);
         }
