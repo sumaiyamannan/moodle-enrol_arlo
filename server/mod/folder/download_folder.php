@@ -52,6 +52,8 @@ folder_downloaded($folder, $course, $cm, $context);
 // Close the session.
 \core\session\manager::write_close();
 
+core_php_time_limit::raise(120);
+
 $filename = shorten_filename(clean_filename($folder->name . "-" . date("Ymd")) . ".zip");
 $zipwriter = \core_files\archive_writer::get_stream_writer($filename, \core_files\archive_writer::ZIP_WRITER);
 
