@@ -34,7 +34,7 @@ use container_workspace\query\workspace\access;
 use core\webapi\execution_context;
 use core\webapi\type_resolver;
 use container_workspace\workspace as model;
-use theme_config;
+use core\theme\helper as theme_helper;
 use totara_core\advanced_feature;
 
 /**
@@ -78,7 +78,8 @@ final class workspace implements type_resolver {
                 return $paginator->get_total();
 
             case 'image':
-                return $workspace->get_image(theme_config::load($args['theme']))->out();
+                $theme_config = theme_helper::load_theme_config($args['theme'] ?? null);
+                return $workspace->get_image($theme_config)->out();
 
             case 'access':
                 if ($workspace->is_public()) {

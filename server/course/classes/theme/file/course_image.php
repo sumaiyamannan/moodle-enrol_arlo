@@ -68,14 +68,14 @@ class course_image extends theme_file {
     /**
      * @inheritDoc
      */
-    public static function get_component(): string {
+    public function get_component(): string {
         return 'course';
     }
 
     /**
      * @inheritDoc
      */
-    public static function get_area(): string {
+    public function get_area(): string {
         return 'defaultcourseimage';
     }
 

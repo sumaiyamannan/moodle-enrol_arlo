@@ -65,14 +65,14 @@ class login_image extends theme_file {
     /**
      * @inheritDoc
      */
-    public static function get_component(): string {
+    public function get_component(): string {
         return 'totara_core';
     }
 
     /**
      * @inheritDoc
      */
-    public static function get_area(): string {
+    public function get_area(): string {
         return 'loginimage';
     }
 
@@ -130,7 +130,7 @@ class login_image extends theme_file {
         }
 
         // Check if setting is enabled.
-        $settings = new settings($this->theme_config, 0);
+        $settings = new settings($this->get_theme_config(), 0);
         return $settings->is_enabled('images', 'formimages_field_displaylogin', true);
     }
 
@@ -140,7 +140,7 @@ class login_image extends theme_file {
      * @return string
      */
     public function get_alt_text(): string {
-        $settings = new settings($this->theme_config, $this->tenant_id);
+        $settings = new settings($this->get_theme_config(), $this->tenant_id);
         $property = $settings->get_property('images', 'formimages_field_loginalttext');
         if (!empty($property)) {
             return $property['value'];

@@ -40,4 +40,24 @@ class unsupported_exception extends base_exception {
     public static function auth(string $plugin, Throwable $previous = null): self {
         return new self('authentication not available for plugin: '.$plugin, 0, $previous);
     }
+
+    /**
+     * Exception: info unsupported by plugin
+     *
+     * @param string $plugin
+     * @return self
+     */
+    public static function info(string $plugin): self {
+        return new self('info unsupported by plugin: '.$plugin);
+    }
+
+    /**
+     * Exception: feature unsupported by plugin
+     *
+     * @param string $plugin
+     * @return self
+     */
+    public static function feature(string $plugin): self {
+        return new self('feature unsupported by plugin: '.$plugin);
+    }
 }

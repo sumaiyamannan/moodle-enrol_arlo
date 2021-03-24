@@ -120,6 +120,11 @@ class auth_plugin_email extends auth_plugin_base {
             set_user_preference('auth_email_wantsurl', $SESSION->wantsurl, $user);
         }
 
+        // Save user sitepolicy consent ids so we can use it during confirmation
+        if (!empty($SESSION->userconsentids)) {
+            set_user_preference('auth_email_userconsentids', json_encode($SESSION->userconsentids), $user);
+        }
+
         // Trigger event.
         \core\event\user_created::create_from_userid($user->id)->trigger();
 
@@ -164,10 +169,10 @@ class auth_plugin_email extends auth_plugin_base {
             if ($user->auth != $this->authtype) {
                 return AUTH_CONFIRM_ERROR;
 
-            } else if ($user->secret == $confirmsecret && $user->confirmed) {
+            } else if ($user->secret === $confirmsecret && $user->confirmed) {
                 return AUTH_CONFIRM_ALREADY;
 
-            } else if ($user->secret == $confirmsecret) {   // They have provided the secret key to get in
+            } else if ($user->secret === $confirmsecret) {   // They have provided the secret key to get in
                 $DB->set_field("user", "confirmed", 1, array("id"=>$user->id));
 
                 if ($wantsurl = get_user_preferences('auth_email_wantsurl', false, $user)) {
@@ -180,6 +185,8 @@ class auth_plugin_email extends auth_plugin_base {
                 \core\event\user_confirmed::create_from_userid($user->id)->trigger();
 
                 return AUTH_CONFIRM_OK;
+            } else {
+                return AUTH_CONFIRM_ERROR;
             }
         } else {
             return AUTH_CONFIRM_ERROR;

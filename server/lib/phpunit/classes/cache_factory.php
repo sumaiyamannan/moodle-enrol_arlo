@@ -102,10 +102,18 @@ class phpunit_cache_factory extends cache_factory {
             get_config($plugin->plugin);
         }
 
+        // Prime the hook watchers:
+        \totara_core\hook\manager::phpunit_get_watchers();
+
+        // Prime the event observers.
+        \core\event\manager::get_all_observers();
+
         // Cache the GraphQL schema - this will be hit numerous times and can't be changed during a run.
-        $method = new ReflectionMethod(\totara_webapi\server::class, 'prepare_schema');
-        $method->setAccessible(true);
-        $method->invoke(null, \totara_webapi\graphql::TYPE_DEV);
+        if (!defined('PHPUNIT_NO_CACHE_GRAPHQL_SCHEMA') || PHPUNIT_NO_CACHE_GRAPHQL_SCHEMA === false) {
+            $method = new ReflectionMethod(\totara_webapi\server::class, 'prepare_schema');
+            $method->setAccessible(true);
+            $method->invoke(null, \totara_webapi\graphql::TYPE_DEV);
+        }
 
         // And finally store the cache as serialised data to unreference the objects!
         $this->primedcaches = array();

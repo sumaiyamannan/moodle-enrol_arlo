@@ -234,6 +234,7 @@ export default {
               footnotes_type: 'playlist',
               footnotes_item_id: this.playlistId,
               include_footnotes: true,
+              theme: config.theme.name,
             },
           },
         ],

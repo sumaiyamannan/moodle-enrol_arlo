@@ -70,7 +70,7 @@ extend type Query {
 
   container_workspace_workspace_image(
     workspace_id: param_integer
-    theme: param_component!
+    theme: param_component
   ): String!
 
   """

@@ -13,7 +13,7 @@
  * Please contact [licensing@totaralearning.com] for more information.
  *
  * @author Simon Chester <simon.chester@totaralearning.com>
- * @module totara_core
+ * @module tui
  */
 
 const stylelint = require('stylelint');
@@ -23,7 +23,7 @@ const messages = stylelint.utils.ruleMessages(ruleName, {
   rejected: 'Non-ascii character',
 });
 
-module.exports = stylelint.createPlugin(ruleName, on => {
+const plugin = stylelint.createPlugin(ruleName, on => {
   return (root, result) => {
     if (!on) {
       return;
@@ -48,5 +48,7 @@ module.exports = stylelint.createPlugin(ruleName, on => {
   };
 });
 
-module.exports.ruleName = ruleName;
-module.exports.messages = messages;
+plugin.ruleName = ruleName;
+plugin.messages = messages;
+
+module.exports = plugin;

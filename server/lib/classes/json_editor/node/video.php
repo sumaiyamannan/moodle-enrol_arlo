@@ -127,10 +127,12 @@ final class video extends base_file implements block_node, has_extra_linked_file
         if (array_key_exists('subtitle', $cleaned_raw_node['attrs'])) {
             $subtitle = $cleaned_raw_node['attrs']['subtitle'];
 
-            $subtitle['url'] = clean_param($subtitle['url'], PARAM_URL);
-            $subtitle['filename'] = clean_param($subtitle['filename'], PARAM_FILE);
+            if (!is_null($subtitle)) {
+                $subtitle['url'] = clean_param($subtitle['url'], PARAM_URL);
+                $subtitle['filename'] = clean_param($subtitle['filename'], PARAM_FILE);
 
-            $cleaned_raw_node['attrs']['subtitle'] = $subtitle;
+                $cleaned_raw_node['attrs']['subtitle'] = $subtitle;
+            }
         }
 
         return $cleaned_raw_node;
@@ -141,11 +143,13 @@ final class video extends base_file implements block_node, has_extra_linked_file
      * @return string
      */
     public function to_html(formatter $formatter): string {
-        // Just return a dummy url for now. VideoJS will in later.
         return html_writer::tag(
-            'a',
-            $this->filename,
-            ['href' => $this->get_file_url()->out(false)]
+            'div',
+            html_writer::tag('video', null, [
+                'src' => $this->get_file_url()->out(false),
+                'controls' => true,
+                'data-grow' => true,
+            ])
         );
     }
 
@@ -155,7 +159,7 @@ final class video extends base_file implements block_node, has_extra_linked_file
      */
     public function to_text(formatter $formatter): string {
         $url = $this->get_file_url();
-        return "[{$this->filename}]({$url->out(false)})";
+        return "[{$this->filename}]({$url->out(false)})\n\n";
     }
 
     /**

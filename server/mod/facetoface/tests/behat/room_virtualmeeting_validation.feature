@@ -64,7 +64,7 @@ Feature: Validation in a seminar virtual room meeting
     And I click on the seminar event action "Edit event" in row "Christmas"
 
     When I click on "Virtual Room" "link" in the "Christmas" "table_row"
-    And I set the field "Add virtual room link" to "PoC App"
+    And I set the field "Add virtual room link" to "Fake Dev App"
     Then the "Connect" "button_exact" should be disabled
     And I click on "OK" "button_exact" in the "Edit room" "totaradialogue"
     And I press "Save changes"
@@ -76,7 +76,7 @@ Feature: Validation in a seminar virtual room meeting
     And I click on the seminar event action "Edit event" in row "Christmas"
 
     When I click on "Virtual Room" "link" in the "Christmas" "table_row"
-    And I set the field "Add virtual room link" to "PoC User"
+    And I set the field "Add virtual room link" to "Fake Dev User"
     Then the "Connect" "button_exact" should be enabled
     When I click on "OK" "button_exact" in the "Edit room" "totaradialogue"
     Then I should see "Authorisation required"
@@ -162,7 +162,7 @@ Feature: Validation in a seminar virtual room meeting
     When I click on "Virtual Meeting" "link" in the "Christmas" "table_row"
     Then the "Add virtual room link" "select" should be enabled
 
-    Given I set the field "Add virtual room link" to "PoC App"
+    Given I set the field "Add virtual room link" to "Fake Dev App"
     Then the "Add to sitewide list" "checkbox" should be disabled
     And I click on "OK" "button_exact" in the "Edit room" "totaradialogue"
 
@@ -213,8 +213,8 @@ Feature: Validation in a seminar virtual room meeting
     When I click on "Virtual Room" "link" in the "Christmas" "table_row"
     And "None" "option" should exist in the "Add virtual room link" "select"
     And "Custom virtual room link" "option" should exist in the "Add virtual room link" "select"
-    And "PoC App" "option" should exist in the "Add virtual room link" "select"
-    And "PoC User" "option" should exist in the "Add virtual room link" "select"
+    And "Fake Dev App" "option" should exist in the "Add virtual room link" "select"
+    And "Fake Dev User" "option" should exist in the "Add virtual room link" "select"
     And I set the following fields to these values:
       | Add virtual room link | Custom virtual room link    |
       | Virtual room link     | http://example.com?id=12345 |
@@ -230,8 +230,8 @@ Feature: Validation in a seminar virtual room meeting
     Then the "Add virtual room link" "select" should be enabled
     And "None" "option" should exist in the "Add virtual room link" "select"
     And "Custom virtual room link" "option" should exist in the "Add virtual room link" "select"
-    And "PoC App" "option" should not exist in the "Add virtual room link" "select"
-    And "PoC User" "option" should not exist in the "Add virtual room link" "select"
+    And "Fake Dev App" "option" should not exist in the "Add virtual room link" "select"
+    And "Fake Dev User" "option" should not exist in the "Add virtual room link" "select"
     And I set the field "Add virtual room link" to "None"
     And I press "Save changes"
     Then I should not see "Go to room"
@@ -250,7 +250,7 @@ Feature: Validation in a seminar virtual room meeting
     And I click on the seminar event action "Edit event" in row "Christmas"
 
     When I click on "Virtual Room" "link" in the "Christmas" "table_row"
-    And I set the field "Add virtual room link" to "PoC App"
+    And I set the field "Add virtual room link" to "Fake Dev App"
     And I click on "OK" "button_exact" in the "Edit room" "totaradialogue"
     And I press "Save changes"
 
@@ -261,7 +261,7 @@ Feature: Validation in a seminar virtual room meeting
     And I log out
 
     Given I log in as "admin"
-    And I navigate to "PoC App" node in "Site administration > Plugins > Virtual meetings"
+    And I navigate to "Fake Dev App" node in "Site administration > Plugins > Virtual meetings"
     And I set the following fields to these values:
       | Enabled | 0 |
     And I press "Save changes"
@@ -284,21 +284,21 @@ Feature: Validation in a seminar virtual room meeting
     And I press "Save changes"
     Then I should not see "Editing event in"
 
-  Scenario: mod_facetoface_virtualmeeting_109:Only one virtual room per event
-    Given I log in as "admin"
+  Scenario: mod_facetoface_virtualmeeting_109: Only one virtual room per event
+    Given I log in as "trainer1"
     And I am on "Virtual seminar" seminar homepage
     When I click on the seminar event action "Edit event" in row "#1"
     And I click on "Select rooms" "link"
     And I click on "Create" "link" in the "Choose rooms" "totaradialogue"
     And I set the following fields to these values:
-      | Name                  | Room 1   |
-      | Capacity              | 10       |
-      | Add virtual room link | PoC User |
+      | Name                  | Room 1        |
+      | Capacity              | 10            |
+      | Add virtual room link | Fake Dev User |
     And I click on "Connect" "button"
     And I switch to "virtualmeeting_connect" window
     And I set the following fields to these values:
-      | username | admin |
-      | password | admin |
+      | username | creator |
+      | password | creator |
     And I click on "Log in" "button"
     And I switch to the main window
     And I click on "//*[@class='ui-dialog-buttonset']/button[contains(.,'OK')]" "xpath_element" in the "Create new room" "totaradialogue"
@@ -308,14 +308,14 @@ Feature: Validation in a seminar virtual room meeting
     And I click on "Select rooms" "link"
     And I click on "Create" "link" in the "Choose rooms" "totaradialogue"
     And I set the following fields to these values:
-      | Name                  | Room 2   |
-      | Capacity              | 5        |
-      | Add virtual room link | PoC User |
+      | Name                  | Room 2        |
+      | Capacity              | 5             |
+      | Add virtual room link | Fake Dev User |
     And I click on "Connect" "button"
     And I switch to "virtualmeeting_connect" window
     And I set the following fields to these values:
-      | username | admin |
-      | password | admin |
+      | username | creator |
+      | password | creator |
     And I click on "Log in" "button"
     And I switch to the main window
     And I click on "//*[@class='ui-dialog-buttonset']/button[contains(.,'OK')]" "xpath_element" in the "Create new room" "totaradialogue"
@@ -324,3 +324,84 @@ Feature: Validation in a seminar virtual room meeting
     # Remove the second room and the error should disappear
     When I click on "Remove room Room 2 from session" "link"
     Then I should not see " Too many virtual meetings. Please ensure that only one virtual meeting is assigned per session"
+
+  Scenario: mod_facetoface_virtualmeeting_110: A warning banner appears if updating a meeting could be a potential data loss
+    And the following "seminars" exist in "mod_facetoface" plugin:
+      | name                    | intro | course |
+      | Another virtual seminar |       | C1     |
+
+    Given I log in as "admin"
+    And I navigate to "Fake Dev App" node in "Site administration > Plugins > Virtual meetings"
+    And I set the following fields to these values:
+      | Lossy update | No |
+    And I press "Save changes"
+    And I log out
+
+    Given I log in as "trainer1"
+    And I am on "Another virtual seminar" seminar homepage
+    And I press "Add event"
+
+    When I click on "Select rooms" "link"
+    And I click on "Create" "link_exact" in the "Choose rooms" "totaradialogue"
+    And I set the following fields to these values:
+      | Name                  | Virtual Meeting Uno |
+      | Capacity              | 99                  |
+      | Add virtual room link | Fake Dev App        |
+    And I click on "OK" "button" in the "Create new room" "totaradialogue"
+    Then ".alert.alert-warning" "css_element" should not exist
+    And I click on "Remove room Virtual Meeting Uno from session" "link"
+
+    When I click on "Select rooms" "link"
+    And I click on "Create" "link_exact" in the "Choose rooms" "totaradialogue"
+    And I set the following fields to these values:
+      | Name                  | Virtual Meeting Dos |
+      | Capacity              | 88                  |
+      | Add virtual room link | Fake Dev User       |
+    And I click on "Connect" "button"
+    And I switch to "virtualmeeting_connect" window
+    And I set the following fields to these values:
+      | username | creator |
+      | password | creator |
+    And I click on "Log in" "button"
+    And I switch to the main window
+    And I click on "OK" "button" in the "Create new room" "totaradialogue"
+    Then ".alert.alert-warning" "css_element" should not exist
+
+    When I press "Save changes"
+    Then I should not see "Editing event in"
+
+    When I click on the seminar event action "Edit event" in row "#1"
+    Then I should see "Editing this session may reset virtual room"
+    And I click on "Remove room Virtual Meeting Dos from session" "link"
+
+    When I click on "Select rooms" "link"
+    And I click on "Virtual Meeting Uno" "text"
+    And I click on "OK" "button" in the "Choose rooms" "totaradialogue"
+    Then ".alert.alert-warning" "css_element" should not exist
+
+    And I click on "Remove room Virtual Meeting Uno from session" "link"
+    When I click on "Select rooms" "link"
+    And I click on "Virtual Meeting Dos" "text"
+    And I click on "OK" "button" in the "Choose rooms" "totaradialogue"
+    Then I should see "Editing this session may reset virtual room"
+
+    When I press "Save changes"
+    Then I should not see "Editing event in"
+
+    When I click on the seminar event action "Copy event" in row "#1"
+    Then ".alert.alert-warning" "css_element" should not exist
+    And I click on "Remove room Virtual Meeting Dos from session" "link"
+
+    When I click on "Select rooms" "link"
+    And I click on "Virtual Meeting Uno" "text"
+    And I click on "OK" "button" in the "Choose rooms" "totaradialogue"
+    Then ".alert.alert-warning" "css_element" should not exist
+
+    And I click on "Remove room Virtual Meeting Uno from session" "link"
+    When I click on "Select rooms" "link"
+    And I click on "Virtual Meeting Dos" "text"
+    And I click on "OK" "button" in the "Choose rooms" "totaradialogue"
+    Then ".alert.alert-warning" "css_element" should not exist
+
+    When I press "Save changes"
+    Then I should not see "Editing event in"

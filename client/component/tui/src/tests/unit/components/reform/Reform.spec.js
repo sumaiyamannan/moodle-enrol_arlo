@@ -385,4 +385,81 @@ describe('Reform', () => {
 
     expect(focusHandler).toHaveBeenCalled();
   });
+
+  it('always clones error result objects', async () => {
+    // regression test for TL-29929:
+    // error result objects sometimes did not get cloned before merging,
+    // resulting in validation errors persisting after the validator stopped
+    // returning them.
+
+    const { scope, submit } = createSimple({
+      els: [{ value: null }, { value: null }],
+    });
+
+    scope.register('validator', ['els', 0, 'value'], () => null);
+    scope.register('validator', ['els', 1, 'value'], () => null);
+
+    scope.register('validator', 'els', items =>
+      items.map((item, index) => {
+        const isDuplicate =
+          items.findIndex((x, i) => i != index && x.value === item.value) !==
+          -1;
+        return {
+          value: isDuplicate ? 'dupe' : null,
+        };
+      })
+    );
+
+    scope.update(['els', 0, 'value'], 5);
+    scope.update(['els', 1, 'value'], 5);
+
+    await submit();
+
+    expect(scope.getError([])).toEqual({
+      els: [{ value: 'dupe' }, { value: 'dupe' }],
+    });
+
+    scope.update(['els', 1, 'value'], 9);
+
+    await validateWait();
+
+    expect(scope.getError([])).toEqual({
+      els: [{ value: null }, { value: null }],
+    });
+  });
+
+  it('handles undefined result in scope validator', async () => {
+    // regression test for TL-30045:
+    // scope validators that returned either undefined or an object would cause
+    // an error on submit if the result was previously undefined.
+
+    const { scope, submit } = createSimple({ fields: [{}] });
+    let draft = true;
+
+    scope.register('validator', ['fields', 1], () =>
+      draft ? undefined : { foo: 'error' }
+    );
+
+    await submit();
+
+    draft = false;
+    // submit will throw if merging doesn't work correctly
+    await submit();
+    expect(scope.getTouched(['fields', 1, 'foo'])).toBe(true);
+  });
+
+  it('handles direct touch with existing undefined validator result', async () => {
+    // regression test for TL-30045:
+    // scope validators that returned either undefined or an object would cause
+    // an error on on real touch if the form was previously submitted with
+    // undefined as the validator result.
+
+    const { scope, submit } = createSimple({ fields: [{}] });
+    scope.register('validator', ['fields', 1], () => undefined);
+
+    await submit();
+
+    scope.touch(['fields', 1, 'foo']);
+    expect(scope.getTouched(['fields', 1, 'foo'])).toBe(true);
+  });
 });

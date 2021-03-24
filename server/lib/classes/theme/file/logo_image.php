@@ -65,14 +65,14 @@ class logo_image extends theme_file {
     /**
      * @inheritDoc
      */
-    public static function get_component(): string {
+    public function get_component(): string {
         return 'totara_core';
     }
 
     /**
      * @inheritDoc
      */
-    public static function get_area(): string {
+    public function get_area(): string {
         return 'logo';
     }
 
@@ -121,7 +121,7 @@ class logo_image extends theme_file {
      * @return string
      */
     public function get_alt_text(): string {
-        $settings = new settings($this->theme_config, $this->tenant_id);
+        $settings = new settings($this->get_theme_config(), $this->tenant_id);
         $property = $settings->get_property('brand', 'formbrand_field_logoalttext');
         if (!empty($property)) {
             return $property['value'];
@@ -140,7 +140,7 @@ class logo_image extends theme_file {
 
         // Fall back on global setting when tenant logo not set.
         if ($this->tenant_id > 0) {
-            $settings = new settings($this->theme_config, $this->tenant_id);
+            $settings = new settings($this->get_theme_config(), $this->tenant_id);
             if (!$settings->is_tenant_branding_enabled()) {
                 $this->tenant_id = 0;
             }

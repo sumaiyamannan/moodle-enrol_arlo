@@ -23,11 +23,11 @@
 
 namespace core\theme\file;
 
-use coding_exception;
 use core\files\file_area;
 use core\files\file_helper;
 use core\files\type\file_type;
 use core\theme\settings as theme_settings;
+use core\theme\helper as theme_helper;
 use context;
 use moodle_url;
 use stored_file;
@@ -64,8 +64,9 @@ abstract class theme_file {
      * theme_file constructor.
      *
      * @param theme_config|null $theme_config
+     * @param string|null $unused This parameter is no longer used as of Totara 13.6
      */
-    public function __construct(?theme_config $theme_config = null) {
+    public function __construct(?theme_config $theme_config = null, ?string $unused = null) {
         $this->theme_config = $theme_config;
     }
 
@@ -107,10 +108,14 @@ abstract class theme_file {
         $this->theme_config = $theme_config;
     }
 
-    private function get_theme_config(): theme_config {
+    /**
+     * @return theme_config
+     */
+    protected function get_theme_config(): theme_config {
         if (empty($this->theme_config)) {
-            throw new coding_exception("'theme_config' is not set");
+            $this->theme_config = theme_helper::load_theme_config();
         }
+
         return $this->theme_config;
     }
 
@@ -161,7 +166,7 @@ abstract class theme_file {
      * @return string
      */
     public function get_name(): string {
-        return static::get_component() . "/" . static::get_area();
+        return $this->get_component() . "/" . $this->get_area();
     }
 
     /**
@@ -195,8 +200,8 @@ abstract class theme_file {
 
         // Get files for current component and context.
         $file_helper = new file_helper(
-            static::get_component(),
-            static::get_area(),
+            $this->get_component(),
+            $this->get_area(),
             $context
         );
         $file_helper->set_item_id($item_id);
@@ -298,8 +303,8 @@ abstract class theme_file {
         global $USER;
 
         $file_helper = new file_helper(
-            static::get_component(),
-            static::get_area(),
+            $this->get_component(),
+            $this->get_area(),
             $this->get_context()
         );
 
@@ -374,7 +379,7 @@ abstract class theme_file {
             $this->get_name(),
             '',
             '',
-            static::get_area(),
+            $this->get_area(),
             $this->get_item_id(),
             [
                 'accepted_types' => $this->get_type()->get_group(),
@@ -440,7 +445,7 @@ abstract class theme_file {
      */
     public function delete(): void {
         if ($current_file = $this->get_current_file()) {
-            unset_config(static::get_area(), static::get_component());
+            unset_config($this->get_area(), $this->get_component());
             $current_file->delete();
         }
     }
@@ -508,12 +513,12 @@ abstract class theme_file {
     /**
      * @return string
      */
-    abstract public static function get_component(): string;
+    abstract public function get_component(): string;
 
     /**
      * @return string
      */
-    abstract public static function get_area(): string;
+    abstract public function get_area(): string;
 
     /**
      * Get a unique key to map to theme categories.

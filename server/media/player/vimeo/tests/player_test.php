@@ -131,4 +131,56 @@ class media_vimeo_testcase extends advanced_testcase {
         $this->assertRegExp('~</iframe>~', $content);
         $this->assertRegExp('~width="123" height="35"~', $content);
     }
+
+    function test_dimensions() {
+        global $CFG;
+
+        $default_w = $CFG->media_default_width;
+        $default_h = $CFG->media_default_height;
+
+        // no width/height
+        $embedcode = '<video controls=""><source src="http://vimeo.com/1176321" type="video/mp4"></video>';
+        $this->assertRegExp(
+            '~<div class="mediaplugin mediaplugin_vimeo"><div style="max-width: ' . $default_w . 'px;">'.
+            '<div class="mediaplugin__iframe_responsive" style="padding-top: ' . (($default_h / $default_w) * 100) . '%">'.
+            '<iframe width="' . $default_w . '" height="' . $default_h . '" src="https://player.vimeo.com/[^>]+></iframe></div></div></div>~',
+            format_text($embedcode, FORMAT_HTML)
+        );
+
+        // width and height
+        $embedcode = '<video controls="" width="500" height="200"><source src="http://vimeo.com/1176321" type="video/mp4"></video>';
+        $this->assertRegExp(
+            '~<div class="mediaplugin mediaplugin_vimeo"><div style="max-width: 500px;">'.
+            '<div class="mediaplugin__iframe_responsive" style="padding-top: 40%">'.
+            '<iframe width="500" height="200" src="https://player.vimeo.com/[^>]+></iframe></div></div></div>~',
+            format_text($embedcode, FORMAT_HTML)
+        );
+
+        // percentage width
+        $embedcode = '<video controls="" width="100%"><source src="http://vimeo.com/1176321" type="video/mp4"></video>';
+        $this->assertRegExp(
+            '~<div class="mediaplugin mediaplugin_vimeo"><div style="max-width: 100%;">'.
+            '<div class="mediaplugin__iframe_responsive" style="padding-top: ' . (($default_h / $default_w) * 100) . '%">'.
+            '<iframe width="' . $default_w . '" height="' . $default_h . '" src="https://player.vimeo.com/[^>]+></iframe></div></div></div>~',
+            format_text($embedcode, FORMAT_HTML)
+        );
+
+        // percentage width + invalid height
+        $embedcode = '<video controls="" width="100%" height="auto"><source src="http://vimeo.com/1176321" type="video/mp4"></video>';
+        $this->assertRegExp(
+            '~<div class="mediaplugin mediaplugin_vimeo"><div style="max-width: 100%;">'.
+            '<div class="mediaplugin__iframe_responsive" style="padding-top: ' . (($default_h / $default_w) * 100) . '%">'.
+            '<iframe width="' . $default_w . '" height="' . $default_h . '" src="https://player.vimeo.com/[^>]+></iframe></div></div></div>~',
+            format_text($embedcode, FORMAT_HTML)
+        );
+
+        // data-grow
+        $embedcode = '<video controls="" width="500" height="200" data-grow><source src="http://vimeo.com/1176321" type="video/mp4"></video>';
+        $this->assertRegExp(
+            '~<div class="mediaplugin mediaplugin_vimeo"><div class="mediaplugin_grow_limit">'.
+            '<div class="mediaplugin__iframe_responsive" style="padding-top: 40%">'.
+            '<iframe width="500" height="200" src="https://player.vimeo.com/[^>]+></iframe></div></div></div>~',
+            format_text($embedcode, FORMAT_HTML)
+        );
+    }
 }

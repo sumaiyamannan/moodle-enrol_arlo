@@ -3,7 +3,7 @@ query totara_engage_shareto_recipients(
   $component: param_component!
   $search: String
   $access: totara_engage_access!
-  $theme: param_component!
+  $theme: param_component
 ) {
   recipients: totara_engage_shareto_recipients(
     itemid: $itemid

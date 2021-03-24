@@ -406,6 +406,9 @@ final class signup extends \moodleform {
             $params += $fwp;
             $select .= " AND frameworkid $fws";
         }
+
+        $select .= ' ORDER BY hf.sortorder ASC, h.fullname ASC';
+
         $hierarchies = $DB->get_records_sql($select, $params);
 
         return array_reduce(

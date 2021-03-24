@@ -34,7 +34,7 @@
       @click="togglePressed"
       @blur="$emit('blur', $event)"
     >
-      <span :class="{ 'sr-only': ariaLabel }">{{ text }}</span>
+      {{ text }}
     </button>
 
     <div class="tui-toggleSwitch__icon">
@@ -108,7 +108,9 @@ export default {
   align-items: center;
 
   &__btn {
+    // stylelint-disable-next-line tui/at-extend-only-placeholders
     @extend .tui-formBtn;
+    // stylelint-disable-next-line tui/at-extend-only-placeholders
     @extend .tui-formBtn--transparent;
     color: var(--form-toggle-color);
 
