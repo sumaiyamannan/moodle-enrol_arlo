@@ -848,12 +848,8 @@
     &-text {
       width: 100%;
       margin: 0;
-      -ms-word-break: break-all;
-      word-break: break-word;
-      -webkit-hyphens: none;
-          -ms-hyphens: none;
-              hyphens: none;
 
+      @include tui-wordbreak--hard;
       @include tui-font-heading-page-title;
     }
 

@@ -45,6 +45,53 @@ class mod_perform_element_plugin_model_testcase extends advanced_testcase {
      * @throws coding_exception
      */
     public function test_respondable_elements_require_title() {
+        $respondable_element_plugin = $this->get_mock_respondable_element_plugin();
+
+        $entity = new element_entity();
+        $entity->title = 'test title';
+
+        // No exception thrown.
+        $respondable_element_plugin->validate_element($entity);
+
+        $entity->title = null;
+
+        $this->expectException('coding_exception');
+        $this->expectExceptionMessage('Respondable elements must include a title');
+        $respondable_element_plugin->validate_element($entity);
+    }
+
+    /**
+     * Make sure that the respondable element plugin validation function fails if no title is provided
+     *
+     * @throws coding_exception
+     */
+    public function test_respondable_elements_validate_max_title(): void {
+        $respondable_element_plugin = $this->get_mock_respondable_element_plugin();
+
+        $entity = new element_entity();
+        $entity->title = $this->get_string_with_length(1024);
+        $respondable_element_plugin->validate_element($entity);
+
+        $entity->title = $this->get_string_with_length(1025);
+
+        $this->expectException('coding_exception');
+        $this->expectExceptionMessage('Respondable element title text exceeds the maximum length');
+        $respondable_element_plugin->validate_element($entity);
+    }
+
+    /**
+     * @param int $length
+     * @return string
+     */
+    private function get_string_with_length(int $length): string {
+        $string = '';
+        while (strlen($string) < $length) {
+            $string .= 'x';
+        }
+        return $string;
+    }
+
+    private function get_mock_respondable_element_plugin(): respondable_element_plugin {
         $respondable_element_plugin = new class extends respondable_element_plugin {
             public function __construct() {
             }
@@ -64,17 +111,6 @@ class mod_perform_element_plugin_model_testcase extends advanced_testcase {
                 return collection::new([]);
             }
         };
-
-        $entity = new element_entity();
-        $entity->title = 'test title';
-
-        // No exception thrown.
-        $respondable_element_plugin->validate_element($entity);
-
-        $entity->title = null;
-
-        $this->expectException('coding_exception');
-        $respondable_element_plugin->validate_element($entity);
+        return $respondable_element_plugin;
     }
-
 }

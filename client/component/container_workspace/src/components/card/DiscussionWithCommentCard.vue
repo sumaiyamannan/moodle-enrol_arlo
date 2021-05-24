@@ -48,7 +48,7 @@
     />
 
     <CommentBox
-      v-show="showComments || showCommentForm"
+      v-if="showComments || showCommentForm"
       ref="comment-box"
       :instance-id="discussionId"
       component="container_workspace"
@@ -211,7 +211,7 @@ export default {
 
       if (this.formElement) {
         // Now we can scrolling.
-        this.formElement.scrollIntoView();
+        this.formElement.scrollIntoView(false);
       }
     },
   },

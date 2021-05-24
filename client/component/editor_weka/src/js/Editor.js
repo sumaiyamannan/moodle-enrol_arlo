@@ -52,6 +52,7 @@ export default class Editor {
     this._parent = options.parent;
     this.viewExtrasEl = options.viewExtrasEl;
     this.viewExtrasLiveEl = options.viewExtrasLiveEl;
+    this.destroyed = false;
 
     /** @type {EditorView} */
     this.view = null;
@@ -169,8 +170,12 @@ export default class Editor {
         );
         value.inflate(this, state);
       } else {
+        let doc = value.getDoc(false);
+        if (doc) {
+          doc = this._execSerializedVisitors(doc, 'load');
+        }
         const state = EditorState.fromJSON(this._editorConfig(), {
-          doc: value.getDoc(false),
+          doc,
           selection: { anchor: 0, head: 0, type: 'text' },
         });
         value.inflate(this, state);
@@ -269,7 +274,9 @@ export default class Editor {
    */
   dispatch(transaction) {
     const newState = this.state.apply(transaction);
-    this.view.updateState(newState);
+    if (this.view && !this.destroyed) {
+      this.view.updateState(newState);
+    }
     this.state = newState;
     this._value = WekaValue.fromState(newState, this);
 
@@ -371,6 +378,7 @@ export default class Editor {
     if (this.view) {
       this.view.destroy();
     }
+    this.destroyed = true;
   }
 
   /**
@@ -401,5 +409,43 @@ export default class Editor {
     return this._extensions.map(extension => {
       return extension.applyFormatters.bind(extension);
     });
+  }
+
+  /*
+   * Execute visitors defined by extensions on the provided serialized doc.
+   *
+   * @param {object} doc
+   * @param {string} type
+   * @returns {object}
+   */
+  _execSerializedVisitors(doc, type) {
+    const extensionVisitors = [];
+    this._extensions.forEach(ext => {
+      const key = type + 'SerializedVisitor';
+      if (ext[key]) {
+        extensionVisitors.push(ext[key]());
+      }
+    });
+    if (extensionVisitors.length > 0) {
+      // clone doc to avoid modifying the original object we were passed
+      doc = JSON.parse(JSON.stringify(doc));
+      extensionVisitors.forEach(visitor => this._traverseNode(doc, visitor));
+    }
+    return doc;
+  }
+
+  /**
+   * Execute visitor on the provided serialized node, and its children recursively.
+   *
+   * @param {object} doc
+   * @param {((node: object) => void)[]} visitor
+   */
+  _traverseNode(node, visitor) {
+    if (visitor[node.type]) {
+      visitor[node.type](node);
+    }
+    if (Array.isArray(node.content)) {
+      node.content.forEach(child => this._traverseNode(child, visitor));
+    }
   }
 }

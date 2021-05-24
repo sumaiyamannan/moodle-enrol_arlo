@@ -617,11 +617,7 @@ html {
   }
 
   &__text {
-    -ms-word-break: break-all;
-    word-break: break-word;
-    -webkit-hyphens: none;
-        -ms-hyphens: none;
-            hyphens: none;
+    @include tui-wordbreak--hard;
   }
 
   &--alert {
@@ -666,20 +662,18 @@ html {
 
   &--circle {
     width: 3.6rem;
-    min-height: 3.6rem;
+    height: 3.6rem;
     padding: 0;
     border-radius: 50%;
 
     &.tui-iconBtn--small {
       width: 3rem;
       height: 3rem;
-      min-height: 0;
     }
 
     &.tui-iconBtn--xsmall {
       width: 2rem;
       height: 2rem;
-      min-height: 0;
     }
   }
 
@@ -3653,6 +3647,8 @@ input[type].tui-formInput {
     flex-grow: 0; /* by default we want item size to respect unit-based calculations*/
     flex-shrink: 1; /* by default we want to auto-adjust for gutters*/
     min-width: 0; /* allows flex items to shrink below their minimum content size*/
+    margin: 0;
+    padding: 0;
     -webkit-hyphens: auto;
         -ms-hyphens: auto;
             hyphens: auto; /* default prevents text from causing grid mis-alignments*/
@@ -3671,10 +3667,6 @@ input[type].tui-formInput {
     }
     &--overflow {
       overflow: auto;
-    }
-    &--list {
-      margin: 0;
-      padding: 0;
     }
   }
 
@@ -3708,6 +3700,15 @@ input[type].tui-formInput {
     /* only applies when grid items wrap, and if the gap is confgured as*/
     /* desirable for a given grid*/
     margin-top: var(--grid-gutter);
+  }
+
+  /* all zero unit GridItems should not show any gutters or content*/
+  &--vertical,
+  &--horizontal {
+    .tui-grid-item--no-units {
+      overflow: hidden;
+      border-width: 0;
+    }
   }
 
   /* switch to stacked display at an container-based pixel width breakpoint*/
@@ -4250,13 +4251,26 @@ $tui-modal-sheetBreakpoint: 768px !default;
   overflow: hidden;
   outline: none;
 
+  &--shade {
+    background-color: var(--color-backdrop-standard);
+    &.tui-modal--size-sheet {
+      background-color: var(--color-backdrop-heavy);
+    }
+  }
+
   &--animated {
+    opacity: 0;
+    transition: opacity var(--transition-modal-function)
+      var(--transition-modal-duration);
+
     .tui-modal__inner {
       transform: translateY(100vh);
       transition: transform var(--transition-modal-function)
-          var(--transition-modal-duration),
-        opacity var(--transition-modal-function)
-          var(--transition-modal-duration);
+        var(--transition-modal-duration);
+    }
+
+    &.tui-modal--in {
+      opacity: 1;
     }
 
     &.tui-modal--in .tui-modal__inner {
@@ -4319,42 +4333,12 @@ $tui-modal-sheetBreakpoint: 768px !default;
   overflow: hidden;
 }
 
-.tui-modalBackdrop {
-  position: fixed;
-  top: 0;
-  left: 0;
-  z-index: var(--zindex-modal-backdrop);
-  width: 100%;
-  height: 100%;
-
-  &--shade {
-    background-color: var(--color-backdrop-standard);
-    &.tui-modalBackdrop--size-sheet {
-      background-color: var(--color-backdrop-heavy);
-    }
-  }
-
-  &--animated {
-    opacity: 0;
-    transition: opacity var(--transition-modal-function)
-      var(--transition-modal-duration);
-
-    &.tui-modalBackdrop--in {
-      opacity: 1;
-    }
-  }
-}
-
 @media (min-width: $tui-modal-sheetBreakpoint) {
   .tui-modal.tui-modal--size-sheet {
     &.tui-modal--animated {
       .tui-modal__inner {
         transform: scale(0.9);
         opacity: 0;
-        transition: transform var(--transition-modal-function)
-            var(--transition-modal-duration),
-          opacity var(--transition-modal-function)
-            var(--transition-modal-duration);
       }
 
       &.tui-modal--in .tui-modal__inner {
@@ -4411,10 +4395,6 @@ $tui-modal-sheetBreakpoint: 768px !default;
         .tui-modal__inner {
           transform: scale(0.9);
           opacity: 0;
-          transition: transform var(--transition-modal-function)
-              var(--transition-modal-duration),
-            opacity var(--transition-modal-function)
-              var(--transition-modal-duration);
         }
 
         &.tui-modal--in .tui-modal__inner {
@@ -5200,6 +5180,7 @@ $progress-tracker-half-circle: 14px !default;
     position: sticky;
     top: 0;
     max-height: 100vh;
+    overflow: hidden;
 
     .ie &,
     .msedge & {

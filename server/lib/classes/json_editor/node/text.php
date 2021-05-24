@@ -119,9 +119,6 @@ final class text extends node implements inline_node {
             return null;
         }
 
-        $text = $cleaned_raw_node['text'] ?? '';
-        $cleaned_raw_node['text'] = clean_param($text, PARAM_TEXT);
-
         if (array_key_exists('marks', $cleaned_raw_node) && !is_array($cleaned_raw_node['marks'])) {
             $cleaned_raw_node['marks'] = [];
         }
@@ -151,18 +148,6 @@ final class text extends node implements inline_node {
         }
 
         return $cleaned_raw_node;
-    }
-
-    /**
-     * @param array $raw_node
-     * @return array
-     */
-    public static function sanitize_raw_node(array $raw_node): array {
-        $sanitized_node = parent::sanitize_raw_node($raw_node);
-        $text = $sanitized_node['text'] ?? '';
-
-        $sanitized_node['text'] = s($text);
-        return $sanitized_node;
     }
 
     /**

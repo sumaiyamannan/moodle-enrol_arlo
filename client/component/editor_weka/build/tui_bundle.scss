@@ -247,8 +247,10 @@
     outline: var(--border-width-normal) solid var(--color-secondary);
   }
 
-  &__inner {
+  &__positioner {
     position: relative;
+  }
+  &__inner {
     display: inline-block;
     max-width: 100%;
     white-space: normal;
@@ -256,7 +258,7 @@
     &-addAltButton {
       position: absolute;
       right: var(--gap-2);
-      bottom: var(--gap-7);
+      bottom: var(--gap-2);
     }
 
     .tui-imageBlock {
@@ -307,6 +309,14 @@
     & > .tui-wekaNodeBar {
       margin-top: var(--gap-2);
     }
+  }
+
+  &__loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--gap-6);
+    color: var(--color-neutral-6);
   }
 }
 

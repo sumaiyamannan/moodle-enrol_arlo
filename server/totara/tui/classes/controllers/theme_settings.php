@@ -32,13 +32,12 @@ namespace totara_tui\controllers;
 
 use context;
 use moodle_url;
-use totara_mvc\controller;
+use totara_mvc\admin_controller;
 use totara_mvc\tui_view;
 use totara_tenant\entity\tenant;
 use core\theme\settings as core_theme_settings;
 
-
-class theme_settings extends controller {
+class theme_settings extends admin_controller {
 
     /**
      * @var string
@@ -66,12 +65,46 @@ class theme_settings extends controller {
     /**
      * @inheritDoc
      */
+    protected function init_page_object() {
+        global $SITE;
+
+        parent::init_page_object();
+
+        if (defined('PHPUNIT_TEST') && PHPUNIT_TEST) {
+            // Don't set page options while under test as it will prevent
+            // creating the controller multiple times in tests.
+            return;
+        }
+
+        // Force current theme to be the theme we are editing. Only for the
+        // current request, it does not persist when you switch to other pages.
+        // This is neccesary as each theme's theme settings are implemented as
+        // *overrides* to the core theme settings views.
+        $theme = $this->get_optional_param('theme_name', null, PARAM_COMPONENT);
+        if ($theme) {
+            $page = $this->get_page();
+            // Must set course before theme.
+            // If we don't set it here, set_course() will throw an exception in
+            // $page->initialise_theme_and_output().
+            // We already set the context in the parent method, so calling this
+            // won't change the context.
+            $page->set_course($SITE);
+            $page->force_theme($theme);
+        }
+    }
+
+    /**
+     * @inheritDoc
+     */
     public function process(string $action = '') {
         global $CFG, $USER;
 
         // Get the theme name from parameter.
         $this->theme = $this->get_required_param('theme_name', PARAM_COMPONENT);
         $this->tenant_id = $this->get_optional_param('tenant_id', null, PARAM_INT);
+
+        // Set external admin page name.
+        $this->admin_external_page_name = "{$this->theme}_editor";
 
         require_login(null, false);
         $url = new moodle_url('/totara/tui/theme_settings.php', ['theme_name' => $this->theme]);

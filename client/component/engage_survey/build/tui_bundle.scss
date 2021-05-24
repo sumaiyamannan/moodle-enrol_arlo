@@ -19,11 +19,7 @@
 
     .tui-radio__label {
       font-size: var(--font-size-15);
-      -ms-word-break: break-all;
-      overflow-wrap: break-word;
-      -webkit-hyphens: none;
-          -ms-hyphens: none;
-              hyphens: none;
+      @include tui-wordbreak--hyphens;
     }
   }
 }
@@ -34,12 +30,7 @@
   }
   .tui-checkbox {
     min-height: var(--gap-4);
-    overflow: auto;
-    -ms-word-break: break-all;
-    overflow-wrap: break-word;
-    -webkit-hyphens: none;
-        -ms-hyphens: none;
-            hyphens: none;
+    @include tui-wordbreak--hyphens;
   }
   .tui-checkboxGroup > * + * {
     margin-top: 0;
@@ -50,11 +41,6 @@
   display: flex;
   flex-direction: column;
   width: 100%;
-
-  .tui-card {
-    /* A hack to set the cursor back to normal cursor instead of pointer.*/
-    cursor: default;
-  }
 
   &__cardContent {
     width: 100%;
@@ -123,11 +109,7 @@
     flex-grow: 1;
     height: 100%;
     overflow: hidden;
-    -ms-word-break: break-all;
-    overflow-wrap: break-word;
-    -webkit-hyphens: none;
-        -ms-hyphens: none;
-            hyphens: none;
+    @include tui-wordbreak--hyphens;
   }
 
   &__footer {
@@ -174,11 +156,7 @@
     @include tui-font-heading-x-small();
     margin-bottom: var(--gap-6);
     color: var(--color-text);
-    -ms-word-break: break-all;
-    overflow-wrap: break-word;
-    -webkit-hyphens: none;
-        -ms-hyphens: none;
-            hyphens: none;
+    @include tui-wordbreak--hyphens;
   }
 
   &__progress {
@@ -243,11 +221,7 @@
 
   &__answer {
     @include tui-font-body();
-    -ms-word-break: break-all;
-    overflow-wrap: break-word;
-    -webkit-hyphens: none;
-        -ms-hyphens: none;
-            hyphens: none;
+    @include tui-wordbreak--hyphens;
   }
 
   &__votes {
@@ -309,11 +283,7 @@
     @include tui-font-heading-medium();
     width: 90%;
     margin: 0;
-    -ms-word-break: break-all;
-    overflow-wrap: break-word;
-    -webkit-hyphens: none;
-        -ms-hyphens: none;
-            hyphens: none;
+    @include tui-wordbreak--hyphens;
 
     @media (max-width: $tui-screen-sm) {
       width: 100%;
@@ -462,8 +432,10 @@
     display: flex;
     flex-direction: column;
     justify-content: center;
+    width: 100%;
     margin: 0 auto;
     padding: 0 0 var(--gap-12) 0;
+
     @media (max-width: $tui-screen-sm) {
       width: 70vw;
       margin-left: var(--gap-8);

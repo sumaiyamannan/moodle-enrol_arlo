@@ -79,40 +79,6 @@ final class hashtag extends node implements inline_node {
     }
 
     /**
-     * @param array $raw_node
-     * @return array|null
-     */
-    public static function clean_raw_node(array $raw_node): ?array {
-        $cleaned_raw_node = parent::clean_raw_node($raw_node);
-
-        if (null === $cleaned_raw_node) {
-            return null;
-        }
-
-        if (!array_key_exists('attrs', $cleaned_raw_node)) {
-            throw new \coding_exception("Invalid node structure", static::get_type());
-        }
-
-        $cleaned_raw_node['attrs']['text'] = clean_param($cleaned_raw_node['attrs']['text'], PARAM_TEXT);
-        return $cleaned_raw_node;
-    }
-
-    /**
-     * @param array $raw_node
-     * @return array
-     */
-    public static function sanitize_raw_node(array $raw_node): array {
-        $sanitized_node = parent::sanitize_raw_node($raw_node);
-
-        if (!isset($sanitized_node['attrs'])) {
-            throw new \coding_exception("Invalid node structure");
-        }
-
-        $sanitized_node['attrs']['text'] = s($sanitized_node['attrs']['text']);
-        return $sanitized_node;
-    }
-
-    /**
      * @param formatter $formatter
      * @return string
      */
