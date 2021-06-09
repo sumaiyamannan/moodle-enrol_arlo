@@ -23,8 +23,8 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2021022400;    // The current plugin version (Date: YYYYMMDDXX).
-$plugin->release   = 2021022400;    // Match release exactly to version.
+$plugin->version   = 2021042001;    // The current plugin version (Date: YYYYMMDDXX).
+$plugin->release   = 2021042001;    // Match release exactly to version.
 $plugin->requires  = 2016120509;    // Requires PHP 7, 2017051509 = T12. M3.3
 
 $plugin->component = 'auth_catadmin';  // Full name of the plugin (used for diagnostics).

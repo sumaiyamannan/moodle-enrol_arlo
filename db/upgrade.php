@@ -47,4 +47,6 @@ function xmldb_auth_catadmin_upgrade($oldversion) {
     if ($oldversion < 2021022400) {
         upgrade_plugin_savepoint(true, 2021022400, 'auth', 'catadmin');
     }
+
+    return true;
 }

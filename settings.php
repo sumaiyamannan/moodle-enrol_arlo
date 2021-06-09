@@ -53,6 +53,14 @@ if ($ADMIN->fulltree) {
         get_string('forceauthn', 'auth_catadmin'),
         get_string('forceauthn_desc', 'auth_catadmin'), 0));
 
+    $settings->add(new admin_setting_configtext('auth_catadmin/groupattribute',
+        get_string('groupattribute', 'auth_catadmin'),
+        get_string('groupattribute_desc', 'auth_catadmin'), 'affiliations', PARAM_TEXT));
+
+    $settings->add(new admin_setting_configtext('auth_catadmin/suffix',
+        get_string('suffix', 'auth_catadmin'),
+        get_string('suffix_desc', 'auth_catadmin'), ''));
+
     $settings->add(new admin_setting_heading(
         'auth_catadmin/auditsettings',
         get_string('auditheading', 'auth_catadmin'),
@@ -79,6 +87,14 @@ if ($ADMIN->fulltree) {
 
     $adminreport = html_writer::link(new moodle_url('/auth/catadmin/admin_report.php'), get_string('adminreport', 'auth_catadmin'));
     $settings->add(new admin_setting_heading('auth_catadmin/admin', '', $adminreport));
+
+
+    // Display locking / mapping of profile fields.
+    $help = get_string('auth_updatelocal_expl', 'auth');
+    $help .= get_string('auth_fieldlock_expl', 'auth');
+    $help .= get_string('auth_updateremote_expl', 'auth');
+    display_auth_lock_options($settings, $authplugin->authtype, $authplugin->userfields, $help, true, true,
+            $authplugin->get_custom_user_profile_fields());
 }
 
 // Add External admin page for admin access auditing.

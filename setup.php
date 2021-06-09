@@ -24,7 +24,7 @@ defined('MOODLE_INTERNAL') || die();
 
 require_once(__DIR__ . '/setuplib.php');
 
-global $CFG, $catadminsaml;
+global $CFG, $catadminsaml, $saml2auth;
 
 if (isset($CFG->sslproxy) && $CFG->sslproxy) {
     $_SERVER['SERVER_PORT'] = '443';
@@ -44,3 +44,6 @@ if (!file_exists($catadminsaml->certpem) || !file_exists($catadminsaml->certcrt)
 }
 
 SimpleSAML\Configuration::setConfigDir("$CFG->dirroot/auth/catadmin/config");
+
+// Make the SAML2 global a reference to catadminsaml to work around SAML customisations.
+$saml2auth = $catadminsaml;
