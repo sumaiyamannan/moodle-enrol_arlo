@@ -106,6 +106,11 @@ class admin_report extends \moodleform {
                 $fullname = \html_writer::tag('del', $fullname);
             }
             $fullname = \html_writer::link('/user/profile.php?id=' . $user->id, $fullname);
+
+            if ($user->auth != 'catadmin') {
+                $fullname .= " <span class='badge badge-info'>{$user->auth}</span>";
+            }
+
             $fullname .= "<br>" . $user->email;
 
             // Check if timecreated is set.

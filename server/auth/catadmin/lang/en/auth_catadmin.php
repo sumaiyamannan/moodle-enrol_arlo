@@ -40,6 +40,10 @@ $string['suspendafter'] = 'Suspend user after';
 $string['suspendafter_desc'] = 'Period of time after which the users are suspended';
 $string['forceauthn'] = 'Force Authn';
 $string['forceauthn_desc'] = 'This will force users to reauthenticate with the IdP if an existing IdP session exists.';
+$string['groupattribute'] = 'Group attribute';
+$string['groupattribute_desc'] = 'The attribute that contains the assigned groups from the IdP.';
+$string['suffix'] = 'Suffix for catadmin users';
+$string['suffix_desc'] = 'Adds a suffix to the end of user\'s username.';
 
 $string["privacy:no_data_reason"] = "The catadmin authentication plugin does not store any personal data.";
 

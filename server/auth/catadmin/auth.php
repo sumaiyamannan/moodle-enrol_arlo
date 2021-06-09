@@ -22,6 +22,7 @@ require_once($CFG->libdir . '/authlib.php');
 require_once($CFG->dirroot . '/auth/catadmin/lib.php');
 
 require_once($CFG->dirroot . '/auth/saml2/classes/idp_parser.php');
+require_once($CFG->dirroot . '/login/lib.php');
 
 /**
  * Class auth_plugin_catadmin
@@ -46,6 +47,11 @@ class auth_plugin_catadmin extends auth_plugin_base {
         'logtofile' => 0,
         'logdir' => '/tmp/',
         'groups' => 'elearning',
+        'groupattribute' => 'affiliations',
+        // Data mapping defaults.
+        'field_map_firstname' => 'catalystFirstName',
+        'field_map_lastname' => 'catalystLastName',
+        'field_map_email' => 'catalystEmail',
     ];
 
     public function __construct() {
@@ -59,6 +65,14 @@ class auth_plugin_catadmin extends auth_plugin_base {
         $this->certpem = $this->get_file("{$this->spname}.pem");
         $this->certcrt = $this->get_file("{$this->spname}.crt");
         $this->config = (object) array_merge($this->defaults, (array) get_config('auth_catadmin'));
+        // Now lets go back over the defaults and decide if any should replace empty values.
+        // This is necessary as defaults can contain items not in config,
+        // So we can't just do a single conditional run based on just one of the arrays.
+        foreach ($this->defaults as $key => $value) {
+            if (empty($this->config->$key)) {
+                $this->config->$key = $value;
+            }
+        }
 
         $parser = new auth_saml2\idp_parser();
         $metadata = get_config('auth_catadmin', 'idpmetadata');
@@ -201,6 +215,16 @@ class auth_plugin_catadmin extends auth_plugin_base {
             return true;
         }
 
+        // Check whether we have already logged out of IdP. This sets a cookie,
+        // That persists until next login.
+        if (!NO_MOODLE_COOKIES) {
+            if (!empty($_COOKIE['catadmin_logout_cookie'])) {
+                if ($_COOKIE['catadmin_logout_cookie'] > (time() - DAYSECS)) {
+                    return false;
+                }
+            }
+        }
+
         // Check whether we've skipped catadmin already.
         // This is here because loginpage_hook is called again during form
         // submission (all of login.php is processed) and ?catadmin=off is not
@@ -282,7 +306,7 @@ class auth_plugin_catadmin extends auth_plugin_base {
 
     public function saml_login() {
         // @codingStandardsIgnoreStart
-        global $CFG, $DB, $USER, $SESSION, $catadminsaml;
+        global $CFG, $SESSION, $catadminsaml;
         // @codingStandardsIgnoreEnd
 
         if (!$this->is_configured()) {
@@ -337,124 +361,7 @@ class auth_plugin_catadmin extends auth_plugin_base {
         $auth->requireAuth();
         $attributes = $auth->getAttributes();
 
-        $attr = $this->config->idpattr;
-        if (empty($attributes[$attr])) {
-            $this->error_page(get_string('noattribute', 'auth_catadmin', $attr));
-        }
-
-        // Check if user is in same group as site.
-        $groups = explode(',', $this->config->groups);
-        $ingroup = false;
-        foreach ($groups as $group) {
-            if (!empty($group)) {
-                if (in_array($group, $attributes['affiliations'])) {
-                    $ingroup = true;
-                }
-            }
-        }
-        if (!$ingroup && !empty($groups[0])) {
-            $this->error_page(get_string('noaccess', 'auth_catadmin', $group));
-        }
-
-        $user = null;
-        foreach ($attributes[$attr] as $key => $uid) {
-            if ($this->config->tolower) {
-                $this->log(__FUNCTION__ . " to lowercase for $key => $uid");
-                $uid = strtolower($uid);
-            }
-            if ($user = $DB->get_record('user', array($this->config->mdlattr => $uid, 'deleted' => 0))) {
-                if ($user->auth == 'catalyst') {
-                    $user->auth = 'catadmin';
-                    user_update_user($user, false);
-                }
-                if ($user->auth != 'catadmin') {
-                    $this->log(__FUNCTION__ . " user '$uid' is not authtype catadmin but attempted to log in!");
-                    $this->error_page(get_string('incorrectauthtype', 'auth_catadmin'));
-                }
-                continue;
-            }
-        }
-
-        $newuser = false;
-        if (!$user) {
-            $email = $attributes['catalystEmail'][0];
-            if (!empty($email)) {
-                // Make a case-insensitive query for the given email address.
-                $select = $DB->sql_equal('email', ':email', false) . ' AND mnethostid = :mnethostid AND deleted = :deleted';
-                $params = array(
-                    'email' => $email,
-                    'mnethostid' => $CFG->mnet_localhost_id,
-                    'deleted' => 0
-                );
-
-                // If there are other user(s) that already have the same email, display an error.
-                if ($DB->record_exists_select('user', $select, $params)) {
-                    $this->log(__FUNCTION__ . " user '$uid' can't be autocreated as email '$email' is taken");
-                    $this->error_page(get_string('emailtaken', 'auth_catadmin', $email));
-                } else {
-                    $this->log(__FUNCTION__ . " user '$uid' is not in moodle so autocreating");
-                    $user = create_user_record($uid, '', 'catadmin');
-                    $newuser = true;
-                }
-            } else {
-                $this->log(__FUNCTION__ . " user '$uid' is not in moodle so error");
-                $this->error_page(get_string('nouser', 'auth_catadmin', $uid));
-            }
-        } else {
-            // Revive users who are suspended.
-            if ($user->suspended) {
-                $user->suspended = 0;
-                user_update_user($user, false);
-            }
-            // Make sure all user data is fetched.
-            $user = get_complete_user_data('username', $user->username);
-            $this->log(__FUNCTION__ . ' found user ' . $user->username);
-        }
-
-        if ($newuser) {
-            $user->email = $attributes['catalystEmail'][0];
-            $user->firstname = $attributes['catalystFirstName'][0];
-            $user->lastname = $attributes['catalystLastName'][0];
-            user_update_user($user, false, false);
-        } else {
-            if ($user->email !== $attributes['catalystEmail'][0]) {
-                // Change emails.
-                $user->email = $attributes['catalystEmail'][0];
-                user_update_user($user, false, false);
-            }
-        }
-
-        // Deny user admin rights based on SAML attribute.
-        if (isset($attributes['denyAdmin'])) {
-            $this->remove_admin_from_user($user->id);
-        } else {
-            // Only add as admin if config has not been set or it is turned on.
-            if (get_config('auth_catadmin', 'autoadmin') == null || get_config('auth_catadmin', 'autoadmin') === 'on') {
-                $this->give_user_admin($user->id);
-            } else {
-                $this->remove_admin_from_user($user->id);
-            }
-        }
-
-        // Make sure all user data is fetched.
-        $user = get_complete_user_data('username', $user->username);
-
-        complete_user_login($user);
-        $USER->loggedin = true;
-        $USER->site = $CFG->wwwroot;
-        set_moodle_cookie($USER->username);
-
-        $urltogo = core_login_get_return_url();
-        // If we are not on the page we want, then redirect to it.
-        if (qualified_me() !== $urltogo) {
-            $this->log(__FUNCTION__ . " redirecting to $urltogo");
-            redirect($urltogo);
-            exit;
-        } else {
-            $this->log(__FUNCTION__ . " continuing onto " . qualified_me());
-        }
-
-        return;
+        $this->saml_login_complete($attributes);
     }
 
     public function remove_admin_from_user($userid) {
@@ -505,6 +412,10 @@ class auth_plugin_catadmin extends auth_plugin_base {
                 setcookie($cookiename, '', time() - HOURSECS, $CFG->sessioncookiepath, $CFG->sessioncookiedomain,
                     is_moodle_cookie_secure(), $CFG->cookiehttponly);
 
+                // Now set a cookie for signing out of IdP that prevents redirects back to IdP.
+                setcookie('catadmin_logout_cookie', time(), time() + 10 * YEARSECS, $CFG->sessioncookiepath,
+                    $CFG->sessioncookiedomain, is_moodle_cookie_secure(), $CFG->cookiehttponly);
+
                 if ($auth->isAuthenticated()) {
                     $auth->logout();
                 }
@@ -554,5 +465,211 @@ class auth_plugin_catadmin extends auth_plugin_base {
             mkdir($directory);
         }
         return $directory;
+    }
+
+    /**
+     * Checks the field map config for values that update onlogin or when a new user is created
+     * and returns true when the fields have been merged into the user object.
+     *
+     * @param $attributes
+     * @param bool $newuser
+     * @return bool true on success
+     */
+    public function update_user_profile_fields(&$user, $attributes, $newuser = false) {
+        global $CFG;
+
+        $mapconfig = get_config('auth_catadmin');
+        $allkeys = array_keys(get_object_vars($mapconfig));
+        $update = false;
+
+        foreach ($allkeys as $key) {
+            if (preg_match('/^field_updatelocal_(.+)$/', $key, $match)) {
+                $field = $match[1];
+                if (!empty($mapconfig->{'field_map_'.$field})) {
+                    $attr = $mapconfig->{'field_map_'.$field};
+                    $updateonlogin = $mapconfig->{'field_updatelocal_'.$field} === 'onlogin';
+
+                    if ($newuser || $updateonlogin) {
+                        // Basic error handling, check to see if the attributes exist before mapping the data.
+                        if (array_key_exists($attr, $attributes)) {
+                            // Handing an empty array of attributes.
+                            if (!empty($attributes[$attr])) {
+                                // Custom profile fields have the prefix profile_field_ and will be saved as profile field data.
+                                $user->$field = $attributes[$attr][0];
+                                $update = true;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        if ($update) {
+            require_once($CFG->dirroot . '/user/lib.php');
+            if ($user->description === true) {
+                // Function get_complete_user_data() sets description = true to avoid keeping in memory.
+                // If set to true - don't update based on data from this call.
+                unset($user->description);
+            }
+            // We should save the profile fields first so they are present and
+            // then we update the user which also fires events which other
+            // plugins listen to so they have the correct user data.
+            profile_save_data($user);
+            user_update_user($user, false);
+        }
+
+        return $update;
+    }
+
+    public function loginpage_idp_list($wantsurl) {
+        if (empty($_COOKIE['catadmin_logout_cookie'])) {
+            return [];
+        }
+
+        $idpicon = new pix_icon('i/user', 'Login');
+        $idpurl = new moodle_url('/auth/catadmin/login.php', ['wants' => $wantsurl]);
+        $idpname = get_string('pluginname', 'auth_catadmin');
+
+        return [[
+            'url'  => $idpurl,
+            'icon' => $idpicon,
+            'iconurl' => null,
+            'name' => $idpname,
+        ]];
+    }
+
+    /**
+     * Finish the SAML login, now that the attributes are set.
+     *
+     * @param array $attributes
+     * @return void
+     */
+    public function saml_login_complete($attributes) {
+        global $CFG, $DB, $SESSION, $USER;
+
+        $attr = $this->config->idpattr;
+        if (empty($attributes[$attr])) {
+            $this->error_page(get_string('noattribute', 'auth_catadmin', $attr));
+        }
+
+        // Check if user is in same group as site.
+        $groups = explode(',', $this->config->groups);
+        $ingroup = false;
+        foreach ($groups as $group) {
+            if (!empty($group)) {
+                if (!empty($attributes[$this->config->groupattribute])
+                        && in_array($group, $attributes[$this->config->groupattribute])) {
+                    $ingroup = true;
+                }
+            }
+        }
+        if (!$ingroup && !empty($groups[0])) {
+            $this->error_page(get_string('noaccess', 'auth_catadmin', $group));
+        }
+
+        $user = null;
+        foreach ($attributes[$attr] as $key => $uid) {
+            $suffix = $this->config->suffix;
+            if ($this->config->mdlattr === 'username') {
+                // If we are matching on username, we need to check it *with* suffix.
+                $uid .= $suffix;
+            }
+            if ($this->config->tolower) {
+                $this->log(__FUNCTION__ . " to lowercase for $key => $uid");
+                $uid = strtolower($uid);
+            }
+            if ($user = $DB->get_record('user', array($this->config->mdlattr => $uid, 'deleted' => 0))) {
+                if ($user->auth == 'catalyst') {
+                    $user->auth = 'catadmin';
+                    user_update_user($user, false);
+                }
+                if ($user->auth != 'catadmin') {
+                    $this->log(__FUNCTION__ . " user '$uid' is not authtype catadmin but attempted to log in!");
+                    $this->error_page(get_string('incorrectauthtype', 'auth_catadmin'));
+                }
+                continue;
+            }
+        }
+
+        $newuser = false;
+        if (!$user) {
+            $email = $attributes[$this->config->field_map_email][0];
+            if ($this->config->mdlattr !== 'username') {
+                // We aren't matching users on username. Here we should attach the suffix before saving $uid as username.
+                $uid .= $suffix;
+            }
+            if (!empty($email)) {
+                // Make a case-insensitive query for the given email address.
+                $select = $DB->sql_equal('email', ':email', false) . ' AND mnethostid = :mnethostid AND deleted = :deleted';
+                $params = array(
+                    'email' => $email,
+                    'mnethostid' => $CFG->mnet_localhost_id,
+                    'deleted' => 0
+                );
+
+                // If there are other user(s) that already have the same email, display an error.
+                if ($DB->record_exists_select('user', $select, $params)) {
+                    $this->log(__FUNCTION__ . " user '$uid' can't be autocreated as email '$email' is taken");
+                    $this->error_page(get_string('emailtaken', 'auth_catadmin', $email));
+                } else {
+                    $this->log(__FUNCTION__ . " user '$uid' is not in moodle so autocreating");
+                    $user = create_user_record($uid, '', 'catadmin');
+                    $newuser = true;
+                }
+            } else {
+                $this->log(__FUNCTION__ . " user '$uid' is not in moodle so error");
+                $this->error_page(get_string('nouser', 'auth_catadmin', $uid));
+            }
+        } else {
+            // Revive users who are suspended.
+            if ($user->suspended) {
+                $user->suspended = 0;
+                user_update_user($user, false);
+            }
+            // Make sure all user data is fetched.
+            $user = get_complete_user_data('username', $user->username);
+            $this->log(__FUNCTION__ . ' found user ' . $user->username);
+        }
+
+        // We have a user now. Apply custom mappings.
+        $this->update_user_profile_fields($user, $attributes, $newuser);
+
+        // Deny user admin rights based on SAML attribute.
+        if (isset($attributes['denyAdmin'])) {
+            $this->remove_admin_from_user($user->id);
+        } else {
+            // Only add as admin if config has not been set or it is turned on.
+            if (get_config('auth_catadmin', 'autoadmin') == null || get_config('auth_catadmin', 'autoadmin') === 'on') {
+                $this->give_user_admin($user->id);
+            } else {
+                $this->remove_admin_from_user($user->id);
+            }
+        }
+
+        // Make sure all user data is fetched.
+        $user = get_complete_user_data('username', $user->username);
+
+        complete_user_login($user);
+        $USER->loggedin = true;
+        $USER->site = $CFG->wwwroot;
+        set_moodle_cookie($USER->username);
+
+        // Clear any autologin prevention cookies now that we have a successful login.
+        setcookie('catadmin_logout_cookie', -1, time() + 10 * YEARSECS, $CFG->sessioncookiepath,
+                $CFG->sessioncookiedomain, is_moodle_cookie_secure(), $CFG->cookiehttponly);
+
+        $urltogo = core_login_get_return_url();
+        // If we are not on the page we want, then redirect to it.
+        if (qualified_me() !== $urltogo) {
+            $this->log(__FUNCTION__ . " redirecting to $urltogo");
+            // Re-store the url in Session to be used by other post login hooks.
+            $SESSION->wantsurl = $urltogo;
+            redirect($urltogo);
+            exit;
+        } else {
+            $this->log(__FUNCTION__ . " continuing onto " . qualified_me());
+        }
+
+        return;
     }
 }
