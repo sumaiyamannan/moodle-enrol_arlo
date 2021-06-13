@@ -29,6 +29,12 @@ $PAGE->set_url('/auth/catadmin/login.php');
 $PAGE->set_title('Catalyst SSO Login');
 $PAGE->set_heading('Catalyst SSO Login');
 
+$wantsurl = optional_param('wants', '', PARAM_TEXT);
+// Set wantsurl in session, provided from loginpage button.
+if (!empty($wantsurl)) {
+    $SESSION->wantsurl = new moodle_url($wantsurl);
+}
+
 $idps = auth_catadmin_get_idps(false, true);
 $idpentityids = array();
 foreach ($idps as $idpid => $idparray) {

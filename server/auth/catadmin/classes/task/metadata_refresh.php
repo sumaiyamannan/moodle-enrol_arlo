@@ -39,7 +39,10 @@ class metadata_refresh extends \core\task\scheduled_task {
     }
 
     public function execute($force = false) {
-        foreach (explode(PHP_EOL, get_config('auth_catadmin', 'idpmetadata')) as $idpmetadata) {
+        global $DB;
+
+        $configidps = explode(PHP_EOL, get_config('auth_catadmin', 'idpmetadata'));
+        foreach ($configidps as $idpmetadata) {
             if (empty($idpmetadata)) {
                 mtrace('IdP metadata not configured.');
                 return false;
@@ -59,6 +62,14 @@ class metadata_refresh extends \core\task\scheduled_task {
 
             mtrace('IdP metadata refresh completed successfully.');
         }
+
+        $existingidps = $DB->get_records('auth_catadmin_idps');
+        foreach ($existingidps as $idp) {
+            if (!in_array($idp->metadataurl, $configidps)) {
+                $DB->delete_records('auth_catadmin_idps', ['metadataurl' => $idp->metadataurl]);
+            }
+        }
+
         return true;
     }
 }
