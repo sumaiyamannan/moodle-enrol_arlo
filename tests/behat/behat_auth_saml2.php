@@ -27,7 +27,6 @@
 use auth_saml2\admin\saml2_settings;
 use auth_saml2\task\metadata_refresh;
 use Behat\Behat\Hook\Scope\AfterStepScope;
-use Behat\Mink\Exception\UnsupportedDriverActionException;
 use Behat\Mink\Exception\ExpectationException;
 use Behat\Gherkin\Node\TableNode;
 
@@ -42,35 +41,6 @@ require_once(__DIR__ . '/../../../../lib/behat/behat_base.php');
  */
 class behat_auth_saml2 extends behat_base {
     /**
-     * Hopefully it will help when dealing with the IDP...
-     *
-     * @AfterStep
-     */
-    public function take_screenshot_after_failure($scope) {
-        if (!($scope instanceof AfterStepScope)) {
-            // Older version of behat.
-            return;
-        }
-        $resultcode = $scope->getTestResult()->getResultCode();
-        if ($resultcode === 99) {
-            $filename = '/tmp/behat_screenshots.base64';
-            if (!file_exists($filename)) {
-                file_put_contents($filename, "Just paste it into your browser :-). You're welcome!\n\n");
-            }
-
-            try {
-                $screenshot = $this->getSession()->getDriver()->getScreenshot();
-                $screenshot = base64_encode($screenshot);
-
-                $url = "data:image/png;base64,{$screenshot}\n"; //
-                file_put_contents($filename, $url, FILE_APPEND);
-            } catch (UnsupportedDriverActionException $e) {
-                file_put_contents($filename, $e->getMessage(), FILE_APPEND);
-            }
-        }
-    }
-
-    /**
      * @Given /^the authentication plugin saml2 is (disabled|enabled) +\# auth_saml2$/
      */
     public function theAuthenticationPluginIsEnabledAuth_saml($enabled = true) {
@@ -82,11 +52,6 @@ class behat_auth_saml2 extends behat_base {
         } else {
             set_config('auth', 'saml2');
             $this->initialise_saml2();
-            /** @var auth_plugin_saml2 $auth */
-            $auth = get_auth_plugin('saml2');
-            if (!$auth->is_configured()) {
-                throw new moodle_exception('Saml2 not configured.');
-            }
         }
 
         \core\session\manager::gc(); // Remove stale sessions.
@@ -331,6 +296,35 @@ EOF;
 
         // Press the submit button.
         $this->getSession()->getDriver()->click('//button');
+    }
+
+    /**
+     * Sets a cookie (for use testing the autologin based on cookie).
+     *
+     * @When /^the cookie "([^"]+)" is set to "([^"]+)" +\# auth_saml2$/
+     */
+    public function the_cookie_is_set_to($cookiename, $value) {
+        $this->getSession()->getDriver()->executeScript('document.cookie = "' .
+                addslashes_js($cookiename) . '=' . addslashes_js($value) . '";');
+    }
+
+    /**
+     * Clears a cookie (for use testing the autologin based on cookie).
+     *
+     * @When /^the cookie "([^"]+)" is removed +\# auth_saml2$/
+     */
+    public function the_cookie_is_removed($cookiename) {
+        $this->getSession()->getDriver()->executeScript('document.cookie = "' .
+                addslashes_js($cookiename) . '=; expires=Thu, 01 Jan 1970 00:00:00 GMT";');
+    }
+
+    private function visit_saml2_login_page() {
+        $this->getSession()->visit($this->locate_path('http://simplesamlphp.test:8001/module.php/core/authenticate.php'));
+    }
+
+    private function reset_saml2_session() {
+        $this->visit_saml2_login_page();
+        $this->getSession()->reset();
     }
 
     private function reset_moodle_session() {

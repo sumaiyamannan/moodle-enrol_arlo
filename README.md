@@ -72,13 +72,13 @@ Features not yet implemented:
 Branches
 --------
 
-| Moodle verion     | Branch      | PHP  | SimpleSAMLphp |
-| ----------------- | ----------- | ---- | ------------- |
-| Moodle 2.7 to 3.4 | 27_34STABLE | 5.5+ | v1.15.4       |
-| Totara up to 11   | 27_34STABLE | 5.5+ | v1.15.4       |
-| Moodle 3.5 to 3.8 | master      | 7.2+ | v1.18.8       |
-| Moodle 3.9        | master      | 7.2+ | v1.18.8       |
-| Totara 12+        | master      | 7.2+ | v1.18.8       |
+| Moodle verion     | Branch           | PHP  | SimpleSAMLphp |
+| ----------------- | ---------------- | ---- | ------------- |
+| Moodle 2.7 to 3.4 | 27_34STABLE      | 5.5+ | v1.15.4       |
+| Totara up to 11   | 27_34STABLE      | 5.5+ | v1.15.4       |
+| Moodle 3.5 to 3.8 | MOODLE_35_STABLE | 7.2+ | v1.18.8       |
+| Moodle 3.9+       | MOODLE_39_STABLE | 7.2+ | v1.18.8       |
+| Totara 12+        | MOODLE_35_STABLE | 7.2+ | v1.18.8       |
 
 Installation
 ------------
@@ -138,6 +138,7 @@ This plugin has been tested against:
 * An AAF instance of Shibboleth
 * OpenAM (Sun / Oracle)
 * Microsoft ADFS
+* NetIQ Access Manager
 
 To configure this against testshib you will need a moodle which is publicly
 accessible over the internet. Turn on the SAML2 plugin and then configure it:
@@ -196,6 +197,14 @@ issues lies. Some common issues are:
 
 Gotchas
 -------
+
+### Bitnami Moodle ###
+
+We get lots of compaints in many plugins that end up being issues with Bitnami. It does a very
+poor job and does not properly configure Moodle with some quite basic things and we strongly
+recommend you don't use it at all, not just for saml issues.  In particular it dynamicaly
+detects the domain that Moodle is on, which is not supported by Moodle. ```$CFG->wwwroot```
+MUST be manually set to a static value in ```config.php```.
 
 ### Multiple IdPs ###
 

@@ -13,25 +13,22 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
 /**
- * Authenticate using an embeded SimpleSamlPhp instance
+ * Page that gets redirected to after autologin is successful.
  *
  * @package   auth_saml2
- * @copyright Brendan Heywood <brendan@catalyst-au.net>
+ * @copyright 2020 The Open University
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
+require_once(__DIR__ . '/../../config.php');
 
-require_once($CFG->libdir.'/authlib.php');
+$url = required_param('url', PARAM_LOCALURL);
+$success = required_param('success', PARAM_INT);
 
-/**
- * Plugin for Saml2 authentication.
- *
- * @package    auth_saml2
- * @copyright  Brendan Heywood <brendan@catalyst-au.net>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-class auth_plugin_saml2 extends \auth_saml2\auth {
+// If the login is OK (or failed expectedly), then redirect back to the destination.
+\auth_saml2\auto_login::finish((bool)$success, new moodle_url($url));
 
-}
+// Something strange went wrong, or somebody tried to directly link here.
+print_error('errorinvalidautologin', 'auth_saml2');
