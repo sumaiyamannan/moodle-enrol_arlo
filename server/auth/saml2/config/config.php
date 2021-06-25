@@ -22,17 +22,11 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
- use auth_saml2\ssl_algorithms;
+use auth_saml2\ssl_algorithms;
 
 defined('MOODLE_INTERNAL') || die();
 
 global $CFG, $saml2auth, $saml2config;
-
-// Check for https login.
-$wwwroot = $CFG->wwwroot;
-if (!empty($CFG->loginhttps)) {
-    $wwwroot = str_replace('http:', 'https:', $CFG->wwwroot);
-}
 
 $metadatasources = [];
 foreach ($saml2auth->metadataentities as $metadataurl => $idpentities) {
@@ -45,13 +39,13 @@ foreach ($saml2auth->metadataentities as $metadataurl => $idpentities) {
 $remoteip = getremoteaddr();
 
 $config = array(
-    'baseurlpath'       => $wwwroot . '/auth/saml2/sp/',
+    'baseurlpath'       => $CFG->wwwroot . '/auth/saml2/sp/',
     'application'       => [
-      'baseURL'         => $wwwroot . '/auth/saml2/sp/',
+      'baseURL'         => $CFG->wwwroot . '/auth/saml2/sp/',
     ],
     'certdir'           => $saml2auth->get_saml2_directory() . '/',
-    'debug'             => $saml2auth->config->debug ? true : false,
-    'logging.level'     => $saml2auth->config->debug ? SimpleSAML\Logger::DEBUG : SimpleSAML\Logger::ERR,
+    'debug'             => $saml2auth->is_debugging(),
+    'logging.level'     => $saml2auth->is_debugging() ? SimpleSAML\Logger::DEBUG : SimpleSAML\Logger::ERR,
     'logging.handler'   => $saml2auth->config->logtofile ? 'file' : 'errorlog',
 
     // SSP has a %srcip token, but instead use $remoteip so Moodle handle's which header to use.
@@ -98,7 +92,7 @@ $config = array(
 
     'proxy' => null, // TODO inherit from moodle conf see http://moodle.local/admin/settings.php?section=http for more.
 
-    'authproc.sp' => auth_plugin_saml2::saml2_authproc_filters_hook(),
+    'authproc.sp' => \auth_saml2\api::authproc_filters_hook(),
 
     // TODO setting for redirect.sign.
 );
