@@ -2222,7 +2222,12 @@ class file_storage {
     protected function path_from_hash($contenthash) {
         $l1 = $contenthash[0].$contenthash[1];
         $l2 = $contenthash[2].$contenthash[3];
-        return "$this->filedir/$l1/$l2";
+
+        if (is_file($this->filedir . '/' . "$l1/$l2" . '/'. $contenthash)) {
+            return "$this->filedir/$l1/$l2";
+        }
+
+        return "$this->filedir/$l1";
     }
 
     /**
@@ -2236,7 +2241,12 @@ class file_storage {
     protected function trash_path_from_hash($contenthash) {
         $l1 = $contenthash[0].$contenthash[1];
         $l2 = $contenthash[2].$contenthash[3];
-        return "$this->trashdir/$l1/$l2";
+
+        if (is_file($this->trashdir . '/' . "$l1/$l2" . '/'. $contenthash)) {
+            return "$this->trashdir/$l1/$l2";
+        }
+
+        return "$this->trashdir/$l1";
     }
 
     /**
