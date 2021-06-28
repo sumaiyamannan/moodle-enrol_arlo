@@ -75,7 +75,7 @@ class totara_core_file_storage_testcase extends advanced_testcase {
         $content = 'test_validate_content invalid ';
         $contenthash = sha1($content);
         $fs->add_string_to_pool($content);
-        $filepath = $CFG->dataroot . '/filedir/' . $contenthash[0].$contenthash[1] . '/' . $contenthash[2].$contenthash[3] . '/' . $contenthash;
+        $filepath = $CFG->dataroot . '/filedir/' . $contenthash[0].$contenthash[1] . '/' . $contenthash;
         $this->assertFileExists($filepath);
         $this->assertTrue($fs->content_exists($contenthash), true);
         file_put_contents($filepath, 'grrr');

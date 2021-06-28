@@ -182,9 +182,9 @@ abstract class base {
         $l1 = $contenthash[0].$contenthash[1];
         $l2 = $contenthash[2].$contenthash[3];
         if ($this->prefix === '') {
-            return "$l1/$l2/$contenthash";
+            return "$l1/$contenthash";
         } else {
-            return "$this->prefix/$l1/$l2/$contenthash";
+            return "$this->prefix/$l1/$contenthash";
         }
     }
 

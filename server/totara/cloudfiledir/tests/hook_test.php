@@ -469,7 +469,7 @@ abstract class totara_cloudfiledir_hook_testcase extends advanced_testcase {
     protected static function get_relative_filepath(string $contenthash): string {
         $l1 = $contenthash[0].$contenthash[1];
         $l2 = $contenthash[2].$contenthash[3];
-        return "$l1/$l2/$contenthash";
+        return "$l1/$contenthash";
     }
 
     /**

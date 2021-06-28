@@ -317,7 +317,7 @@ final class store {
     public static function get_relative_filepath(string $contenthash): string {
         $l1 = $contenthash[0].$contenthash[1];
         $l2 = $contenthash[2].$contenthash[3];
-        return "$l1/$l2/$contenthash";
+        return "$l1/$contenthash";
     }
 
     /**
