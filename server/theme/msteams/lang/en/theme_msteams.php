@@ -26,5 +26,7 @@ defined('MOODLE_INTERNAL') || die();
 $string['cachedef_postprocessedcode'] = 'Cache JS and CSS';
 $string['choosereadme'] = 'Microsoft Teams theme for Totara. (For internal use only)';
 $string['goback'] = 'Back';
-$string['openexternally'] = 'Open in new window';
+$string['loggedinasuser'] = 'Logged in as {$a}.';
+$string['openexternally'] = 'Open in browser';
+$string['open_externally_content'] = 'You are about to be taken to your default browser to view this page';
 $string['pluginname'] = 'Microsoft Teams';

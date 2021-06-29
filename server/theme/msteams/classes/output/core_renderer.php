@@ -26,12 +26,14 @@ namespace theme_msteams\output;
 defined('MOODLE_INTERNAL') || die();
 
 use context_system;
+use core_user;
 use html_writer;
 use moodle_url;
 use single_button;
 use theme_msteams\hook\get_page_navigation_hook;
 use theme_msteams\loader;
 use theme_msteams\session;
+use totara_tui\output\component;
 
 /**
  * Override core_renderer.
@@ -143,6 +145,8 @@ class core_renderer extends \core_renderer {
      * @inheritDoc
      */
     public function standard_top_of_body_html() {
+        global $USER;
+
         $out = parent::standard_top_of_body_html();
 
         $out .= self::include_msteams_sdk();
@@ -154,7 +158,7 @@ class core_renderer extends \core_renderer {
 
         $nav = '';
         $alert = '';
-
+        $template_data = [];
         if ($hook->navigation !== false) {
             // Convert array to template data.
             $links = array_map(function ($obj) {
@@ -197,20 +201,32 @@ class core_renderer extends \core_renderer {
                         'name' => 'target',
                         'value' => '_blank'
                     ]
-                ]
+                ],
+                'marginauto' => $hook->has_sign_out ? true : false,
             ];
 
-            $data = [
-                'links' => $links
+            $template_data = ['links' => $links];
+        }
+
+        if ($hook->has_sign_out && !empty($USER->id)) {
+            $template_data['logout'] = [
+                'logouttitle' => get_string('loggedinasuser', 'theme_msteams', fullname($USER)),
+                'logouttext' => get_string('botfw:msg_signout_button', 'totara_msteams'),
+                'logouthref' => (new moodle_url('/login/logout.php', ['sesskey' => sesskey(), 'redirecturl' => (new moodle_url($data['url']))->out(false)]))->out(false)
             ];
-            $nav = $this->render(new navigation($data));
+        }
+
+        // Render navigation if template data is not empty.
+        if (!empty($template_data)) {
+            $nav = $this->render(new navigation($template_data));
         }
 
         if ((string)$hook->alert !== '') {
             $alert = html_writer::div($hook->alert, 'totara_msteams__alert');
         }
 
-        return $out.$nav.$alert;
+        $tui = new component('totara_msteams/components/modal/ExternalUrlModal');
+        return $out.$nav.$alert.$tui->out_html();
     }
 
     /**

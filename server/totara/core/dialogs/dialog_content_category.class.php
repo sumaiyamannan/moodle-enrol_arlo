@@ -124,11 +124,10 @@ class totara_dialog_content_category extends totara_dialog_content {
     public function get_all_root_items() {
         global $DB;
 
-        $cats = $DB->get_records('course_categories', ['parent' => 0], '', 'id, name, path');
+        $cats = $DB->get_records('course_categories', ['parent' => 0, 'issystem' => 0], '', 'id, name, path');
         foreach ($cats as $k => $cat) {
-            if (!coursecat::get($cat->id)->is_uservisible()) {
+            if (!coursecat::get($cat->id, IGNORE_MISSING)) {
                 unset($cats[$k]);
-                continue;
             }
         }
 
@@ -143,11 +142,10 @@ class totara_dialog_content_category extends totara_dialog_content {
     public function get_subcategories_item($itemid) {
         global $DB;
 
-        $cats = $DB->get_records('course_categories', ['parent' => $itemid], '', 'id, name, path');
+        $cats = $DB->get_records('course_categories', ['parent' => $itemid, 'issystem' => 0], '', 'id, name, path');
         foreach ($cats as $k => $cat) {
-            if (!coursecat::get($cat->id)->is_uservisible()) {
+            if (!coursecat::get($cat->id, IGNORE_MISSING)) {
                 unset($cats[$k]);
-                continue;
             }
         }
 
