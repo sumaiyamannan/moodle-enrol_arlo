@@ -8,17 +8,20 @@ function clustercache_setup_cache (){
     $config = cache_config::instance();
 
     if ($localcreated) {
-        // Actually map something to the cache store.
-        $definitions = array('core/string', 'core/htmlpurifier');
-        $mappings = array($cachename);
-        foreach ($definitions as $definition) {
-            $result = $writer->set_definition_mappings($definition, $mappings);
-            if (!$result) {
-                print "$definition mapped to $cachename successfully<br/>\n";
-            } else {
-                print "failed to map $definition to $cachename<br/>\n";
+        $defs = cache_administration_helper::get_definition_summaries();
+
+        foreach ($defs as $id => $def) {
+            if ($def['canuselocalstore']) {
+                $result = $writer->set_definition_mappings($id, [$cachename]);
+                if (!$result) {
+                    print "$id mapped to $cachename successfully<br/>\n";
+                } else {
+                    print "failed to map $id to $cachename<br/>\n";
+                }
             }
         }
+    } else {
+        print "failed to create local store<br/>\n";
     }
 
     if (extension_loaded('redis')) {
