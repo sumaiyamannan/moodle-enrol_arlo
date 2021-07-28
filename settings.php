@@ -57,6 +57,10 @@ if ($ADMIN->fulltree) {
         get_string('groupattribute', 'auth_catadmin'),
         get_string('groupattribute_desc', 'auth_catadmin'), 'affiliations', PARAM_TEXT));
 
+    $settings->add(new admin_setting_configtext('auth_catadmin/groups',
+        get_string('groups', 'auth_catadmin'),
+        get_string('groups_desc', 'auth_catadmin'), 'elearning', PARAM_TEXT));
+
     $settings->add(new admin_setting_configtext('auth_catadmin/suffix',
         get_string('suffix', 'auth_catadmin'),
         get_string('suffix_desc', 'auth_catadmin'), ''));
