@@ -76,7 +76,7 @@ class auth_plugin_catadmin extends auth_plugin_base {
 
         $parser = new auth_saml2\idp_parser();
         $metadata = get_config('auth_catadmin', 'idpmetadata');
-        $metadata = str_replace(PHP_EOL, ' ', $metadata);
+        $metadata = str_replace("\n", ' ', $metadata);
         $this->metadatalist = $parser->parse($metadata);
 
         $this->metadataentities = auth_catadmin_get_idps(true);

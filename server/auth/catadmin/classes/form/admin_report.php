@@ -68,12 +68,21 @@ class admin_report extends \moodleform {
         list($sqlin, $sqlparams) = $DB->get_in_or_equal(explode(',', $CFG->siteadmins));
         $sql = "SELECT *
                   FROM {user}
-                 WHERE auth = ?
-                    OR " . $DB->sql_like('email', '?') . "
-                    OR id {$sqlin}
-              ORDER BY currentlogin DESC";
+                 WHERE (suspended = 0
+                       OR lastlogin > ?
+                       OR currentlogin > ?)
+                   AND (auth = ?
+                       OR " . $DB->sql_like('email', '?') . "
+                       OR id {$sqlin})
+              ORDER BY SUBSTRING(email, " . $DB->sql_position("'@'", 'email') . " + 1, " . $DB->sql_length('email') . "),
+                       currentlogin DESC";
         // Add siteadmins params to end of anonymous params array.
-        $finalparams = array_merge(array('catadmin', '%@catalyst%'), $sqlparams);
+        $finalparams = array_merge([
+            time() - YEARSECS,
+            time() - YEARSECS,
+            'catadmin',
+            '%@catalyst%',
+        ], $sqlparams);
         $catusers = $DB->get_records_sql($sql, $finalparams);
 
         // Get all lang strings for table header.
@@ -98,7 +107,21 @@ class admin_report extends \moodleform {
         );
         $auditperiod = get_config('auth_catadmin', 'auditperiod');
 
+        $lastdomain = '';
         foreach ($catusers as $user) {
+
+            $domain = $user->email;
+            $domain = substr($domain, strpos($domain, '@') + 1);
+
+            if ($domain != $lastdomain) {
+                $cell = new \html_table_cell(\html_writer::tag('h3', $domain));
+                $cell->colspan = 7;
+                $cell->header = true;
+                $row = new \html_table_row([$cell]);
+                $table->data[] = $row;
+            }
+            $lastdomain = $domain;
+
             $userid = $user->id;
             $fullname = fullname($user);
             $fullname = \html_writer::tag('span', $fullname);
