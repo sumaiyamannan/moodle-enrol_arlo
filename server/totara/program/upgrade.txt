@@ -35,6 +35,10 @@ information provided here is intended especially for developers.
 * \totara_program\assignment\helper::can_update() added second argument $typeid.
 * prog_assignment_category::get_categories() added first argument $excludeui.
 
+=== 12.34 ===
+
+* Added totara_program\rb\display\program_assigned as a replacement for totara_program\rb\display\program_mandatory_status.
+
 === 12.8 ===
 
 * Added new parameter $data to totara_program_renderer::display_set_completion(), this contains data to set the values of the set completion dialog.
