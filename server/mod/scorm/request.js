@@ -58,7 +58,7 @@ function DoRequest(httpReq, url, param, allowBeaconAPI) {
      * @returns boolean
      */
     var canUseBeaconAPI = function() {
-        return (allowBeaconAPI && navigator && navigator.sendBeacon && FormData);
+        return (allowBeaconAPI && navigator && navigator.sendBeacon);
     };
 
     /**
@@ -71,7 +71,7 @@ function DoRequest(httpReq, url, param, allowBeaconAPI) {
             // Last ditch effort, the SCORM package may have introduced its own listeners before our listeners.
             // This is OLD API, window.event is not reliable and is not recommended API.
             // https://developer.mozilla.org/en-US/docs/Web/API/Window/event
-            if (window.event && ['beforeunload', 'unload', 'pagehide'].indexOf(window.event.type)) {
+            if (window.event && ['beforeunload', 'unload', 'pagehide'].indexOf(window.event.type) !== -1) {
                 window.mod_scorm_useBeaconAPI = true;
             }
         }
@@ -90,21 +90,33 @@ function DoRequest(httpReq, url, param, allowBeaconAPI) {
         // I've chosen FormData and FormData.append as they are compatible with our supported browsers:
         //  - https://developer.mozilla.org/en-US/docs/Web/API/FormData/FormData
         //  - https://developer.mozilla.org/en-US/docs/Web/API/FormData/append
+        // The data is encoded as JSON rather than directly putting each attribute in FormData. This saves us a lot of
+        // space, which is important as sendBeacon is limited to 64kb.
 
         var vars = param.split('&'),
             i = 0,
             pair,
             key,
             value,
-            formData = new FormData();
+            data = {},
+            formData = new FormData(),
+            // these need to be passed as parameters instead of in the JSON data
+            formParams = ['sesskey', 'id', 'a', 'scoid', 'attempt'];
         for (i = 0; i < vars.length; i++) {
             pair = vars[i].split('=');
             key = decodeURIComponent(pair[0]);
             value = decodeURIComponent(pair[1]);
-            formData.append(key, value);
+            if (formParams.indexOf(key) !== -1) {
+                formData.append(key, value);
+            } else {
+                data[key] = value;
+            }
         }
         // We'll also inform it that we are unloading, potentially useful in the future.
         formData.append('unloading', '1');
+
+        // Pass the JSON-encoded data.
+        formData.append('json_data', JSON.stringify(data));
 
         // We're going to add a token to the URL that will identify this request as going to the beacon API.
         // In the future this would allow our server side scripts to respond differently when the beacon API
@@ -179,11 +191,7 @@ window.mod_scorm_useBeaconAPI = false;
 
 /**
  * TOTARA: We wire up a small marker for the unload events triggered when the user is navigating away or closing the tab.
- * This is done because Chrome does not allow synchronous XHR requests on the following unload events:
- *  - beforeunload
- *  - unload
- *  - pagehide
- *  - visibilitychange
+ * This is done because Chrome does not allow synchronous XHR requests during page dismissal.
  */
 function mod_scorm_monitorForBeaconRequirement(target) {
 
@@ -230,28 +238,14 @@ function mod_scorm_monitorForBeaconRequirement(target) {
         return target.addEventListener(on, callback);
     };
 
-    // Listen to the three events known to represent an unload operation.
+    // Listen to the events fired on page dismissal.
     observe('beforeunload', toggleOn);
-    observe('unload', toggleOn);
     observe('pagehide', toggleOn);
+    observe('unload', toggleOn);
 
     // Listen to the event fired when navigating to a page and ensure we toggle useBeaconAPI off.
     // This shouldn't be needed (page should be uncached) but just in case!
     observe('pageshow', toggleOff);
-
-    // Finally listen to the visibility change event, and respond to it.
-    // This unfortunately is not ideal, but is required as a SCORM package may also be listening to this and
-    // trying to save content when the user hides the page. As this can occur as part of the page dismissal lifecycle
-    // we also need to ensure we use the Beacon API here.
-    observe('visibilitychange', function() {
-        // Visible means synchronous XHR permitted, use XHR.
-        // Hidden means synchronous XHR not permitted, use Beacon API.
-        if (document.visibilityState === 'visible' || document.visibilityState === 'prerender') {
-            toggleOff();
-        } else if (document.visibilityState === 'hidden') {
-            toggleOn();
-        }
-    });
 }
 // Begin monitoring on the main window immediately.
 mod_scorm_monitorForBeaconRequirement(window);

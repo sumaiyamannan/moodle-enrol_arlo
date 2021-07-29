@@ -397,11 +397,10 @@ class format_topics extends format_base {
      *
      * @param MoodleQuickForm $mform form the elements are added to.
      * @param bool $forsection 'true' if this is a section edit form, 'false' if this is course edit form.
-     * @param bool $remove_collapse 'true' skip the collapse setting for the first section when it is a section edit form
      * @return array array of references to the added form elements.
      */
-    public function create_edit_form_elements(&$mform, $forsection = false, $remove_collapse = false) {
-        $elements = parent::create_edit_form_elements($mform, $forsection, $remove_collapse);
+    public function create_edit_form_elements(&$mform, $forsection = false) {
+        $elements = parent::create_edit_form_elements($mform, $forsection);
 
         // Totara: Keep numsections.
         // Increase the number of sections combo box values if the user has increased the number of sections
@@ -554,6 +553,64 @@ class format_topics extends format_base {
         $renderer = $PAGE->get_renderer('format_topics');
         $rv['section_availability'] = $renderer->section_availability($this->get_section($section));
         return $rv;
+    }
+
+    /**
+     * Returns format options elements for a section edit form.
+     *
+     * @param stdClass $section
+     * @return array
+     */
+    private function section_form_format_options(\stdClass $section): array {
+        $sectionformatoptions = [];
+        $course = $this->get_course();
+
+        if (!empty($course->collapsiblesections) && $course->collapsiblesections == 1 &&  $section->section != 0) {
+            $sectionformatoptions['collapseddefault'] = ['default' => self::COLLAPSE_STATE_AUTO, 'type' => PARAM_INT];
+        }
+        $sectionformatoptions['cssclasses'] = [
+            'default' => '',
+            'type' => PARAM_TEXT,
+        ];
+
+        if (!isset(reset($sectionformatoptions)['label'])) {
+            $sectionformatoptionsedit = [];
+            if (isset($sectionformatoptions['collapseddefault'])) {
+                $sectionmenu = [
+                    self::COLLAPSE_STATE_AUTO => new lang_string('default_collapse_state_auto', 'totara_core'),
+                    self::COLLAPSE_STATE_COLLAPSED => new lang_string('default_collapse_state_collapsed', 'totara_core'),
+                    self::COLLAPSE_STATE_EXPANDED => new lang_string('default_collapse_state_expanded', 'totara_core'),
+                ];
+                $sectionformatoptionsedit['collapseddefault'] = [
+                    'label' => new lang_string('default_collapse_state', 'totara_core'),
+                    'element_type' => 'select',
+                    'element_attributes' => [$sectionmenu],
+                ];
+            }
+            $sectionformatoptionsedit['cssclasses'] = [
+                'label' => new lang_string('topic_css_classes', 'totara_core'),
+                'element_type' => 'text',
+                'help' => 'topic_css_classes',
+                'help_component' => 'totara_core',
+            ];
+            $sectionformatoptions = array_merge_recursive($sectionformatoptions, $sectionformatoptionsedit);
+        }
+
+        return $sectionformatoptions;
+    }
+
+    /**
+     * Adds format options elements to the section edit form.
+     *
+     * @param MoodleQuickForm $mform
+     * @param stdClass $section
+     * @return array
+     */
+    public function create_section_edit_form_elements(\MoodleQuickForm &$mform, \stdClass $section): array {
+        $options = $this->section_form_format_options($section);
+        $elements = $this->add_options_to_form_elements($mform, $options);
+
+        return $elements;
     }
 }
 

@@ -55,7 +55,7 @@ $string['botfw:msg_signout_already'] = 'Hi, you\'re already signed out.';
 $string['botfw:msg_signout_button'] = 'Sign out';
 $string['botfw:msg_signout_done'] = 'Thanks {$a}, you are now signed out. Please sign in again to receive notifications.';
 $string['botfw:msg_subscribe_already'] = 'Hi {$a}, you\'re already set up to receive notifications.';
-$string['botfw:msg_welcome'] = 'Welcome! This bot will let you receive all your notifications right here. You\'ll need to sign in to your account to get this started.';
+$string['botfw:msg_welcome'] = 'Welcome! Totara connects your learning to day-to-day work. Totara supports you to access learning, share and collaborate on resources and receive Totara notifications all within Microsoft Teams.<br><br>This bot will let you receive all your notifications right here. You\'ll need to sign in to your account to get this started.';
 $string['botfw:mx_command_search'] = 'Search catalogue';
 $string['botfw:mx_command_search_desc'] = 'Search catalogue';
 $string['botfw:mx_command_search_term'] = 'Search';
@@ -142,7 +142,7 @@ $string['help_page_about_info'] = 'Here you can find out more about the Totara a
 description. This tab may also include links to the publisher’s website and important policies.';
 $string['help_page_accessing_app'] = 'Accessing the app';
 $string['help_page_accessing_app_adding_app'] = 'Click the app and select <strong>Add</strong> to access it.';
-$string['help_page_accessing_app_built_for_organisation'] = 'Select <strong>Built for [organisation name]</strong> to display a list of all available custom apps.';
+$string['help_page_accessing_app_built_for_organisation'] = 'Find the \'Totara\' by Totara Learning app in the catalogue.';
 $string['help_page_accessing_app_more_app'] = 'Click on the icon of three dots in the side panel and select <strong>More apps.</strong> ';
 $string['help_page_accessing_app_signin'] = 'Sign in to Microsoft Teams.';
 $string['help_page_accessing_app_steps'] = 'Follow these steps to access the Totara app:';
@@ -155,7 +155,7 @@ $string['help_page_catalog_items'] = 'In this tab you can access the Totara cata
 $string['help_page_catalog_search'] = 'You can search for content or use the filters on the left-hand side to find the content you’re looking for.';
 $string['help_page_chat'] = 'Chat';
 $string['help_page_chat_commands'] = 'There are three commands for the chat bot:';
-$string['help_page_chat_help'] = '<strong>Help:</strong> Use this command to access any links to help documentation or contact details for support';
+$string['help_page_chat_help'] = '<strong>Help:</strong> Use this command to access further information on how to use the app';
 $string['help_page_chat_notification'] = 'By signing in on this tab you can receive Totara notifications. You can configure which Totara notifications you want to be sent to Microsoft 
 Teams under the Notifications preferences when accessing Totara from your browser.';
 $string['help_page_chat_signin'] = '<strong>Sign in:</strong> You need to sign in to the bot in order to enable notifications';
