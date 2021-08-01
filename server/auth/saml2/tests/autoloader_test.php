@@ -1,5 +1,5 @@
 <?php
-// This file is part of SAML2 Authentication Plugin for Moodle
+// This file is part of SAML2 Authentication Plugin
 //
 // Moodle is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -21,9 +21,9 @@
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace auth_saml2\admin;
-
 defined('MOODLE_INTERNAL') || die();
+
+require_once(__DIR__ . '/../_autoload.php');
 
 /**
  * @package     auth_saml2
@@ -31,24 +31,18 @@ defined('MOODLE_INTERNAL') || die();
  * @copyright   2018 Catalyst IT Australia {@link http://www.catalyst-au.net}
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-abstract class saml2_settings {
-    const OPTION_DUAL_LOGIN_NO = 0;
-
-    const OPTION_DUAL_LOGIN_YES = 1;
-
-    const OPTION_DUAL_LOGIN_PASSIVE = 2;
-
-    const OPTION_MULTI_IDP_DISPLAY_DROPDOWN = 0;
-
-    const OPTION_MULTI_IDP_DISPLAY_BUTTONS = 1;
-
-    const OPTION_FLAGGED_LOGIN_MESSAGE = 1;
-
-    const OPTION_FLAGGED_LOGIN_REDIRECT = 2;
-
-    const OPTION_AUTO_LOGIN_NO = 0;
-
-    const OPTION_AUTO_LOGIN_SESSION = 1;
-
-    const OPTION_AUTO_LOGIN_COOKIE = 2;
+class auth_saml2_autoloader_test extends advanced_testcase {
+    public function test_it_loads_classes() {
+        $classes = [
+            \Psr\Log\LoggerInterface::class,
+            \SAML2\Utils::class,
+            \SimpleSAML\Configuration::class,
+            \RobRichards\XMLSecLibs\XMLSecEnc::class,
+            Twig_Loader_Filesystem::class,
+        ];
+        foreach ($classes as $class) {
+            $found = class_exists($class) || interface_exists($class);
+            self::assertTrue($found, "Class not found: {$class}");
+        }
+    }
 }

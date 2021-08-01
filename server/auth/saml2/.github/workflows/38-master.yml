@@ -4,7 +4,7 @@ name: 3.8 and higher branch test
 # events but only for the master branch
 # Run this workflow every time a new commit pushed to your repository
 
-on: push
+on: [push, pull_request]
 
 jobs:
   citest:
@@ -37,13 +37,22 @@ jobs:
           --health-interval 10s
           --health-timeout 5s
           --health-retries 3
+
     strategy:
       fail-fast: false
       matrix:
-        database: ['pgsql', 'mariadb']
+        database: ['pgsql']
         moodle-branch: ['MOODLE_38_STABLE','MOODLE_39_STABLE', 'MOODLE_310_STABLE', 'MOODLE_311_STABLE', 'master']
-        node: ['14.15.1']
         php: ['7.2', '7.4']
+        exclude:
+          - moodle-branch: master
+            php: 7.2
+          - moodle-branch: MOODLE_311_STABLE
+            php: 7.2
+        include:
+          - moodle-branch: master
+            php: 7.4
+            database: mariadb
 
     steps:
       - name: Check out repository code
@@ -51,16 +60,11 @@ jobs:
         with:
           path: plugin
 
-      - name: Install node  ${{ matrix.node }}
-        uses: actions/setup-node@v2
-        with:
-          node-version: ${{ matrix.node }}
-
       - name: Setup PHP ${{ matrix.php }}
         uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
-          extensions: pgsql, zip, gd, xmlrpc, soap
+          ini-values: max_input_vars=5000
           coverage: none
 
       - name: Initialise moodle-plugin-ci
@@ -71,12 +75,10 @@ jobs:
           echo $(cd ci/vendor/bin; pwd) >> $GITHUB_PATH
           # PHPUnit depends on en_AU.UTF-8 locale
           sudo locale-gen en_AU.UTF-8
+          echo "NVM_DIR=$HOME/.nvm" >> $GITHUB_ENV
+
       - name: Install Moodle
         run: |
-          mkdir ~/.npm-global
-          npm config set prefix '~/.npm-global'
-          export PATH=~/.npm-global/bin:$PATH
-          source ~/.profile
           moodle-plugin-ci install -vvv --plugin ./plugin --db-host=127.0.0.1
         env:
           DB: ${{ matrix.database }}
@@ -120,4 +122,4 @@ jobs:
 
       - name: Run behat
         if: ${{ always() }}
-        run: moodle-plugin-ci behat --profile chrome 
+        run: moodle-plugin-ci behat --profile chrome
