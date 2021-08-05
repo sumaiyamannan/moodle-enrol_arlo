@@ -41,7 +41,7 @@ class metadata_refresh extends \core\task\scheduled_task {
     public function execute($force = false) {
         global $DB;
 
-        $configidps = explode(PHP_EOL, get_config('auth_catadmin', 'idpmetadata'));
+        $configidps = explode("\n", get_config('auth_catadmin', 'idpmetadata'));
         foreach ($configidps as $idpmetadata) {
             if (empty($idpmetadata)) {
                 mtrace('IdP metadata not configured.');

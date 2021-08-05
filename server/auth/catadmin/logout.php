@@ -25,4 +25,6 @@ require('setup.php');
 
 $auth = new SimpleSAML\Auth\Simple($catadminsaml->spname);
 
+unset($SESSION->catadminidp);
+
 $auth->logout('/');

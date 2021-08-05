@@ -31,33 +31,24 @@ require_once("$CFG->libdir/formslib.php");
 class idpselectform extends moodleform {
 
     public function definition() {
+        global $catadminsaml;
         $mform = $this->_form;
 
-        $idpentityids = explode(PHP_EOL, get_config('auth_catadmin', 'idpmetadata'));
+        $idps = $catadminsaml->metadataentities;
 
         $selectvalues = [];
+        $defaultidp = "";
 
-        $rdidp = "";
-        foreach ($idpentityids as $idpentity) {
-            if (is_string($idpentity)) {
-                $selectvalues[$idpentity] = $idpentity;
-                if (date('z') % 2 == 0) {
-                    $rdidp = $idpentity;
-                }
-            } else {
-                foreach ((array) $idpentity as $subidpentity => $active) {
-                    if ($active) {
-                        if (date('z') % 2 == 0) {
-                            $rdidp = $idpentity;
-                        }
-                        $selectvalues[$subidpentity] = $subidpentity;
-                    }
-                }
+        foreach ($idps as $metadataurl => $details) {
+            $entityid = reset($details)->entityid;
+            $selectvalues[$entityid] = $metadataurl;
+            if (date('z') % 2 == 0) {
+                $defaultidp = $entityid;
             }
         }
 
         $select = $mform->addElement('select', 'idp', get_string('select_idp_button', 'auth_catadmin'), $selectvalues);
-        $select->setSelected($rdidp);
+        $select->setSelected($defaultidp);
 
         $mform->addElement('submit', 'login', get_string('select_idp_button', 'auth_catadmin'));
     }
