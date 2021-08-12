@@ -6607,6 +6607,7 @@ function email_to_user($user, $from, $subject, $messagetext, $messagehtml = '', 
         if (!empty($mail->SMTPDebug)) {
             echo '</pre>';
         }
+        \local_maillog\helper::log_mail(true, '', $user, $mail->From, $subject, $messagetext, $messagehtml, $attachment, $attachname, $usetrueaddress, $replyto, $replytoname, $wordwrapwidth);  // ird mod
         return true;
     } else {
         // Trigger event for failing to send email.
@@ -6626,7 +6627,6 @@ function email_to_user($user, $from, $subject, $messagetext, $messagehtml = '', 
         }
         if (!empty($mail->SMTPDebug)) {
             echo '</pre>';
-            \local_maillog\helper::log_mail(true, '', $user, $mail->From, $subject, $messagetext, $messagehtml, $attachment, $attachname, $usetrueaddress, $replyto, $replytoname, $wordwrapwidth);  // ird mod
         }
         \local_maillog\helper::log_mail(false, 'mail->Send() returned false', $user, $mail->From, $subject, $messagetext, $messagehtml, $attachment, $attachname, $usetrueaddress, $replyto, $replytoname, $wordwrapwidth);  // ird mod
         return false;
