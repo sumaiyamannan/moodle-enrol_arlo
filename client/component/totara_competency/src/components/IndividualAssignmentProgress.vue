@@ -441,21 +441,7 @@ export default {
             }, []);
         },
 
-        label(tooltipItem, data) {
-          let label = data.datasets[tooltipItem.datasetIndex].label || '';
-
-          if (
-            label &&
-            data.datasets[tooltipItem.datasetIndex].rawData[tooltipItem.index]
-          ) {
-            label +=
-              ': ' +
-              data.datasets[tooltipItem.datasetIndex].rawData[tooltipItem.index]
-                .name;
-          }
-
-          return label;
-        },
+        label: that.getToolTipText,
       };
 
       return options;
@@ -471,7 +457,6 @@ export default {
             backgroundColor: theme.getVar('color-chart-transparent-1'),
             borderColor: theme.getVar('color-chart-background-1'),
             borderWidth: 2,
-            rawData: [],
             data: [],
             values: [],
           },
@@ -488,7 +473,6 @@ export default {
             pointBackgroundColor: theme.getVar('color-chart-background-4'),
             borderWidth: 2,
             steppedLine: 'middle',
-            rawData: [],
             data: [],
             values: [],
           },
@@ -503,8 +487,6 @@ export default {
           data.datasets[1].data.push(item.min_value.percentage);
           data.datasets[0].values.push(item.my_value.name);
           data.datasets[1].values.push(item.min_value.name);
-          data.datasets[0].rawData.push(item.my_value);
-          data.datasets[1].rawData.push(item.min_value);
         }.bind(this)
       );
 
@@ -517,27 +499,6 @@ export default {
         if (data.datasets[0].data.length) {
           const first = data.datasets[1].data.slice(0, 1).pop();
           const last = data.datasets[1].data.slice(-1).pop();
-
-          // Appending extra empty "bars" to the chart to avoid it being giant when displayed for a single
-          // competency.
-          if (this.assignmentProgress.items.length <= 2) {
-            for (let i = this.assignmentProgress.items.length; i <= 3; i++) {
-              data.datasets[0].data.push(null);
-              data.datasets[1].data.push(last);
-              data.competencies.push(null);
-
-              if (i === 3) {
-                data.labels.push('   ');
-              } else {
-                data.labels.push(' ');
-              }
-            }
-          }
-
-          data.datasets[0].rawData.push(null);
-          data.datasets[0].rawData.unshift(null);
-          data.datasets[1].rawData.push(null);
-          data.datasets[1].rawData.unshift(null);
 
           data.datasets[0].data.push(null);
           data.datasets[0].data.unshift(null);
@@ -588,6 +549,44 @@ export default {
       if (id) {
         window.location.href = this.competencyLink(id);
       }
+    },
+
+    /**
+     * Gets the correct index for the data
+     *
+     * @param {Number} index the index in the dataset that is required
+     * @returns {Number} The index in this.assignmentProgress that the entry matches to
+     */
+    getDataIndex(index) {
+      if (this.type !== 'bar') {
+        return index;
+      } else {
+        return index - 1;
+      }
+    },
+
+    /**
+     * Gets the tooltip text for the requested entry
+     *
+     * @param {Object} tooltipItem as provided by ChartJs
+     * @param {Object} data chart data as supplied to ChartJS
+     * @returns {String} The text to display in the tooltip
+     */
+    getToolTipText(tooltipItem, data) {
+      const index = this.getDataIndex(tooltipItem.index);
+      const label = data.datasets[tooltipItem.datasetIndex].label || '';
+      let value = '';
+
+      switch (tooltipItem.datasetIndex) {
+        case 0:
+          value = this.assignmentProgress.items[index].my_value.name;
+          break;
+        case 1:
+          value = this.assignmentProgress.items[index].min_value.name;
+          break;
+      }
+
+      return label + ': ' + value;
     },
 
     /**
