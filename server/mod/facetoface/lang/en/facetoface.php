@@ -381,12 +381,10 @@ $string['cancelreservation'] = 'Cancel reservation';
 $string['cannotsignupguest'] = 'Cannot sign up guest';
 $string['cannotsignupsessioninprogress'] = 'You cannot sign up, this event is in progress';
 $string['cannotsignupsessionover'] = 'You cannot sign up, this event is over.';
-$string['cannotapproveatcapacity'] = 'You cannot approve any more attendees as this event is full.';
 $string['ccmanager'] = 'Manager copy';
 $string['ccmanager_note'] = 'Send a copy of this notification to the user\'s manager';
 $string['changeselectedusers'] = 'Change selected users';
 $string['chooseapprovers'] = 'Select activity level approvers';
-$string['cannotapproveatcapacity'] = 'You cannot approve any more attendees as this event is full.';
 $string['chooseassets'] = 'Choose assets';
 $string['choosefacilitator'] = 'Choose facilitator';
 $string['choosefacilitators'] = 'Choose facilitators';
@@ -674,6 +672,7 @@ $string['error:invalidvalue'] = '(invalid)';
 $string['error:invaliduserid'] = 'Invalid user ID';
 $string['error:isalreadybooked'] = '{$a} is already booked';
 $string['error:jobassignementsonsignupdisabled'] = 'Select job assignments on sign up is not enabled for this Seminar activity.';
+$string['error:lotterynocapacity'] = '"Play Lottery" disabled. The event is fully booked.';
 $string['error:manageremailaddressmissing'] = 'You are currently not assigned to a manager in the system. Please contact the site administrator.';
 $string['error:mincapacitymissing'] = 'Session minimum bookings value is missing';
 $string['error:mincapacitynotnumeric'] = 'Event minimum bookings is not a number';
@@ -1237,7 +1236,7 @@ $string['printversionid'] = 'Print version: without name';
 $string['printversionname'] = 'Print version: with name';
 $string['really'] = 'Do you really want to delete all results for this seminar?';
 $string['recipients'] = 'Recipients';
-$string['recipients_allbooked'] = 'All events (past, present and future)';
+$string['recipients_allbooked'] = 'All events (present and future)';
 $string['recipients_attendedonly'] = 'Attended only';
 $string['recipients_noshowsonly'] = 'No shows only';
 $string['registeredon'] = 'Registered On';
@@ -2295,7 +2294,7 @@ Event times and virtual meeting details:
 [session:startdate], [session:starttime] - [session:finishdate], [session:finishtime] [session:timezone]
 Duration: [session:duration]
 Room: [session:room:name]
-[seminareventdetailslink] 
+[seminareventdetailslink]
 [/sessions]';
 $string['setting:defaultwaitlistautocleansubjectdefault'] = 'Waitlisted signup expired';
 $string['setting:defaultwaitlistautocleanmessagedefault'] = 'This is to advise you that your waitlisted signup for the following course has been cancelled due to the event starting:

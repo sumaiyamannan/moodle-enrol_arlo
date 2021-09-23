@@ -830,6 +830,7 @@ $string['prognamelinkedicon'] = 'Program Name and Linked Icon';
 $string['program'] = 'Program';
 $string['programexpandlink'] = 'Program Name (expanding details)';
 $string['program:accessanyprogram'] = 'Access any program';
+$string['programassigned'] = 'Program assigned';
 $string['program:configureassignments'] = 'Configure program assignments';
 $string['program:configurecontent'] = 'Configure program content';
 $string['program:configuredetails'] = 'Edit program details';

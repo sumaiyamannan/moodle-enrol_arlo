@@ -283,6 +283,22 @@ function xmldb_totara_hierarchy_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2020011702, 'totara', 'hierarchy');
     }
 
+    if ($oldversion < 2020100101) {
+        $table = new xmldb_table('comp');
+        $proficiency_expected = new xmldb_field('proficiencyexpected', XMLDB_TYPE_INTEGER, '18', null, XMLDB_NOTNULL, null, 1);
+        $evidence_count = new xmldb_field('evidencecount', XMLDB_TYPE_INTEGER, '18', null, XMLDB_NOTNULL, null, 0);
+
+        if ($dbman->field_exists($table, $proficiency_expected)) {
+            $dbman->change_field_default($table, $proficiency_expected);
+        }
+
+        if ($dbman->field_exists($table, $evidence_count)) {
+            $dbman->change_field_default($table, $evidence_count);
+        }
+
+        // Hierarchy savepoint reached.
+        upgrade_plugin_savepoint(true, 2020100101, 'totara', 'hierarchy');
+    }
 
     return true;
 }

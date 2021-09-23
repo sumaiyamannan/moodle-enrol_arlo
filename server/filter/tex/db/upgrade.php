@@ -36,6 +36,13 @@ function xmldb_filter_tex_upgrade($oldversion) {
 
     // Totara 10 branching line.
 
+    if ($oldversion < 2017111300.01) {
+        require_once ($CFG->dirroot.'/filter/tex/lib.php');
+        filter_tex_updatedcallback(null);
+
+        upgrade_plugin_savepoint(true, 2017111300.01, 'filter', 'tex');
+    }
+
     // Moodle v3.1.0 release upgrade line.
     // Put any upgrade step following this.
 

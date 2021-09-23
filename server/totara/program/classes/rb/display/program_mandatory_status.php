@@ -29,6 +29,7 @@ use totara_reportbuilder\rb\display\base;
  *
  * @author Simon Player <simon.player@totaralearning.com>
  * @package totara_program
+ * @deprecated Since Totara 12.34
  */
 class program_mandatory_status extends base {
 
@@ -43,19 +44,8 @@ class program_mandatory_status extends base {
      * @return string
      */
     public static function display($value, $format, \stdClass $row, \rb_column $column, \reportbuilder $report) {
-        global $OUTPUT;
-
-        $isexport = ($format !== 'html');
-
-        if (!empty($value)) {
-            if ($isexport) {
-                return get_string('yes');
-            } else {
-                return $OUTPUT->pix_icon('i/valid', get_string('yes'));
-            }
-        }
-
-        return get_string('no');
+        debugging('program_mandatory_status has been deprecated since Totara 12.34. Use totara_program\rb\display\program_assigned instead', DEBUG_DEVELOPER);
+        return program_assigned::display($value, $format, $row, $column, $report);
     }
 
     /**
@@ -67,6 +57,7 @@ class program_mandatory_status extends base {
      * @return bool
      */
     public static function is_graphable(\rb_column $column, \rb_column_option $option, \reportbuilder $report) {
-        return false;
+        debugging('program_mandatory_status has been deprecated since Totara 12.34. Use totara_program\rb\display\program_assigned instead', DEBUG_DEVELOPER);
+        return program_assigned::is_graphable($column, $option, $report);
     }
 }

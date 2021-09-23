@@ -1,7 +1,13 @@
 This files describes API changes in /client/component/totara_engage,
 information provided here is intended especially for developers.
 
+=== 13.12 ===
+
+* Updated Contribution BaseContent and Filter to allow targeting with better selectors
+  * Template and SCSS changes
+
 === 13.3 ===
+
 * Update InlineEditing.vue to pass through prop "focusButton" to tui ButtonIcon.vue
   * Template changes
 * Removed modal/EngageWarningModal.vue component

@@ -37,7 +37,7 @@ final class core_user_generator extends component_generator_base {
         switch ($field_data_type) {
             case 'menu':
                 $clone_data = fullclone($current_data);
-                $clone_data->param1 = 'xx';
+                $clone_data->param1 = "xx\nyy\nzz";
 
                 return $clone_data;
 

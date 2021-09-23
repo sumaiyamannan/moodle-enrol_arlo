@@ -29,6 +29,7 @@ $string['sourcesummary'] = 'Response data from performance activities.';
 $string['sourcetitle'] = 'Performance Performance Responses';
 $string['type_activity'] = 'Performance activity';
 $string['type_element'] = 'Element';
+$string['type_evidence'] = 'Evidence custom fields';
 $string['type_participant_instance'] = 'Participant instance';
 $string['type_participant_user'] = 'Participant user';
 $string['type_response'] = 'Response';

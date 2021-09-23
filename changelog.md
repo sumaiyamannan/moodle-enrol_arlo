@@ -1,3 +1,219 @@
+Release 13.12 (21st September 2021):
+====================================
+
+
+Important:
+
+    TL-32183       Fixed an issue with user profile fields not being imported in HR import when using field mapping
+
+                   This is an issue with user profile fields being imported via HR Import and
+                   only effects sites where the profile fields are using field mapping in the
+                   import configuration. If the user element configuration is using 'Empty
+                   fields erase existing data' this may result in existing profile field data
+                   being deleted.
+
+Security issues:
+
+    TL-31887       Fixed potential blind Server-side request forgery (SSRF) against cURL blocked hosts via redirect
+
+                   All cURL redirect requests are now performed at the PHP level instead of
+                   relying on native cURL functionality to prevent blind Server-side request
+                   forgery (SSRF)
+
+    TL-32429       Removed ability of site administrators to read arbitrary files via TeX preamble
+
+                   Previously, if all of the relevant TeX packages were installed and
+                   configured, a site administrator could read arbitrary files readable by the
+                   HTTP server system account via TeX, preamble. This included reading the
+                   config.php file and recovering the database credentials, listing system
+                   accounts and gaining access to user-uploaded content which posed a risk to
+                   shared hosting environments.
+
+    TL-32430       Fixed a PHP type juggling vulnerability in external DB authentication
+
+                   Prior to this fix, a PHP type juggling vulnerability caused by loosely
+                   typed comparison could result in authentication bypass for users with
+                   password hash starting with "0e" on sites using the "External database"
+                   authentication plugin.
+
+Performance improvements:
+
+    TL-30416       Improved the performance of IE11 devtools by moving CSS Variable rules onto a dedicated root DOM Node
+    TL-31570       Delegated the re-grading of final grades of enrolled users within courses when adding a new course module.
+
+                   Prior to this patch, when a course had a large number of enrolled users and
+                   associated grade records, it would take a long time to add a course module
+                   that has grading enabled. This was due to the re-grading of final grades
+                   occurring immediately when a new course module was added.
+
+                   With this patch, a new adhoc task is introduced which defers the re-grading
+                   functionality into cron. The re-grading task will be deferred to cron,
+                   every time when a new course module (activity) that enable grading
+                   functionality was added to the course. A course creator, or site
+                   administrator will be able to see the notification banner when viewing the
+                   course that has the re-grading cron task pending. When the cron runs and
+                   all the grade records get processed, the notification banner will not
+                   appear again.
+
+    TL-31762       Improved the performance of the totara_icon_url_and_alt function
+
+                   This function is used, amongst other places, for the display of 'Multi
+                   select' course custom fields. This change will improve the performance of
+                   report builder where these fields have been used.
+
+    TL-31863       Improved the performance of session's room selection dialog
+
+Improvements:
+
+    TL-29566       Added evidence type custom fields to evidence reports
+
+                   It is now possible to view and export custom field data on evidence
+                   reports.
+
+    TL-30099       Improved accessibility of block show/hide buttons
+    TL-30101       Improved accessibility of mobile view main navigation
+    TL-30102       Improved accessibility of the action menus when expanded/collapsed
+    TL-30103       Improved accessibility of close button in yui dialogs
+    TL-30173       Improved accessibility of managing selected tiles in content marketplace explorer
+    TL-30177       Improved accessibility of close button in content marketplace cards
+    TL-31403       Created a 'program assigned' column for the deprecated 'mandatory' column in the learning plans (program) report source
+
+                   Investigation showed that the 'Mandatory' column is only an indication
+                   whether the user is still assigned to a program that he previously
+                   completed. This column has now been deprecated and a replacement column
+                   'program assigned' created to reflect the correct meaning.
+
+    TL-31438       Created accessible HTML version of certificate activity PDF
+
+                   In the certificate course module a user can now access a HTML version of
+                   the certificate alongside the existing PDF version. This is to provide an
+                   accessible version of the certificate as the PDF is not currently
+                   accessible. If the certificate is sent via email to the user the user will
+                   be able to access the HTML version from the email via a link.
+
+    TL-31447       Added CLI script for changing program start and completion times
+
+                   The course completion editor allows administrators to change the date and
+                   time when an enrolled user completed a course to a date in the future. If
+                   this course is then later included in a program and the user assigned to
+                   the program, the resulting program completion record may indicate that the
+                   user started and completed the program in the future.
+
+                   As the program completion editor does not allow changes to the program
+                   start datetime administrators have no easy way to fully correct their
+                   data.
+
+                   The provided new script
+                   (totara/program/cli/update_program_completion_start_end.php) allows
+                   administrators to manually change program start and completion datetimes
+                   for assigned users.
+
+                   Note: this script allows administrators to update multiple program
+                   completion records in a single run. It should therefore be used with care.
+
+    TL-31682       ALLOWED_VALUES constraint in install.xml files allows uppercase letters
+    TL-31800       Added more user fields for web service create and update functions
+
+                   \core_user_external::create_users() and \core_user_external::update_users()
+                   can now accept more user profile fields so user creation/update via web
+                   service can now be very similar to the edit profile page's functionality.
+                   The new fields that have been added are:
+                    * maildisplay
+                    * interests
+                    * url
+                    * skype
+                    * institution
+                    * department
+                    * phone1
+                    * phone2
+                    * address
+
+    TL-31875       Upgraded postcss library to version 7.0.36
+    TL-31930       Removed admin buttons and headings on pages when viewed within MS Teams
+    TL-31934       Added logout to configuration tab in MS Teams and hid unwanted headings and configuration options
+    TL-32081       Removed attendee date conflict check when copying seminar event
+    TL-32284       Reworded seminar notifications help text
+
+                   Previously the session booking and session date changed reminder recipients
+                   had the wording "All events(past, ...)".
+
+                   However, these notifications never go out for past events. This ticket
+                   removed the word "past"; the new wording makes it clear that notifications
+                   only go out for current and future events.
+
+Bug fixes:
+
+    TL-31586       Fixed a race condition where the contribute resource card in a workspace would sometimes not be displayed
+    TL-31603       Fixed the competency bar graph to have a label for each item associated, removing any empty labels at the beginning and the end
+    TL-31639       Fixed triggering a user_suspended event when suspending a user during upload
+    TL-31652       Fixed the room link in seminar notifications not displaying the correct room status
+    TL-31664       Ensured that the sub-menu is shown when viewing all of the 'Your Library' pages
+    TL-31709       Fixed multiple event popovers showing at the same time
+    TL-31722       Fixed theme field in totara_tui_themes_with_variables GraphQL query to use a consistent type
+    TL-31726       Required checkbox profile fields are treated the same as other custom profile fields when a user logs in
+
+                   When a new required checkbox custom profile field was added, users who
+                   existed before and after the field was created were treated differently.
+                   Users who existed before the field would be required to check the checkbox
+                   when next logging in. Users created afterwards or who had the checkbox
+                   cleared by an admin would not be prompted on login.
+
+                   With this patch in place, a required unchecked checkbox is treated like the
+                   other custom profile fields and users will be prompted to check it when
+                   they log in.
+
+    TL-31779       Fixed an issue where a user using a URL resource within MS Teams would result in the wrong theme being displayed
+    TL-31795       Fixed an error where hidden courses were appearing in the "Recommended For You" block
+
+                   Prior to this patch if a course was marked as hidden but had
+                   self-enrollment enabled, it may have been recommended to users through the
+                   "Recommended for you" block. With this patch in place only courses that a
+                   user is allowed to see and enrol in will be recommended.
+
+    TL-31802       Fixed use of incorrect caret direction icon on category management page
+    TL-31870       Fixed the new message alert count always showing despite there being no new messages
+    TL-31908       Removed absolute positioning from Engage Contribution data counter and supplied more useful CSS class names and HTML structure
+    TL-31927       Fixed issue where deleting a manager on expired temporary manager assignment caused scheduled task to fail
+    TL-31944       Added form validation to prevent the creation of lesson activities that specify "no grade" and "completion requires grade"
+    TL-32009       Fixed competency upload to use current record as default values thus not overwriting the fields 'evidencecount' and 'proficiencyexpected' involuntarily.
+    TL-32018       Updated validate_param() function to ensure validation works with encoded characters
+    TL-32020       Fixed the tenant specific footer not appearing on the login page for tenant members.
+    TL-32026       Added a missing call to set_allow_xss() function in the report builder 'category' filter
+    TL-32027       Fixed badly rendering Workspace Libraries containing a Playlist in IE11
+    TL-32050       Added user's field "suspended" into backup and restore step.
+
+                   Prior to this patch, when a user record was included in a backup file of
+                   the course. The field "suspended" was not included, which newly record of
+                   user that was created by restore will not set the value for field
+                   "suspended".
+
+                   This patch added the field "suspended" into account of backup and restore
+                   process, hence newly created user records from restore will populate the
+                   value of field "suspended"
+
+    TL-32084       Fixed display of column and horizontal bar graphs when exporting to PDF in reports
+    TL-32154       Fixed user's full name being unintentionally encoded in LTI module requests
+    TL-32157       Fixed SQL query in recent learning block that caused the dashboard to crash
+    TL-32169       Fixed overbooking of seminar events when playing the seminar lottery more than once
+    TL-32170       Removed incorrect escaping of URL in the template for 'Related pages' admin block
+    TL-32171       Ensured the language string identifiers are in lower case for the CAS authentication type
+    TL-32231       Removed unused joins in the sql of customfield dataholders for the Torara Catalog
+
+API changes:
+
+    TL-31979       Removed SidePanelCommentBox.interactor
+
+                   The SidePanelCommentBox.interactor was introduced in the previous release
+                   but breaks backward compatibility. Any code that has depended on the prop
+                   since 13.11 or 14.3 will be required to use
+                   :showComment="interactor.can_comment" instead.
+
+Contributions:
+
+    * Michael Geering at Kineo UK - TL-32157
+    * Stewart Fulton at Kineo Pacific - TL-31762
+
+
 Release 13.11 (6th August 2021):
 ================================
 

@@ -264,7 +264,7 @@ abstract class testing_module_generator extends component_generator_base {
 
         // Add the module to the course.
         $moduleinfo = add_moduleinfo($record, $course, $mform = null);
-        $moduleinfo = edit_module_post_actions($moduleinfo, $course);
+
         // Prepare object to return with additional field cmid.
         $instance = $DB->get_record($this->get_modulename(), array('id' => $moduleinfo->instance), '*', MUST_EXIST);
 
