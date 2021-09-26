@@ -476,10 +476,12 @@ class core_calendar_rrule_manager_testcase extends advanced_testcase {
         $records = $DB->get_records('event', array('repeatid' => $this->event->id), 'timestart ASC', 0, 100);
 
         $expecteddate = clone($startdatetime);
+        $expecteddate->setTimezone(new DateTimeZone(get_user_timezone()));
+
         $first = true;
         foreach ($records as $record) {
             $this->assertLessThanOrEqual($until, $record->timestart);
-            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), date('Y-m-d H:i:s', $record->timestart));
+            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), $this->get_date($record->timestart));
             // Go to next iteration.
             $expecteddate->add($interval);
             // Check UUID.
@@ -547,10 +549,12 @@ class core_calendar_rrule_manager_testcase extends advanced_testcase {
         $this->assertCount(2, $records);
 
         $expecteddate = clone($startdate);
+        $expecteddate->setTimezone(new DateTimeZone(get_user_timezone()));
+
         $expecteddate->modify('1997-09-03');
         foreach ($records as $record) {
             $expecteddate->add($offsetinterval);
-            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), date('Y-m-d H:i:s', $record->timestart));
+            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), $this->get_date($record->timestart));
 
             if (date('D', $record->timestart) === 'Mon') {
                 // Go to the fifth day of this month.
@@ -592,12 +596,13 @@ class core_calendar_rrule_manager_testcase extends advanced_testcase {
 
         // First instance of this set of recurring events.
         $expecteddate = clone($startdate);
+        $expecteddate->setTimezone(new DateTimeZone(get_user_timezone()));
+
 
         // Iterate over each record and increment the expected date accordingly.
         foreach ($records as $record) {
             $eventdateexpected = $expecteddate->format('Y-m-d H:i:s');
-            $eventdateactual = date('Y-m-d H:i:s', $record->timestart);
-            $this->assertEquals($eventdateexpected, $eventdateactual);
+            $this->assertEquals($eventdateexpected, $this->get_date($record->timestart));
 
             $expecteddate->add($interval);
             $this->assertLessThanOrEqual($until, $record->timestart);
@@ -621,8 +626,10 @@ class core_calendar_rrule_manager_testcase extends advanced_testcase {
         $this->assertCount(3, $records);
 
         $expecteddate = clone($startdatetime);
+        $expecteddate->setTimezone(new DateTimeZone(get_user_timezone()));
+
         foreach ($records as $record) {
-            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), date('Y-m-d H:i:s', $record->timestart));
+            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), $this->get_date($record->timestart));
             // Go to next month.
             $expecteddate->add($interval);
         }
@@ -675,9 +682,11 @@ class core_calendar_rrule_manager_testcase extends advanced_testcase {
         $this->assertCount(12, $records);
 
         $expecteddate = clone($startdate);
+        $expecteddate->setTimezone(new DateTimeZone(get_user_timezone()));
+
         $expecteddate->add($offsetinterval);
         foreach ($records as $record) {
-            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), date('Y-m-d H:i:s', $record->timestart));
+            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), $this->get_date($record->timestart));
 
             if (date('j', $record->timestart) == 2) {
                 // Go to the fifth day of this month.
@@ -721,11 +730,13 @@ class core_calendar_rrule_manager_testcase extends advanced_testcase {
         $records = $DB->get_records('event', ['repeatid' => $this->event->id], 'timestart ASC', 'id, repeatid, timestart');
 
         $expecteddate = clone($startdate);
+        $expecteddate->setTimezone(new DateTimeZone(get_user_timezone()));
+
         $expecteddate->add($offsetinterval);
         foreach ($records as $record) {
             $this->assertLessThanOrEqual($until, $record->timestart);
 
-            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), date('Y-m-d H:i:s', $record->timestart));
+            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), $this->get_date($record->timestart));
 
             // Reset date to the first day of the month.
             $expecteddate->modify('first day of this month');
@@ -757,10 +768,12 @@ class core_calendar_rrule_manager_testcase extends advanced_testcase {
 
         // First occurrence of this set of recurring events: 06-10-1997.
         $expecteddate = clone($startdate);
+        $expecteddate->setTimezone(new DateTimeZone(get_user_timezone()));
+
         $expecteddate->modify('1997-10-06');
         $expecteddate->add($offsetinterval);
         foreach ($records as $record) {
-            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), date('Y-m-d H:i:s', $record->timestart));
+            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), $this->get_date($record->timestart));
 
             // Go to next month period.
             $expecteddate->add($interval);
@@ -794,11 +807,13 @@ class core_calendar_rrule_manager_testcase extends advanced_testcase {
         $this->assertCount(9, $records);
 
         $expecteddate = clone($startdate);
+        $expecteddate->setTimezone(new DateTimeZone(get_user_timezone()));
+
         $expecteddate->modify('first Monday of October 1997');
         foreach ($records as $record) {
             $expecteddate->add($offsetinterval);
 
-            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), date('Y-m-d H:i:s', $record->timestart));
+            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), $this->get_date($record->timestart));
 
             // Go to next month.
             $expecteddate->modify('first day of next month');
@@ -833,10 +848,12 @@ class core_calendar_rrule_manager_testcase extends advanced_testcase {
         $this->assertCount(11, $records);
 
         $expecteddate = clone($startdate);
+        $expecteddate->setTimezone(new DateTimeZone(get_user_timezone()));
+
         $expecteddate->modify('1997-09-17');
         foreach ($records as $record) {
             $expecteddate->add($offsetinterval);
-            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), date('Y-m-d H:i:s', $record->timestart));
+            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), $this->get_date($record->timestart));
 
             if (date('D', $record->timestart) === 'Mon') {
                 // Go to the fifth day of this month.
@@ -877,6 +894,8 @@ class core_calendar_rrule_manager_testcase extends advanced_testcase {
 
         $records = $DB->get_records('event', ['repeatid' => $this->event->id], 'timestart ASC', 'id, repeatid, timestart');
         $expecteddate = new DateTime('first Monday of this month');
+        $expecteddate->setTimezone(new DateTimeZone(get_user_timezone()));
+
         // Move to the next interval's first Monday if the calculated start date is after this month's first Monday.
         if ($expecteddate->getTimestamp() < $startdate->getTimestamp()) {
             $expecteddate->add($interval);
@@ -886,7 +905,7 @@ class core_calendar_rrule_manager_testcase extends advanced_testcase {
             $expecteddate->add($offsetinterval);
             $this->assertLessThanOrEqual($until, $record->timestart);
 
-            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), date('Y-m-d H:i:s', $record->timestart));
+            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), $this->get_date($record->timestart));
 
             // Go to next month period.
             $expecteddate->add($interval);
@@ -916,8 +935,10 @@ class core_calendar_rrule_manager_testcase extends advanced_testcase {
         $this->assertCount(3, $records);
 
         $expecteddate = clone($startdatetime);
+        $expecteddate->setTimezone(new DateTimeZone(get_user_timezone()));
+
         foreach ($records as $record) {
-            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), date('Y-m-d H:i:s', $record->timestart));
+            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), $this->get_date($record->timestart));
 
             // Go to next period.
             $expecteddate->add($interval);
@@ -962,10 +983,12 @@ class core_calendar_rrule_manager_testcase extends advanced_testcase {
         $this->assertCount(3, $records);
 
         $expecteddate = clone($startdatetime);
+        $expecteddate->setTimezone(new DateTimeZone(get_user_timezone()));
+
         $expecteddate->modify('first Monday of September 1998');
         $expecteddate->add($offsetinterval);
         foreach ($records as $record) {
-            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), date('Y-m-d H:i:s', $record->timestart));
+            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), $this->get_date($record->timestart));
 
             // Go to next period.
             $expecteddate->add($interval);
@@ -989,11 +1012,13 @@ class core_calendar_rrule_manager_testcase extends advanced_testcase {
         $this->assertCount(10, $records);
 
         $expecteddate = clone($startdatetime);
+        $expecteddate->setTimezone(new DateTimeZone(get_user_timezone()));
+
         $expecteddate->modify('first Monday of September 1998');
         $expecteddate->add($offsetinterval);
         foreach ($records as $record) {
             $this->assertLessThanOrEqual($untildate->getTimestamp(), $record->timestart);
-            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), date('Y-m-d H:i:s', $record->timestart));
+            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), $this->get_date($record->timestart));
 
             // Go to next period.
             $expecteddate->add($interval);
@@ -1014,11 +1039,13 @@ class core_calendar_rrule_manager_testcase extends advanced_testcase {
         $this->assertCount(5, $records);
 
         $expecteddate = clone($startdatetime);
+        $expecteddate->setTimezone(new DateTimeZone(get_user_timezone()));
+
         $expecteddate->modify('first Monday of September 1999');
         $expecteddate->add($offsetinterval);
         foreach ($records as $record) {
             $this->assertLessThanOrEqual($untildate->getTimestamp(), $record->timestart);
-            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), date('Y-m-d H:i:s', $record->timestart));
+            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), $this->get_date($record->timestart));
 
             // Go to next period.
             $expecteddate->add($interval);
@@ -1049,9 +1076,11 @@ class core_calendar_rrule_manager_testcase extends advanced_testcase {
 
         $interval = new DateInterval('P2Y');
         $expecteddate = new DateTime(date('Y0902\T090000'));
+        $expecteddate->setTimezone(new DateTimeZone(get_user_timezone()));
+
         foreach ($records as $record) {
             $this->assertLessThanOrEqual($untiltimestamp, $record->timestart);
-            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), date('Y-m-d H:i:s', $record->timestart));
+            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), $this->get_date($record->timestart));
 
             // Go to the next expected date.
             $expecteddate->add($interval);
@@ -1087,11 +1116,13 @@ class core_calendar_rrule_manager_testcase extends advanced_testcase {
 
         // First occurrence of this set of events is on the first Monday of September.
         $expecteddate = clone($startdatetime);
+        $expecteddate->setTimezone(new DateTimeZone(get_user_timezone()));
+
         $expecteddate->modify('first Monday of September');
         $expecteddate->add($offsetinterval);
         foreach ($records as $record) {
             $this->assertLessThanOrEqual($untiltimestamp, $record->timestart);
-            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), date('Y-m-d H:i:s', $record->timestart));
+            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), $this->get_date($record->timestart));
 
             // Go to next period.
             $expecteddate->add($interval);
@@ -1122,13 +1153,17 @@ class core_calendar_rrule_manager_testcase extends advanced_testcase {
         $records = $DB->get_records('event', ['repeatid' => $this->event->id], 'timestart ASC', 'id, repeatid, timestart');
 
         $untildate = new DateTime();
+        $untildate->setTimezone(new DateTimeZone(get_user_timezone()));
         $untildate->add(new DateInterval('P' . $mang::TIME_UNLIMITED_YEARS . 'Y'));
+
         $untiltimestamp = $untildate->getTimestamp();
 
         $expecteddate = clone($startdatetime);
+        $expecteddate->setTimezone(new DateTimeZone(get_user_timezone()));
+
         foreach ($records as $record) {
             $this->assertLessThanOrEqual($untiltimestamp, $record->timestart);
-            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), date('Y-m-d H:i:s', $record->timestart));
+            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), $this->get_date($record->timestart));
 
             // Go to next period.
             $expecteddate->add($interval);
@@ -1161,8 +1196,10 @@ class core_calendar_rrule_manager_testcase extends advanced_testcase {
         $this->assertCount(10, $records);
 
         $expecteddate = new DateTime(date('Y-m-d H:i:s', $startdatetime->getTimestamp()));
+        $expecteddate->setTimezone(new DateTimeZone(get_user_timezone()));
+
         foreach ($records as $record) {
-            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), date('Y-m-d H:i:s', $record->timestart));
+            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), $this->get_date($record->timestart));
 
             // Go to next period.
             $expecteddate->add($interval);
@@ -1196,9 +1233,11 @@ class core_calendar_rrule_manager_testcase extends advanced_testcase {
         $this->assertCount(113, $records);
 
         $expecteddate = new DateTime(date('Y-m-d H:i:s', $startdatetime->getTimestamp()));
+        $expecteddate->setTimezone(new DateTimeZone(get_user_timezone()));
+
         foreach ($records as $record) {
             $this->assertLessThanOrEqual($untiltimestamp, $record->timestart);
-            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), date('Y-m-d H:i:s', $record->timestart));
+            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), $this->get_date($record->timestart));
             // Go to next period.
             $expecteddate->add($interval);
         }
@@ -1236,10 +1275,12 @@ class core_calendar_rrule_manager_testcase extends advanced_testcase {
         $untiltimestamp = $untildate->getTimestamp();
 
         $expecteddate = new DateTime(date('Y-m-d H:i:s', $startdatetime->getTimestamp()));
+        $expecteddate->setTimezone(new DateTimeZone(get_user_timezone()));
+
         foreach ($records as $record) {
             $this->assertLessThanOrEqual($untiltimestamp, $record->timestart);
 
-            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), date('Y-m-d H:i:s', $record->timestart));
+            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), $this->get_date($record->timestart));
             // Go to next period.
             $expecteddate->add($interval);
         }
@@ -1267,8 +1308,10 @@ class core_calendar_rrule_manager_testcase extends advanced_testcase {
         $this->assertCount(5, $records);
 
         $expecteddate = new DateTime(date('Y-m-d H:i:s', $startdatetime->getTimestamp()));
+        $expecteddate->setTimezone(new DateTimeZone(get_user_timezone()));
+
         foreach ($records as $record) {
-            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), date('Y-m-d H:i:s', $record->timestart));
+            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), $this->get_date($record->timestart));
             // Go to next period.
             $expecteddate->add($interval);
         }
@@ -1364,8 +1407,10 @@ class core_calendar_rrule_manager_testcase extends advanced_testcase {
         $this->assertCount(10, $records);
 
         $expecteddate = new DateTime(date('Y-m-d H:i:s', $this->event->timestart));
+        $expecteddate->setTimezone(new DateTimeZone(get_user_timezone()));
+
         foreach ($records as $record) {
-            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), date('Y-m-d H:i:s', $record->timestart));
+            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), $this->get_date($record->timestart));
             // Go to next period.
             $expecteddate->add($interval);
         }
@@ -1396,9 +1441,11 @@ class core_calendar_rrule_manager_testcase extends advanced_testcase {
         $untildate = new DateTime('19971224T000000Z');
         $untiltimestamp = $untildate->getTimestamp();
         $expecteddate = new DateTime(date('Y-m-d H:i:s', $this->event->timestart));
+        $expecteddate->setTimezone(new DateTimeZone(get_user_timezone()));
+
         foreach ($records as $record) {
             $this->assertLessThanOrEqual($untiltimestamp, $record->timestart);
-            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), date('Y-m-d H:i:s', $record->timestart));
+            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), $this->get_date($record->timestart));
             // Go to next period.
             $expecteddate->add($interval);
         }
@@ -1437,10 +1484,12 @@ class core_calendar_rrule_manager_testcase extends advanced_testcase {
         $untiltimestamp = $untildate->getTimestamp();
 
         $expecteddate = new DateTime(date('Y-m-d H:i:s', $this->event->timestart));
+        $expecteddate->setTimezone(new DateTimeZone(get_user_timezone()));
+
         foreach ($records as $record) {
             $this->assertLessThanOrEqual($untiltimestamp, $record->timestart);
 
-            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), date('Y-m-d H:i:s', $record->timestart));
+            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), $this->get_date($record->timestart));
             // Go to next period.
             $expecteddate->add($interval);
         }
@@ -1468,12 +1517,16 @@ class core_calendar_rrule_manager_testcase extends advanced_testcase {
         $untildate = new DateTime('19971007T000000Z');
         $untiltimestamp = $untildate->getTimestamp();
         $expecteddate = new DateTime(date('Y-m-d H:i:s', $this->event->timestart));
+        $expecteddate->setTimezone(new DateTimeZone(get_user_timezone()));
+
         $startdate = new DateTime($expecteddate->format('Y-m-d'));
+        $startdate->setTimezone(new DateTimeZone(get_user_timezone()));
+
         $offset = $expecteddate->diff($startdate, true);
         foreach ($records as $record) {
             $this->assertLessThanOrEqual($untiltimestamp, $record->timestart);
 
-            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), date('Y-m-d H:i:s', $record->timestart));
+            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), $this->get_date($record->timestart));
             // Go to next period.
             if ($expecteddate->format('l') === rrule_manager::DAY_TUESDAY) {
                 $expecteddate->modify('next Thursday');
@@ -1504,10 +1557,14 @@ class core_calendar_rrule_manager_testcase extends advanced_testcase {
         $this->assertCount(10, $records);
 
         $expecteddate = new DateTime(date('Y-m-d H:i:s', $this->event->timestart));
+        $expecteddate->setTimezone(new DateTimeZone(get_user_timezone()));
+
         $startdate = new DateTime($expecteddate->format('Y-m-d'));
+        $startdate->setTimezone(new DateTimeZone(get_user_timezone()));
+
         $offset = $expecteddate->diff($startdate, true);
         foreach ($records as $record) {
-            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), date('Y-m-d H:i:s', $record->timestart));
+            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), $this->get_date($record->timestart));
             // Go to next period.
             if ($expecteddate->format('l') === rrule_manager::DAY_TUESDAY) {
                 $expecteddate->modify('next Thursday');
@@ -1550,9 +1607,11 @@ class core_calendar_rrule_manager_testcase extends advanced_testcase {
         $expecteddate = clone($startdatetime);
         $expecteddate->modify('next Wednesday');
         $expecteddate->add($offsetinterval);
+        $expecteddate->setTimezone(new DateTimeZone(get_user_timezone()));
+
         foreach ($records as $record) {
             $this->assertLessThanOrEqual($untiltimestamp, $record->timestart);
-            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), date('Y-m-d H:i:s', $record->timestart));
+            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), $this->get_date($record->timestart));
 
             // Go to next period.
             switch ($expecteddate->format('l')) {
@@ -1598,8 +1657,10 @@ class core_calendar_rrule_manager_testcase extends advanced_testcase {
 
         // First occurrence of this set of events is on 2 September 1999.
         $expecteddate = clone($startdatetime);
+        $expecteddate->setTimezone(new DateTimeZone(get_user_timezone()));
+
         foreach ($records as $record) {
-            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), date('Y-m-d H:i:s', $record->timestart));
+            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), $this->get_date($record->timestart));
 
             // Go to next period.
             switch ($expecteddate->format('l')) {
@@ -1647,10 +1708,12 @@ class core_calendar_rrule_manager_testcase extends advanced_testcase {
             // Get the first Friday of the record's month.
             $recordmonthyear = date('F Y', $record->timestart);
             $expecteddate = new DateTime('first Friday of ' . $recordmonthyear);
+            $expecteddate->setTimezone(new DateTimeZone(get_user_timezone()));
+
             // Add the time of the event.
             $expecteddate->add($offsetinterval);
 
-            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), date('Y-m-d H:i:s', $record->timestart));
+            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), $this->get_date($record->timestart));
         }
     }
 
@@ -1683,10 +1746,12 @@ class core_calendar_rrule_manager_testcase extends advanced_testcase {
             // Get the first Friday of the record's month.
             $recordmonthyear = date('F Y', $record->timestart);
             $expecteddate = new DateTime('first Friday of ' . $recordmonthyear);
+            $expecteddate->setTimezone(new DateTimeZone(get_user_timezone()));
+
             // Add the time of the event.
             $expecteddate->add($offsetinterval);
 
-            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), date('Y-m-d H:i:s', $record->timestart));
+            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), $this->get_date($record->timestart));
         }
     }
 
@@ -1723,9 +1788,11 @@ class core_calendar_rrule_manager_testcase extends advanced_testcase {
             // Get date of the month's first/last Sunday.
             $recordmonthyear = date('F Y', $record->timestart);
             $expecteddate = new DateTime($ordinal . ' Sunday of ' . $recordmonthyear);
+            $expecteddate->setTimezone(new DateTimeZone(get_user_timezone()));
+
             $expecteddate->add($offsetinterval);
 
-            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), date('Y-m-d H:i:s', $record->timestart));
+            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), $this->get_date($record->timestart));
             if ($ordinal === 'first') {
                 $ordinal = 'last';
             } else {
@@ -1764,12 +1831,14 @@ class core_calendar_rrule_manager_testcase extends advanced_testcase {
             // Get date of the month's last Monday.
             $recordmonthyear = date('F Y', $record->timestart);
             $expecteddate = new DateTime('last Monday of ' . $recordmonthyear);
+            $expecteddate->setTimezone(new DateTimeZone(get_user_timezone()));
+
             // Modify to get the second to the last Monday.
             $expecteddate->modify('last Monday');
             // Add offset.
             $expecteddate->add($offsetinterval);
 
-            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), date('Y-m-d H:i:s', $record->timestart));
+            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), $this->get_date($record->timestart));
         }
     }
 
@@ -1810,12 +1879,14 @@ class core_calendar_rrule_manager_testcase extends advanced_testcase {
             // Get date of the third to the last day of the month.
             $recordmonthyear = date('F Y', $record->timestart);
             $expecteddate = new DateTime('last day of ' . $recordmonthyear);
+            $expecteddate->setTimezone(new DateTimeZone(get_user_timezone()));
+
             // Set time to 9am.
             $expecteddate->setTime(9, 0);
             // Modify to get the third to the last day of the month.
             $expecteddate->sub($subinterval);
 
-            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), date('Y-m-d H:i:s', $record->timestart));
+            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), $this->get_date($record->timestart));
         }
     }
 
@@ -1851,6 +1922,8 @@ class core_calendar_rrule_manager_testcase extends advanced_testcase {
 
             // Get date of the month's last Monday.
             $expecteddate = new DateTime("$recordmonthyear-$day");
+            $expecteddate->setTimezone(new DateTimeZone(get_user_timezone()));
+
             // Add offset.
             $expecteddate->add($offsetinterval);
             if ($day === '02') {
@@ -1859,7 +1932,7 @@ class core_calendar_rrule_manager_testcase extends advanced_testcase {
                 $day = '02';
             }
 
-            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), date('Y-m-d H:i:s', $record->timestart));
+            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), $this->get_date($record->timestart));
         }
     }
 
@@ -1896,10 +1969,12 @@ class core_calendar_rrule_manager_testcase extends advanced_testcase {
 
             // Get date of the month's last Monday.
             $expecteddate = new DateTime("$day day of $recordmonthyear");
+            $expecteddate->setTimezone(new DateTimeZone(get_user_timezone()));
+
             // Add offset.
             $expecteddate->add($offsetinterval);
 
-            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), date('Y-m-d H:i:s', $record->timestart));
+            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), $this->get_date($record->timestart));
 
             if ($day === 'first') {
                 $day = 'last';
@@ -1935,7 +2010,7 @@ class core_calendar_rrule_manager_testcase extends advanced_testcase {
         $expecteddate = clone($startdatetime);
         $expecteddate->setTimezone(new DateTimeZone(get_user_timezone()));
         foreach ($records as $record) {
-            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), date('Y-m-d H:i:s', $record->timestart));
+            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), $this->get_date($record->timestart));
 
             // Get next expected date.
             if ($expecteddate->format('d') == 15) {
@@ -1982,13 +2057,16 @@ class core_calendar_rrule_manager_testcase extends advanced_testcase {
         $untiltimestamp = $untildate->getTimestamp();
 
         $expecteddate = new DateTime(date('Y-m-d H:i:s', $this->event->timestart));
+        $expecteddate->setTimezone(new DateTimeZone(get_user_timezone()));
+
         $nextmonth = new DateTime($expecteddate->format('Y-m-d'));
+        $nextmonth->setTimezone(new DateTimeZone(get_user_timezone()));
         $offset = $expecteddate->diff($nextmonth, true);
         $nextmonth->modify('first day of next month');
         foreach ($records as $record) {
             $this->assertLessThanOrEqual($untiltimestamp, $record->timestart);
 
-            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), date('Y-m-d H:i:s', $record->timestart));
+            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), $this->get_date($record->timestart));
 
             // Get next expected date.
             $expecteddate->modify('next Tuesday');
@@ -2036,7 +2114,7 @@ class core_calendar_rrule_manager_testcase extends advanced_testcase {
         $monthinterval = new DateInterval('P1M');
         $yearinterval = new DateInterval('P1Y');
         foreach ($records as $record) {
-            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), date('Y-m-d H:i:s', $record->timestart));
+            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), $this->get_date($record->timestart));
 
             // Get next expected date.
             if ($expecteddate->format('m') == 6) {
@@ -2079,7 +2157,7 @@ class core_calendar_rrule_manager_testcase extends advanced_testcase {
         $monthinterval = new DateInterval('P1M');
         $yearinterval = new DateInterval('P2Y');
         foreach ($records as $record) {
-            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), date('Y-m-d H:i:s', $record->timestart));
+            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), $this->get_date($record->timestart));
 
             // Get next expected date.
             if ($expecteddate->format('m') != 3) {
@@ -2128,7 +2206,7 @@ class core_calendar_rrule_manager_testcase extends advanced_testcase {
         $yearinterval = new DateInterval('P3Y');
 
         foreach ($records as $record) {
-            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), date('Y-m-d H:i:s', $record->timestart));
+            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), $this->get_date($record->timestart));
 
             // Get next expected date.
             if ($expecteddate->format('z') == 0) { // January 1.
@@ -2183,7 +2261,8 @@ class core_calendar_rrule_manager_testcase extends advanced_testcase {
         $expecteddate->setTimezone(new DateTimeZone(get_user_timezone()));
         foreach ($records as $record) {
             $this->assertLessThanOrEqual($untiltimestamp, $record->timestart);
-            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), date('Y-m-d H:i:s', $record->timestart));
+
+            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), $this->get_date($record->timestart));
 
             // Go to next period.
             $expecteddate->modify('January 1');
@@ -2232,9 +2311,11 @@ class core_calendar_rrule_manager_testcase extends advanced_testcase {
         $untiltimestamp = $untildate->getTimestamp();
 
         $expecteddate = new DateTime(date('Y-m-d H:i:s', $startdatetime->getTimestamp()));
+        $expecteddate->setTimezone(new DateTimeZone(get_user_timezone()));
+
         foreach ($records as $record) {
             $this->assertLessThanOrEqual($untiltimestamp, $record->timestart);
-            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), date('Y-m-d H:i:s', $record->timestart));
+            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), $this->get_date($record->timestart));
 
             // Go to next period.
             $expecteddate->add($interval);
@@ -2283,7 +2364,7 @@ class core_calendar_rrule_manager_testcase extends advanced_testcase {
         $april1st = new DateTime('April 1');
         foreach ($records as $record) {
             $this->assertLessThanOrEqual($untiltimestamp, $record->timestart);
-            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), date('Y-m-d H:i:s', $record->timestart));
+            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), $this->get_date($record->timestart));
 
             // Go to next period.
             $expecteddate->modify('next Thursday');
@@ -2340,10 +2421,14 @@ class core_calendar_rrule_manager_testcase extends advanced_testcase {
         $untiltimestamp = $untildate->getTimestamp();
 
         $expecteddate = new DateTime(date('Y-m-d H:i:s', $startdatetime->getTimestamp()));
+        $expecteddate->setTimezone(new DateTimeZone(get_user_timezone()));
+
         $september1st = new DateTime('September 1');
+        $september1st->setTimezone(new DateTimeZone(get_user_timezone()));
+
         foreach ($records as $record) {
             $this->assertLessThanOrEqual($untiltimestamp, $record->timestart);
-            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), date('Y-m-d H:i:s', $record->timestart));
+            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), $this->get_date($record->timestart));
 
             // Go to next period.
             $expecteddate->modify('next Thursday');
@@ -2436,11 +2521,13 @@ class core_calendar_rrule_manager_testcase extends advanced_testcase {
 
             // Get first Saturday after the first Sunday of the month.
             $expecteddate = new DateTime('first Sunday of ' . $recordmonthyear);
+            $expecteddate->setTimezone(new DateTimeZone(get_user_timezone()));
+
             $expecteddate->modify('next Saturday');
             $expecteddate->add($offset);
 
             // Assert the record's date corresponds to the first Saturday of the month.
-            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), date('Y-m-d H:i:s', $record->timestart));
+            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), $this->get_date($record->timestart));
 
             // Assert that the record is either the 7th, 8th, 9th, ... 13th day of the month.
             $this->assertContains(date('j', $record->timestart), $bymonthdays);
@@ -2493,11 +2580,13 @@ class core_calendar_rrule_manager_testcase extends advanced_testcase {
 
             // Get first Saturday after the first Sunday of the month.
             $expecteddate = new DateTime('first Monday of ' . $recordmonthyear);
+            $expecteddate->setTimezone(new DateTimeZone(get_user_timezone()));
+
             $expecteddate->modify('next Tuesday');
             $expecteddate->add($offset);
 
             // Assert the record's date corresponds to the first Saturday of the month.
-            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), date('Y-m-d H:i:s', $record->timestart));
+            $this->assertEquals($expecteddate->format('Y-m-d H:i:s'), $this->get_date($record->timestart));
 
             // Assert that the record is either the 2nd, 3rd, 4th ... 8th day of the month.
             $this->assertContains(date('j', $record->timestart), $bymonthdays);
@@ -2531,7 +2620,7 @@ class core_calendar_rrule_manager_testcase extends advanced_testcase {
             (new DateTime('1997-11-06 09:00:00 EST'))->getTimestamp()
         ];
         foreach ($records as $record) {
-            $this->assertContains($record->timestart, $expecteddates, date('Y-m-d H:i:s', $record->timestart) . ' is not found.');
+            $this->assertContains($record->timestart, $expecteddates, $this->get_date($record->timestart) . ' is not found.');
         }
     }
 
@@ -2609,7 +2698,7 @@ class core_calendar_rrule_manager_testcase extends advanced_testcase {
             (new DateTime('1997-09-02 15:00:00 EDT'))->getTimestamp(),
         ];
         foreach ($records as $record) {
-            $this->assertContains($record->timestart, $expecteddates, date('Y-m-d H:i:s', $record->timestart) . ' is not found.');
+            $this->assertContains($record->timestart, $expecteddates, $this->get_date($record->timestart) . ' is not found.');
         }
     }
 
@@ -2640,7 +2729,7 @@ class core_calendar_rrule_manager_testcase extends advanced_testcase {
             (new DateTime('1997-09-02 10:15:00 EDT'))->getTimestamp(),
         ];
         foreach ($records as $record) {
-            $this->assertContains($record->timestart, $expecteddates, date('Y-m-d H:i:s', $record->timestart) . ' is not found.');
+            $this->assertContains($record->timestart, $expecteddates, $this->get_date($record->timestart) . ' is not found.');
         }
     }
 
@@ -2669,7 +2758,7 @@ class core_calendar_rrule_manager_testcase extends advanced_testcase {
             (new DateTime('1997-09-02 13:30:00 EDT'))->getTimestamp(),
         ];
         foreach ($records as $record) {
-            $this->assertContains($record->timestart, $expecteddates, date('Y-m-d H:i:s', $record->timestart) . ' is not found.');
+            $this->assertContains($record->timestart, $expecteddates, $this->get_date($record->timestart) . ' is not found.');
         }
     }
 
@@ -2713,7 +2802,7 @@ class core_calendar_rrule_manager_testcase extends advanced_testcase {
         $this->assertCount($count, $records);
 
         foreach ($records as $record) {
-            $this->assertContains($record->timestart, $expecteddates, date('Y-m-d H:i:s', $record->timestart) . ' is not found.');
+            $this->assertContains($record->timestart, $expecteddates, $this->get_date($record->timestart) . ' is not found.');
         }
     }
 
@@ -2757,7 +2846,7 @@ class core_calendar_rrule_manager_testcase extends advanced_testcase {
         $this->assertCount($count, $records);
 
         foreach ($records as $record) {
-            $this->assertContains($record->timestart, $expecteddates, date('Y-m-d H:i:s', $record->timestart) . ' is not found.');
+            $this->assertContains($record->timestart, $expecteddates, $this->get_date($record->timestart) . ' is not found.');
         }
     }
 
@@ -2788,7 +2877,7 @@ class core_calendar_rrule_manager_testcase extends advanced_testcase {
             (new DateTime('1997-08-24 09:00:00 EDT'))->getTimestamp(),
         ];
         foreach ($records as $record) {
-            $this->assertContains($record->timestart, $expecteddates, date('Y-m-d H:i:s', $record->timestart) . ' is not found.');
+            $this->assertContains($record->timestart, $expecteddates, $this->get_date($record->timestart) . ' is not found.');
         }
     }
 
@@ -2821,7 +2910,7 @@ class core_calendar_rrule_manager_testcase extends advanced_testcase {
         ];
 
         foreach ($records as $record) {
-            $this->assertContains($record->timestart, $expecteddates, date('Y-m-d H:i:s', $record->timestart) . ' is not found.');
+            $this->assertContains($record->timestart, $expecteddates, $this->get_date($record->timestart) . ' is not found.');
         }
     }
 
@@ -2867,7 +2956,9 @@ class core_calendar_rrule_manager_testcase extends advanced_testcase {
         $this->assertCount(30, $records);
 
         foreach ($records as $record) {
-            $date = new DateTime(date('Y-m-d H:i:s', $record->timestart));
+            $date = new DateTime($this->get_date($record->timestart));
+            $date->setTimezone(new DateTimeZone(get_user_timezone()));
+
             $year = $date->format('Y');
             $day = $date->format('d');
             if ($year % 4 == 0) {
@@ -2905,5 +2996,18 @@ class core_calendar_rrule_manager_testcase extends advanced_testcase {
         $this->event->timestart = $calevent->timestart;
 
         return $newdatetime;
+    }
+
+    /**
+     * Get date in format Y-m-d H:i:s in the current users timezone
+     *
+     * @param int $timestamp
+     * @return string
+     */
+    private function get_date(int $timestamp): string {
+        $date = new DateTime('@'.$timestamp);
+        $date->setTimezone(new DateTimeZone(get_user_timezone()));
+
+        return $date->format('Y-m-d H:i:s');
     }
 }
