@@ -64,7 +64,7 @@ class totara_evidence_migration_miscellaneous_testcase extends totara_evidence_m
         $this->generator()->create_evidence_relation($user2_evidence[1]->id, $user2_plan->id, $user2_objective);
         $this->generator()->create_evidence_relation($user2_evidence[3]->id, $user2_plan->id, $user2_objective);
 
-        totara_evidence_migrate();
+        totara_evidence_migrate(2);
 
         /** @var evidence_item[] $user1_evidence_relations */
         $user1_evidence_relations = evidence_item::repository()

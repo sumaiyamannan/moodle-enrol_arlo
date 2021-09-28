@@ -752,8 +752,9 @@ function totara_evidence_migrate_get_migrated_type_fields(int $type_id) {
  * @param int $current_time
  * @param int $admin_userid
  * @param $progress_bar
+ * @param int $batch_limit defaults to 10000
  */
-function totara_evidence_migrate_completion_history_evidence($current_time, $admin_userid, $progress_bar) {
+function totara_evidence_migrate_completion_history_evidence($current_time, $admin_userid, $progress_bar, int $batch_limit = 10000) {
     global $DB;
 
     if (!$DB->count_records('dp_plan_evidence', ['readonly' => 1])) {
@@ -798,12 +799,11 @@ function totara_evidence_migrate_completion_history_evidence($current_time, $adm
 
     // Migrate the actual completion evidence, i.e. evidence that is marked as 'readonly'
     $offset = 0;
-    $limit = 10000;
+    $limit = $batch_limit;
     $has_items = true;
     while ($has_items) {
         $items = $DB->get_recordset('dp_plan_evidence', ['readonly' => 1], 'id', '*', $offset, $limit);
         $has_items = $items->valid();
-        $offset = $offset + $limit;
 
         foreach ($items as $item) {
             $transaction = $DB->start_delegated_transaction();
@@ -838,14 +838,15 @@ function totara_evidence_migrate_completion_history_evidence($current_time, $adm
  * @param int $current_time
  * @param int $admin_userid
  * @param $progress_bar
+ * @param int $batch_limit defaults to 10000
  */
-function totara_evidence_migrate_manually_created_evidence($current_time, $admin_userid, $progress_bar) {
+function totara_evidence_migrate_manually_created_evidence($current_time, $admin_userid, $progress_bar, int $batch_limit = 10000) {
     global $DB;
 
     $types = totara_evidence_get_legacy_evidence_types($current_time, $admin_userid);
 
     foreach ($types as $old_type) {
-        $DB->transaction(static function () use ($DB, $current_time, $admin_userid, $progress_bar, $old_type) {
+        $DB->transaction(static function () use ($DB, $current_time, $admin_userid, $progress_bar, $old_type, $batch_limit) {
             // We need to create a type from a given record
             $manual_type_record = [
                 'name' => $old_type->name,
@@ -874,12 +875,11 @@ function totara_evidence_migrate_manually_created_evidence($current_time, $admin
 
             // Let's migrate all the records of a given type, except 'read-only'
             $offset = 0;
-            $limit = 10000;
+            $limit = $batch_limit;
             $has_items = true;
             while ($has_items) {
                 $items = $DB->get_recordset('dp_plan_evidence', ['readonly' => 0, 'evidencetypeid' => $old_type->id], 'id', '*', $offset, $limit);
                 $has_items = $items->valid();
-                $offset = $offset + $limit;
 
                 foreach ($items as $item) {
                     totara_evidence_migrate_item($item, $type_field_ids, $new_type_id, $current_time, $admin_userid);
@@ -950,14 +950,16 @@ function totara_evidence_migrate_move_files_to_temp_area() {
 
 /**
  * Once we are done copying everything over, we need to clean up the temporary file area we created
+ *
+ * @param int $batch_limit defaults to 10000
  */
-function totara_evidence_migrate_remove_temporary_files() {
+function totara_evidence_migrate_remove_temporary_files(int $batch_limit = 10000) {
     global $DB;
     $context = context_system::instance()->id;
     $fs = get_file_storage();
 
     $offset = 0;
-    $limit = 10000;
+    $limit = $batch_limit;
     $has_files = true;
     while ($has_files) {
         $files = $DB->get_recordset_select(
@@ -969,7 +971,6 @@ function totara_evidence_migrate_remove_temporary_files() {
             null, 'id', '*', $offset, $limit
         );
         $has_files = $files->valid();
-        $offset += $limit;
 
         foreach ($files as $file) {
             $fs->get_file_instance($file)->delete();
@@ -982,8 +983,11 @@ function totara_evidence_migrate_remove_temporary_files() {
 
 /**
  * Migrate old evidence to the new evidence tables
+ *
+ * @param int $batch_limit defaults to 10000
+ * @return bool
  */
-function totara_evidence_migrate() {
+function totara_evidence_migrate(int $batch_limit = 1000) {
     $time = time();
     $admin_userid = get_admin()->id;
 
@@ -1044,13 +1048,13 @@ function totara_evidence_migrate() {
 
     totara_evidence_migrate_move_files_to_temp_area();
 
-    totara_evidence_migrate_completion_history_evidence($time, $admin_userid, $progress_bar);
+    totara_evidence_migrate_completion_history_evidence($time, $admin_userid, $progress_bar, $batch_limit);
 
-    totara_evidence_migrate_manually_created_evidence($time, $admin_userid, $progress_bar);
+    totara_evidence_migrate_manually_created_evidence($time, $admin_userid, $progress_bar, $batch_limit);
 
     $progress_bar->show_finishing();
 
-    totara_evidence_migrate_remove_temporary_files();
+    totara_evidence_migrate_remove_temporary_files($batch_limit);
 
     totara_evidence_migrate_reports();
 

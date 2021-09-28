@@ -55,7 +55,7 @@ class totara_evidence_migration_idempotence_testcase extends totara_evidence_mig
             'fieldid' => 0,
         ]);
         try {
-            totara_evidence_migrate();
+            totara_evidence_migrate(1);
             self::fail("Migration should have thrown an error here but it didn't");
         } catch (Exception $exception) {
             $this->assertEquals('Undefined offset: 0', $exception->getMessage());
