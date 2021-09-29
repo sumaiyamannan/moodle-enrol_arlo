@@ -987,7 +987,7 @@ function totara_evidence_migrate_remove_temporary_files(int $batch_limit = 10000
  * @param int $batch_limit defaults to 10000
  * @return bool
  */
-function totara_evidence_migrate(int $batch_limit = 1000) {
+function totara_evidence_migrate(int $batch_limit = 10000) {
     $time = time();
     $admin_userid = get_admin()->id;
 
