@@ -105,7 +105,8 @@ class rb_filter_course_multi extends rb_filter_type {
 
         // Container for currently selected items.
         $content = html_writer::tag('div', '', array('class' => 'rb-filter-content-list list-' . $this->name));
-        $objs[] =& $mform->createElement('static', $this->name.'_list', '', $content);
+        $element = $mform->createElement('static', $this->name.'_list', '', $content)->set_allow_xss(true);
+        $objs[] =& $element;
 
         // Create a group for the elements.
         $grp =& $mform->addElement('group', $this->name.'_grp', $label, $objs, '', false);
@@ -163,6 +164,11 @@ class rb_filter_course_multi extends rb_filter_type {
         $operator = $field . '_op';
 
         if (isset($formdata->$field) && $formdata->$field != '') {
+            // Return false to reset selected values stored in session
+            if ((int)$formdata->$operator === self::COURSE_MULTI_ANYVALUE) {
+                return false;
+            }
+
             $data = array('operator' => (int)$formdata->$operator,
                 'value'    => (string)$formdata->$field);
 

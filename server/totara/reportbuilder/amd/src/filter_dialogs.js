@@ -460,9 +460,29 @@ define(['jquery', 'core/config', 'core/str'], function ($, mdlcfg, mdlstrings) {
                 if ($(this).val() === '0') {
                     $('input[name='+name+'_rec]').prop('disabled', true);
                     $('#show-'+name+'-dialog').prop('disabled', true);
+
+                    // Remove any selected items
+                    $('.list-'+name).empty();
                 } else {
                     $('input[name='+name+'_rec]').prop('disabled', false);
                     $('#show-'+name+'-dialog').prop('disabled', false);
+
+                    // Re-add items to markup
+                    if ($('.list-'+name).html() == '') {
+                        var courseids = $('input[name=' + name + ']').val();
+                        var url = mdlcfg.wwwroot + '/totara/reportbuilder/ajax/filter/course_multi/save.php';
+
+                        $.ajax({
+                            url: url,
+                            type: 'POST',
+                            data: ({filtername: name, sesskey: mdlcfg.sesskey, ids: courseids}),
+                            success: function (o) {
+                                if (o.length > 0) {
+                                    $('.list-' + name).html(o);
+                                }
+                            }
+                        });
+                    }
                 }
             });
 
