@@ -1039,5 +1039,17 @@ function xmldb_facetoface_upgrade($oldversion) {
         upgrade_mod_savepoint(true, 2020100105, 'facetoface');
     }
 
+    /**
+     * Replace 'sessiondate' with 'sessionstartdate' and 'datefinish' with 'sessionfinishdate' column values
+     * for 'rb_source_facetofcae_sessions' and 'rb_source_facetoface_signin' seminar report sources to make consistency and
+     * use it as a single column value for all seminar report sources
+     */
+    if ($oldversion < 2020100106) {
+
+        facetoface_upgradelib_migrate_reoportbuilder_date_fields();
+        // Facetoface savepoint reached.
+        upgrade_mod_savepoint(true, 2020100106, 'facetoface');
+    }
+
     return true;
 }
