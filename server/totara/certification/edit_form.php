@@ -54,7 +54,7 @@ class certification_add_form extends moodleform {
         $mform->setType('comptype', PARAM_INT);
 
         $buttonarray = array();
-        $buttonarray[] = $mform->createElement('submit', 'savechanges', get_string('add'), 'class="certification-add"');
+        $buttonarray[] = $mform->createElement('submit', 'savechanges', get_string('add'), 'class="form-submit certification-add"');
         $buttonarray[] = $mform->createElement('cancel', 'cancel', get_string('cancel'),
                                                 'class="certification-cancel"');
         $mform->addGroup($buttonarray, 'buttonar', '', array(' '), false);
