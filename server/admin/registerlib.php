@@ -45,6 +45,34 @@ function is_valid_registration_code_format($code) {
 }
 
 /**
+ * Does the site have exception to not send registration data?
+ *
+ * @return bool false unless valid exemption code is provided in config.php
+ */
+function is_registration_exempted() {
+    global $CFG;
+
+    if (empty($CFG->registrationcode) || empty($CFG->registrationexemptioncode)) {
+        return false;
+    }
+
+    if (!is_valid_registration_code_format($CFG->registrationcode)) {
+        return false;
+    }
+
+    if (strlen($CFG->registrationexemptioncode) !== 10) {
+        return false;
+    }
+
+    $hash = sha1($CFG->registrationcode);
+    if (substr($hash, 0, 2) === substr($CFG->registrationexemptioncode, 0, 2)) {
+        return true;
+    }
+
+    return false;
+}
+
+/**
  * Should we redirect the current user to the registration page?
  * @return bool
  */
@@ -111,6 +139,7 @@ function get_registration_data() {
         }
     }
 
+    $data['timegenerated'] = time();
     $data['siteidentifier'] = $CFG->siteidentifier;
     $data['wwwroot'] = $CFG->wwwroot;
     $data['siteshortname'] = $SITE->shortname;

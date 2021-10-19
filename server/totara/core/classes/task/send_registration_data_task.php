@@ -44,7 +44,7 @@ class send_registration_data_task extends \core\task\scheduled_task {
         global $CFG;
         require_once($CFG->dirroot.'/admin/registerlib.php');
 
-        if (empty($CFG->registrationenabled)) {
+        if (is_registration_exempted()) {
             mtrace("Registration updates are disabled");
             return;
         }

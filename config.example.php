@@ -36,6 +36,13 @@ Totara Registration
 // $CFG->sitetype = 'production';
 // $CFG->registrationcode = 'xxxxxxxxxxxxxxxx'; // Your unique code provided by the registration system
 //
+// All sites are required to send registration data to Totara unless an exemption has been granted.
+// Exemptions are granted on a case-by-case basis and need to be organised with your Totara partner.
+// If you are granted an exemption you will be provided with a unique code that needs to be added
+// to your config.php as shown below.
+//
+// $CFG->registrationexemptioncode = 'yyyyyyyyyy'; // Optional registration exemption code, 10 characters.
+//
 
 /***********************************************************************************************************************
 Web Address

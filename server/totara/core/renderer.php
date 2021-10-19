@@ -642,10 +642,11 @@ class totara_core_renderer extends plugin_renderer_base {
      */
     public function is_registered() {
         global $CFG;
+        require_once($CFG->dirroot . '/' . $CFG->admin . '/registerlib.php');
 
         // NOTE: do not change any config settings here, it is the job of admin/register.php page!!!
 
-        if (empty($CFG->registrationenabled)) {
+        if (is_registration_exempted()) {
             $message = get_string('registrationisdisabled', 'admin', $CFG->wwwroot . '/admin/register.php');
             $level = \core\output\notification::NOTIFY_ERROR;
         } else if (empty($CFG->sitetype) or empty($CFG->registered)) {
