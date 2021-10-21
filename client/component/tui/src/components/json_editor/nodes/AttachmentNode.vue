@@ -35,12 +35,13 @@
     />
 
     <div class="tui-attachmentNode__info">
-      <div
-        class="tui-attachmentNode__filename"
-        :data-file-extension="fileExtension"
-        :class="[truncate && `tui-attachmentNode__filename--truncate`]"
-      >
-        <p ref="filenameText">{{ filename }}</p>
+      <div class="tui-attachmentNode__filename">
+        <div class="tui-attachmentNode__filename-text">
+          {{ fileName }}
+        </div>
+        <div class="tui-attachmentNode__filename-ext">
+          {{ fileExtension }}
+        </div>
       </div>
 
       <p class="tui-attachmentNode__fileSize">
@@ -53,7 +54,6 @@
 <script>
 import FileIcon from 'tui/components/icons/files/compute/FileIcon';
 import FileSize from 'tui/components/file/FileSize';
-import { isRtl } from 'tui/i18n';
 
 export default {
   components: {
@@ -87,12 +87,6 @@ export default {
     },
   },
 
-  data() {
-    return {
-      truncate: true,
-    };
-  },
-
   computed: {
     /** @deprecated since 13.3 */
     attributes: () => null,
@@ -105,21 +99,18 @@ export default {
       }
 
       let parts = String.prototype.split.call(this.filename, separator);
-      return parts.pop();
+      return this.$str('file_extension', 'totara_core', parts.pop());
     },
-  },
 
-  mounted() {
-    if (isRtl()) {
-      this.truncate = false;
-    } else {
-      this.$nextTick().then(() => {
-        const el = this.$refs.filenameText;
-        if (el.offsetWidth >= el.scrollWidth) {
-          this.truncate = false;
-        }
-      });
-    }
+    fileName() {
+      const separator = '.';
+      if (!this.filename.includes(separator)) {
+        return this.filename;
+      }
+
+      let parts = this.filename.split(separator);
+      return parts.shift();
+    },
   },
 
   methods: {
@@ -136,7 +127,8 @@ export default {
 <lang-strings>
   {
     "totara_core": [
-      "filewithname"
+      "filewithname",
+      "file_extension"
     ]
   }
 </lang-strings>
@@ -164,7 +156,8 @@ export default {
   border-radius: var(--card-border-radius);
 
   &__info {
-    width: calc(100% - 3.2rem - var(--gap-2) - 2.2em);
+    flex-direction: column;
+    overflow: hidden;
   }
 
   &__fileSize {
@@ -174,23 +167,17 @@ export default {
   }
 
   &__filename {
-    position: relative;
+    display: flex;
 
-    > p {
+    &-text {
       margin: 0;
       overflow: hidden;
       white-space: nowrap;
       text-overflow: ellipsis;
     }
 
-    &--truncate {
-      &:after {
-        position: absolute;
-        top: 0;
-        left: 100%;
-        width: 2.2em;
-        content: attr(data-file-extension);
-      }
+    &-ext {
+      flex-shrink: 0;
     }
   }
 
