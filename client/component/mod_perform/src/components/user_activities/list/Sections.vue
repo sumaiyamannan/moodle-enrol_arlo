@@ -92,6 +92,7 @@
                   : row.participant.fullname
               "
               :profile-picture="row.participant.profileimageurlsmall"
+              :profile-picture-alt="row.participant.profileimagealt"
               size="xxsmall"
             />
           </Cell>
