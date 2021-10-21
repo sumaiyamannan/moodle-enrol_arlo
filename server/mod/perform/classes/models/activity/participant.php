@@ -125,7 +125,7 @@ class participant {
             return $this->user->get_profileimagealt();
         }
 
-        $field_resolver = user_field_resolver::from_record($this->user->to_record());
+        $field_resolver = user_field_resolver::from_record($this->user->get_record());
         return $field_resolver->get_field_value('profileimagealt');
     }
 
