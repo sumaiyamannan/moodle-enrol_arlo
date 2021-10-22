@@ -18,7 +18,12 @@
 <template>
   <div class="tui-sidePanelCommentBox">
     <h4 class="tui-sidePanelCommentBox__header">
-      <span>{{ $str('comments', 'totara_comment', totalComments) }}</span>
+      <span v-if="commentsLoading">{{
+        $str('comments', 'totara_engage')
+      }}</span>
+      <span v-else>
+        {{ $str('comments', 'totara_comment', totalComments) }}</span
+      >
       <Loading v-if="submitting" />
     </h4>
 
@@ -35,6 +40,7 @@
       }"
       :comment-able="reallyCommentAble"
       class="tui-sidePanelCommentBox__box"
+      @fetch-comments="commentsLoading = $event"
       @update-total-comments="totalComments = $event"
       @update-submitting="submitting = $event"
     />
@@ -97,6 +103,7 @@ export default {
       size: SIZE_SMALL,
       totalComments: 0,
       submitting: false,
+      commentsLoading: false,
     };
   },
 
@@ -113,6 +120,9 @@ export default {
 <lang-strings>
   {
     "totara_comment": [
+      "comments"
+    ],
+    "totara_engage": [
       "comments"
     ]
   }
