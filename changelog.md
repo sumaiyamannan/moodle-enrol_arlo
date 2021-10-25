@@ -1,3 +1,169 @@
+Release 13.13 (26th October 2021):
+==================================
+
+
+Important:
+
+    TL-32535       Fixed batching of the migration of evidence items and files
+
+                   The new totara_evidence migration code batches the items migrated and only
+                   loads maximum 1000 items at a time. Unfortunately the code for batching had
+                   an issue: if there are more than 10000 records to be migrated some records
+                   could have been missed. This patch fixes the batching code and makes sure
+                   all existing items are migrated successfully.
+
+Security issues:
+
+    TL-28248       Fixed XSS issue in CAS authentication module when using the CAS as proxy
+    TL-32427       Fixed unreleased grade disclosure via web service mod_quiz_get_user_attempts
+    TL-32467       Fixed user error messages to prevent disclosure of information
+
+                   The same error message is now displayed for deleted, non-existing, or
+                   non-accessible users, to prevent disclosure of information about deleted or
+                   hidden accounts
+
+    TL-32602       Made sure session key is required when removing related badge
+    TL-32672       Made sure program access is checked when "program viewed" event is triggered via Web API
+
+Performance improvements:
+
+    TL-32547       Improved the performance of the 'certification completion date' dynamic audience rule
+
+Improvements:
+
+    TL-28246       Upgraded PHPMailer library to version 6.5.1
+    TL-28271       Upgraded the ChartJS library used in Tui to version 2.9.4
+    TL-31653       Added basic support for mailto links in the weka editor
+    TL-31937       Added a configuration setting to prevent resending program and certification messages on schedule change
+
+                   Introduced a new configuration setting
+                   "$CFG->program_message_prevent_resend_on_schedule_change". When set to
+                   true, it switches off the default behaviour of resending program and
+                   certification messages on change of the message scheduling.
+
+    TL-32663       Updated environment checks to include checks for the upcoming Totara 15 release
+
+Bug fixes:
+
+    TL-31569       Fixed the display of singular and nested course module activity restrictions in GraphQL
+    TL-31679       Added new users's status filter that only shows one 'Requested' option in Seminar events and summary reports
+
+                   Within seminar there are three different requested statuses depending on
+                   the type of approval configured. The new filter shows all requested records
+                   when the single 'Requested' option is selected.
+
+    TL-32133       Fixed styling of tags in report table
+    TL-32186       Fixed custom font for PDF export in report builder
+    TL-32335       Fixed the course module GraphQL type to check if the summary field exists before attempting to fetch it
+    TL-32349       Fixed linking to a course in the catalogue, to take users directly to the course instead of enrolment options page
+
+                   Prior to Totara 12 clicking on a course would take you to the course page.
+                   This change resulted in the user being sent directly to the enrolment
+                   options page under certain circumstances. This broke the desired behaviour
+                   when using certain enrolment methods such as the auto-enrol method,
+                   requiring an extra click to get to the course.
+
+                   This change returns to the previous behaviour - the user is first directed
+                   to the course page where they may be auto-enrolled. They still may end
+                   being redirected to the enrolment options page if there are no
+                   auto-enrolment options for them.
+
+    TL-32355       Fixed the display of descriptions in Report builder when they contain nothing but an image
+
+                   Prior to this this change, images would only be displayed if
+                   accompanied with text.
+
+    TL-32361       Fixed the sending of notifications when seminar reservations are cancelled
+    TL-32363       Fixed the submission of images in "online text" assignments
+
+                   Previously if you attempted to submit an "online text" assignment with
+                   nothing but an image in it, it would be rejected as an empty submission.
+                   This has been fixed to correctly validate empty submissions.
+
+    TL-32366       Ensured that breadcrumbs adhere to the 'navshowcategories' settings within Programs and Certifications
+    TL-32372       Fixed layout of grading comment bar in quiz essay question
+
+                   In the admin view of the quiz after grading and adding a comment, a comment
+                   bar is shown with a link to update it. This fixes an alignment issue in the
+                   comment bar.
+
+    TL-32395       Fixed the link to the GO1 content marketplace information page
+    TL-32397       Fixed custom seminar notifications not being sent when filtering multiple event times
+
+                   Prior to this fix, custom seminar notifications that were configured to be
+                   sent to booked users in combination with selecting multiple event times
+                   (i.e. future, past or in progress) failed to send under certain circumstances.
+
+    TL-32433       Fixed custom seminar notifications being sent to participants with the wrong status
+
+                   Prior to this fix, custom seminar notifications that were configured to be
+                   sent to booked users only were also sent to users with different
+                   participation status, e.g. cancelled or waitlisted users.
+
+    TL-32447       Fixed incorrect warning message when deleting workspace discussion and leaving workspace
+    TL-32457       Fixed job assignment HR import order
+    TL-32460       Fixed checks on the container/workspace:workspaceview capability when accessing workspaces so that "prevent" works properly
+    TL-32461       Ensured course enrolment works correctly when courses are accessed via a Learning Plan using Learning Plan enrolment method
+
+                   In cases where Audience based visibility is used, with course visibility
+                   set as 'Enrolled users only' an approved plan containing the course could
+                   not be enrolled upon prior to this change.
+
+    TL-32488       Fixed embedding of Vimeo videos that have a private URL
+
+                   Vimeo private videos have a slightly different URL format to standard Vimeo
+                   videos. Embedding one of these into an editor field will now load correctly
+                   instead of showing an error.
+
+    TL-32534       Fixed the display of certificate modules using the force download option
+
+                   Previously the page was attempting to output the 'view as html' button,
+                   even though the button was not being properly initialised for the "force
+                   download" option. This has been resolved so the button only attempts to
+                   render for the "email" or "open in another window" options.
+
+    TL-32539       Fixed the translation of resource type for some engage notifications
+    TL-32543       Fixed blocks being displayed on the course completion status page
+
+                   On the 'More details' page for the 'Course completion status' block the
+                   front page blocks incorrectly displayed. This fixes the block display so it
+                   now shows the course navigation blocks.
+
+    TL-32561       Fixed a network error for the CSS files used during initial installation
+    TL-32572       Fixed an error creating the "Playlist Engagement" report that happened when "Recommendations" was turned off in Engage settings
+    TL-32577       Fixed redirect when navigating directly to the declare interest page for a Seminar
+
+                   When navigating directly to the declare interest page for a Seminar and the
+                   user is not logged in the redirect after the user logged in didn't preserve
+                   the URL parameter. This is now preserved and loads the page correctly.
+
+    TL-32600       Fixed error when adding Certification ID filter to "Record of Learning: Certifications" report
+    TL-32607       Prevented columns with compound data from being added to the report toolbar
+    TL-32620       Fixed a "first column not unique" error in Engage when searching within your library
+    TL-32626       Fixed deleted workspaces being listed when sharing resource to recipients
+    TL-32722       Fixed an error in the Weka editor when dragging nodes
+    TL-32725       Fixed site policies preventing web crawlers from indexing the site
+
+                   Web crawlers are no longer prevented from indexing sites where the 'Open to
+                   Google' setting is enabled and agreement to site policies are required.
+
+    TL-32647       Fixed Seminar Start/Finish Date columns for Seminar Sign-In report source
+
+                   Totara 12 introduced Seminar Start/Finish Date column improvements for
+                   Seminar reports and brought consistency across sources. But the upgrade was
+                   missed and the client data for these columns were hidden and do not display
+                   on the reports. Now it fixed and the following columns were changed when
+                   Totara 12 got improvements.
+                   * replaced 'sessiondate' with 'sessionstartdate' column value for
+                     'rb_source_facetofcae_sessions' and 'rb_source_facetoface_signin' seminar
+                     report sources to make consistency and use it as a single column value for
+                     all seminar report sources
+                   * replaced 'datefinish' with 'sessionfinishdate' column value for
+                     'rb_source_facetofcae_sessions' and 'rb_source_facetoface_signin' seminar
+                     report sources to make consistency and use it as a single column value for
+                     all seminar report sources
+
+
 Release 13.12 (21st September 2021):
 ====================================
 
