@@ -3350,7 +3350,9 @@ class global_navigation_for_ajax extends global_navigation {
             foreach ($courses as $course) {
                 $this->add_course($course);
             }
-            $courses->close();
+            if (!is_array($courses)) {
+                $courses->close();
+            }
         }
     }
 
