@@ -178,7 +178,7 @@ export default {
      * @param uri {string}
      */
     fixUrl(uri) {
-      const purposefulStarts = ['/', '#', 'http://', 'https://'];
+      const purposefulStarts = ['/', '#', 'http://', 'https://', 'mailto:'];
 
       const uriHasPurposefulStart = purposefulStarts.some(purposefulStart =>
         uri.startsWith(purposefulStart)

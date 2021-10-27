@@ -23,7 +23,11 @@
  * @subpackage facetoface
  */
 
-use mod_facetoface\{attendees_helper, seminar_event, output\session_time, seminar_event_helper};
+use mod_facetoface\{attendees_helper,
+    query\event\filter\event_times_filter,
+    seminar_event,
+    output\session_time,
+    seminar_event_helper};
 use mod_facetoface\signup\state\{
     attendance_state,
     booked,
@@ -308,44 +312,50 @@ class facetoface_notification extends data_object {
      * Get recipients list including new options
      *
      * @access  private
-     * @param   int     $sessionid  (optional)
-     * @return  object|false    Recordset or false on error
+     * @param   int|null  $sessionid  (optional)
+     * @param   array  $recipient_status_settings
+     * @return  moodle_recordset  Recordset
      */
-    private function load_recipients(?int $sessionid = null, array $recipients) {
+    private function load_recipients(?int $sessionid = null, array $recipient_status_settings) {
         global $DB;
 
         $query = new query_notifications($sessionid, $this);
 
-        foreach ($recipients as $recipient => $value) {
-            switch ($recipient) {
+        $event_times_filters = [];
+        foreach ($recipient_status_settings as $status_setting => $enabled) {
+            if ((int)$enabled !== 1) {
+                continue;
+            }
+            switch ($status_setting) {
                 case 'upcoming_events':
-                    if ((int)$value == 1) {
-                        $query->with_filter(new event_time_filter(event_time::FUTURE));
-                    }
+                    // Filter for "Booked (upcoming events)".
+                    $event_times_filters[] = event_time::FUTURE;
+                    $query->with_status('booked');
                     break;
                 case 'events_in_progress':
-                    if ((int)$value == 1) {
-                        $query->with_filter(new event_time_filter(event_time::INPROGRESS));
-                    }
+                    // Filter for "Booked (events in progress)".
+                    $event_times_filters[] = event_time::INPROGRESS;
+                    $query->with_status('booked');
                     break;
                 case 'past_events':
-                    if ((int)$value == 1) {
-                        $query->with_filter(new event_time_filter(event_time::PAST));
-                    }
+                    // Filter for "Booked (past events)".
+                    $event_times_filters[] = event_time::PAST;
+                    $query->with_status('booked');
                     break;
                 default:
                     // 'fully_attended', 'partially_attended', 'unable_to_attend',
                     // 'no_show', 'waitlisted', 'user_cancelled',
                     // 'requested', 'requestedrole', 'requestedadmin'
-                    if ((int)$value == 1) {
-                        $query->with_status($recipient);
-                        if ($recipient == 'requested') {
-                            $query->with_status('requestedrole');
-                            $query->with_status('requestedadmin');
-                        }
+                    $query->with_status($status_setting);
+                    if ($status_setting === 'requested') {
+                        $query->with_status('requestedrole');
+                        $query->with_status('requestedadmin');
                     }
                     break;
             }
+        }
+        if (count($event_times_filters) > 0) {
+            $query->with_filter(new event_times_filter($event_times_filters));
         }
 
         $statement = $query->get_statement();

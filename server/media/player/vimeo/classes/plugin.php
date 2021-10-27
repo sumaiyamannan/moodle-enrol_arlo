@@ -33,11 +33,21 @@ defined('MOODLE_INTERNAL') || die();
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class media_vimeo_plugin extends core_media_player_external {
+
     protected function embed_external(moodle_url $url, $name, $width, $height, $options) {
-        $videoid = $this->matches[1];
+        $video_id = $this->matches[1];
         $info = trim($name);
         if (empty($info) or strpos($info, 'http') === 0) {
             $info = get_string('pluginname', 'media_vimeo');
+        }
+
+        // If there's another extension send this through as well
+        if (!empty($this->matches[3])) {
+            $private_id = $this->matches[3];
+
+            $iframe_url = "https://player.vimeo.com/video/$video_id?h=$private_id";
+        } else {
+            $iframe_url = "https://player.vimeo.com/video/$video_id";
         }
 
         // Note: resizing via url is not supported, user can click the fullscreen
@@ -47,7 +57,7 @@ class media_vimeo_plugin extends core_media_player_external {
 
         $grow = !empty($options[core_media_manager::OPTION_GROW]);
 
-        $content = $this->responsive_iframe("https://player.vimeo.com/video/$videoid", $width, $height, $info);
+        $content = $this->responsive_iframe($iframe_url, $width, $height, $info);
 
         $content = html_writer::tag('div', $content, [
             'class' => $grow ? 'mediaplugin_grow_limit' : null,
@@ -68,7 +78,9 @@ class media_vimeo_plugin extends core_media_player_external {
         $start = '~^https?://vimeo\.com/';
         // Middle bit: either watch?v= or v/.
         $middle = '([0-9]+)';
-        return $start . $middle . core_media_player_external::END_LINK_REGEX_PART;
+        // Could be a private url with another hash at the end
+        $end = '(\/([a-zA-Z0-9]*))?';
+        return $start . $middle . $end . core_media_player_external::END_LINK_REGEX_PART;
     }
 
     public function get_embeddable_markers() {

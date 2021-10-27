@@ -68,36 +68,17 @@ class course_module implements type_resolver {
         $course = $cminfo->get_course();
         if ($field == 'availablereason') {
             $info->availablereason = [];
+
             if (!$available) {
-                if (!empty($cminfo->availableinfo)) {
-                    if (is_string($cminfo->availableinfo)) {
-                        $info->availablereason = [$cminfo->availableinfo];
-                    } else {
-                        $modinfo = get_fast_modinfo($course->id, $USER->id);
-                        $coursecontext = \context_course::instance($course->id);
+                $availableinfo = $cminfo->availableinfo;
 
-                        // Mimic half of core_availability::format_info() to get the cm names.
-                        foreach ($cminfo->availableinfo->items as $item) {
-                            // Don't waste time if there are no special tags.
-                            if (strpos($item, '<AVAILABILITY_') === false) {
-                                $cminfo->availablereason[] = $item;
-                                continue;
-                            }
+                if (!empty($availableinfo)) {
+                    // Pre-load the module and context information.
+                    $modinfo = get_fast_modinfo($course->id, $USER->id);
+                    $coursecontext = \context_course::instance($course->id);
+                    $reason = \core_availability\info::webapi_parse_available_info($availableinfo, $coursecontext, $modinfo);
 
-                            $reason = preg_replace_callback('~<AVAILABILITY_CMNAME_([0-9]+)/>~',
-                                        function($matches) use($modinfo, $coursecontext) {
-                                            $cm = $modinfo->get_cm($matches[1]);
-                                            if ($cm->has_view() and $cm->uservisible) {
-                                                // Help student by providing a link to the module which is preventing availability.
-                                                return \html_writer::link($cm->url, format_string($cm->name, true, array('context' => $coursecontext)));
-                                            } else {
-                                                return format_string($cm->name, true, array('context' => $coursecontext));
-                                            }
-                                        }, $item
-                                    );
-                            $info->availablereason[] = $reason;
-                        }
-                    }
+                    $info->availablereason = $reason;
                 }
             }
         }
@@ -191,8 +172,23 @@ class course_module implements type_resolver {
 
         $modvaluefields = ['description', 'descriptionformat'];
         if (in_array($field, $modvaluefields)) {
-            // Note: The get_coursemodule_info functions do too much pre-formatting, thisi s the easiest way to handle it.
-            $modvalues = $DB->get_record($cminfo->modname, ['id' => $cminfo->instance], 'name, intro, introformat');
+            // Note: The get_coursemodule_info functions do too much pre-formatting, this is the easiest way to handle it.
+            //       However, first we would need to make sure that if course module supports the intro or not in order
+            //       to include the appropriate fields.
+            $fetch_fields = ["name"];
+            $support_intro = plugin_supports("mod", $cminfo->modname, FEATURE_MOD_INTRO, false);
+
+            if ($support_intro) {
+                $fetch_fields[] = "intro";
+                $fetch_fields[] = "introformat";
+            }
+
+            $modvalues = $DB->get_record($cminfo->modname, ['id' => $cminfo->instance], implode(", ", $fetch_fields));
+            if (!$support_intro) {
+                // Default intro to null and FORMAT HTML if intro is not supported by course module.
+                $modvalues->intro = null;
+                $modvalues->introformat = FORMAT_HTML;
+            }
 
             if ($field == 'description') {
                 $info->description = $modvalues->intro;

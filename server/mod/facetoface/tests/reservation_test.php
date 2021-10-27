@@ -311,4 +311,61 @@ class mod_facetoface_reservation_testcase extends advanced_testcase {
             (object)['userid' => $student1->id, 'statuscode' => booked::get_code()],
         ]);
     }
+
+    public function test_notifications_after_remove() {
+        $gen = $this->getDataGenerator();
+        $manager_id = $gen->create_user()->id;
+        $course_id = $gen->create_course()->id;
+
+        $gen->enrol_user($manager_id, $course_id, 'manager');
+
+        $f2fgen = $gen->get_plugin_generator('mod_facetoface');
+        $f2f = $f2fgen->create_instance([
+            'course' => $course_id,
+            'managerreserve' => 1,
+            'maxmanagerreserves' => 5
+        ]);
+        $sessionid = $f2fgen->add_session([
+            'facetoface' => $f2f->id,
+            'capacity' => 200,
+            'allowoverbook' => 1,
+            'sessiondates' => [time() + YEARSECS]
+        ]);
+
+        $seminarevent = new seminar_event($sessionid);
+
+        $this->setUser($manager_id);
+        reservations::add($seminarevent, $manager_id, 2, 0);
+
+        $reservation = (object)['userid' => 0, 'statuscode' => booked::get_code()];
+        self::assert_signups_of_event($sessionid, [$reservation, $reservation]);
+
+        // By default if the manager is the one cancelling reservations, he does
+        // not need a notification to tell him he did so.
+        $sink = $this->redirectEmails();
+        reservations::remove($seminarevent, $manager_id, null);
+        $this->executeAdhocTasks();
+
+        self::assert_signups_of_event($sessionid, []);
+
+        $messages = $sink->get_messages();
+        $sink->close();
+        $this->assertCount(0, $messages);
+
+        reservations::add($seminarevent, $manager_id, 3, 0);
+        self::assert_signups_of_event($sessionid, [$reservation, $reservation, $reservation]);
+
+        $this->setAdminUser();
+
+        // But notifications could be forced if the manager is not the one cancelling.
+        $sink = $this->redirectEmails();
+        reservations::remove($seminarevent, $manager_id, null, true);
+        $this->executeAdhocTasks();
+
+        self::assert_signups_of_event($sessionid, []);
+
+        $messages = $sink->get_messages();
+        $sink->close();
+        $this->assertCount(1, $messages);
+    }
 }

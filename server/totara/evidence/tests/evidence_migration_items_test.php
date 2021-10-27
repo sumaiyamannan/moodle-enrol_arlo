@@ -65,7 +65,7 @@ class totara_evidence_migration_items_testcase extends totara_evidence_migration
         $this->assertEquals(4, builder::table('dp_plan_evidence')->count());
         $this->assertEquals(0, evidence_item::repository()->count());
 
-        totara_evidence_migrate();
+        totara_evidence_migrate(2);
 
         $this->assertEquals(0, builder::table('dp_evidence_type')->count());
         $this->assertEquals(4, evidence_type::repository()->count());
@@ -127,7 +127,7 @@ class totara_evidence_migration_items_testcase extends totara_evidence_migration
         $this->assertEquals(3, builder::table('dp_plan_evidence')->count());
         $this->assertEquals(0, evidence_item::repository()->count());
 
-        totara_evidence_migrate();
+        totara_evidence_migrate(2);
 
         $this->assertEquals(0, builder::table('dp_evidence_type')->count());
         $this->assertEquals(4, evidence_type::repository()->count());
