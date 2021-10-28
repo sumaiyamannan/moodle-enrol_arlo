@@ -1,6 +1,10 @@
 This files describes API changes in /client/component/engage_article,
 information provided here is intended especially for developers.
 
+=== 13.14 ===
+* Updated ArticleCard.vue & PlaylistCard.vue to keep the title position consistent when the bookmark button is available
+    * Template & SCSS changes
+
 === 13.3 ===
 * Updates in ArticleForm.vue:
   * Template changes
