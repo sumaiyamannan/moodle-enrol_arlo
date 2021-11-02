@@ -232,3 +232,26 @@ class TestDataLoader(unittest.TestCase):
         self.assertIsInstance(random.choice(interactions), tuple)
         self.assertIsInstance(positive_inter_map, dict)
         self.assertIsInstance(random.choice(list(positive_inter_map.values())), list)
+
+    def get_items_no_document(self):
+        """
+        This method tests if the `__get_items` method of the `DataLoader` class returns
+        correct response when there was no text description in any of the content.
+        """
+        items_modified_data = self.items_data.copy()
+        items_modified_data["document"] = ""
+
+        items_transformed_data = self.data_loader._DataLoader__get_items(
+            users_data=items_modified_data, query="hybrid"
+        )
+        self.assertIsInstance(
+            obj=items_transformed_data["items_features_data"],
+            cls=list,
+            msg=(
+                "The 'items_features_data' value of returned response from the "
+                "'DataLoader.__get_items' for empty user's descriptions "
+                f"{type(items_transformed_data['items_features_data'])} while it was"
+                "expected to be <class 'list'>"
+            )
+        )
+
