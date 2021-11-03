@@ -1,6 +1,14 @@
 This files describes API changes in /client/component/container_workspace,
 information provided here is intended especially for developers.
 
+=== 13.14 ===
+
+* Updated spacing and responsive behaviour in WorkspacePrimaryAction.vue and EmptySpacesHeader.vue
+  * SCSS changes
+* Updated mobile styling and empty state UI in RecommendedSpaces.vue, EmptySpacesPage.vue and SpaceCardsGrid.vue
+  * Template, SCSS and script block changes
+* Reduced the size of the smallest breakpoint in grid.js
+
 === 13.5 ===
 
 * Updates in WorkspaceMenu.vue:
@@ -15,7 +23,7 @@ information provided here is intended especially for developers.
 * Updated WorkspaceDiscussionForm.vue to add prop "variant" to component editor_weka Weka.vue
   * Template changes
 * Updated WorkspaceForm.vue to replace props "component", "area" and "instance-id" with "usage-identifier" for editor_weka Weka.vue
-  * Templace changes
+  * Template changes
 * Updated WorkspaceForm.vue to add prop "variant" to component editor_weka Weka.vue
   * Template changes
 * Updated WorkspaceDiscussionPage.vue to add prop "editor" to component editor_weka Weka.vue
