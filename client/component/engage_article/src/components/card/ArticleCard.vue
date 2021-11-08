@@ -31,13 +31,14 @@
       :show-cover="hovered"
       class="tui-engageArticleCard__imageheader"
     >
-      <img
+      <div
         slot="image"
-        :alt="extraData.alt || null"
         :role="getRoleAttr"
-        :src="extraData.image"
         class="tui-engageArticleCard__image"
-      />
+        :style="imageStyle"
+      >
+        <span v-if="extraData.alt" class="sr-only">{{ extraData.alt }}</span>
+      </div>
 
       <div slot="actions" class="tui-engageArticleCard__icons">
         <ButtonIcon
@@ -182,6 +183,12 @@ export default {
     getRoleAttr() {
       return !this.extraData.alt ? 'presentation' : null;
     },
+
+    imageStyle() {
+      return {
+        backgroundImage: `url(${this.extraData.image}})`,
+      };
+    },
   },
 
   created() {
@@ -295,13 +302,12 @@ export default {
   height: 100%;
   min-height: var(--totara-engage-card-height);
 
-  &__imageheader {
-    padding: var(--gap-4) var(--gap-4) 0 var(--gap-4);
-  }
-
   &__image {
-    display: block;
-    width: 100%;
+    @include card-header-image(
+      var(--engage-card-image-width),
+      var(--engage-card-image-height),
+      var(--gap-4)
+    );
   }
 
   &__link {
