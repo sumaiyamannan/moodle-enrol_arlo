@@ -45,7 +45,7 @@ use totara_core\entity\relationship_resolver as relationship_resolver_entity;
  *
  * @package totara_core\relationship
  */
-final class relationship extends model {
+class relationship extends model {
 
     /**
      * @var relationship_entity
@@ -80,7 +80,7 @@ final class relationship extends model {
      * @return static
      * @throws coding_exception
      */
-    public static function load_by_idnumber(string $idnumber): self {
+    public static function load_by_idnumber(string $idnumber) {
         $entity = static::get_entity_class()::repository()
             ->where('idnumber', $idnumber)
             ->one(true);
@@ -178,7 +178,7 @@ final class relationship extends model {
         int $sort_order = 1,
         int $type = null,
         string $component = null
-    ): self {
+    ) {
         self::validate_resolvers($resolver_class_names);
 
         if (trim($idnumber) === '' || strlen($idnumber) > 255) {
