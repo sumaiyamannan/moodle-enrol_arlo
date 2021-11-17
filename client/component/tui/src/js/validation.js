@@ -95,9 +95,12 @@ export const v = {
 
   integer: () => ({
     validate: val => {
+      // If val is a string then we can check for .0 and therefore fail the validation in those cases
+      const hasDecimal =
+        typeof val === 'string' ? val.toString().indexOf('.') != -1 : false;
       const num = Number(val);
       // not NaN and is an integer
-      return !isNaN(num) && (num | 0) === num;
+      return !hasDecimal && !isNaN(num) && (num | 0) === num;
     },
     message: () => langString('validation_invalid_integer', 'totara_core'),
   }),
