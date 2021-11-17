@@ -430,6 +430,11 @@ Y.extend(DRAGDROP, Y.Base, {
         var droptargets = Y.all('.' + this.samenodeclass + ', .' + this.parentnodeclass);
 
         droptargets.each(function(node) {
+            // Specifically skip anything living inside the drag and drop proxy container.
+            if (node.ancestor('.yui3-dd-proxy') !== null) {
+                return;
+            }
+
             var validdrop = false;
             var labelroot = node;
             var className = node.getAttribute("class").split(' ').join(', .');
