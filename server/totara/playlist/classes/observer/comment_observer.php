@@ -121,6 +121,10 @@ final class comment_observer {
                 'owner' => $playlist->get_userid(),
                 'component' => $playlist::get_resource_type(),
                 'resourcetype' => get_string('message_playlist', 'totara_playlist'),
+                'resource_info' => [
+                    'stringkey' => 'message_playlist',
+                    'component' => 'totara_playlist'
+                ],
                 'commenter' =>   $comment->get_userid(),
                 'name' => $playlist->get_name(),
                 'is_comment' => !$comment->is_reply()

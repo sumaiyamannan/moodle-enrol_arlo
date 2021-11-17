@@ -26,6 +26,8 @@ use core\message\message;
 use core\task\adhoc_task;
 use core_user;
 use totara_engage\output\share_message;
+use totara_engage\share\helper;
+use totara_engage\share\provider;
 
 final class share_notify_task extends adhoc_task {
     /**
@@ -66,9 +68,30 @@ final class share_notify_task extends adhoc_task {
 
         cron_setup_user($recipient);
 
+        if (!empty($data->component) && !empty($data->item_id)) {
+            $item_name = helper::get_resource_name($data->share_component, $data->item_id);
+        } else {
+            $item_name = $data->item_name;
+        }
+
+        $string_identifier = 'message_'.$data->component;
+        $string_component = $data->share_component;
+        // Special case: articles are resources and the string is stored in the main plugin
+        if ($data->share_component === 'engage_article') {
+            $string_component = 'totara_engage';
+        }
+
+        if (!empty($data->share_component)
+            && get_string_manager()->string_exists($string_identifier, $string_component)
+        ) {
+            $component_name = get_string($string_identifier, $string_component);
+        } else {
+            $component_name = $data->component;
+        }
+
         $message_body = new \stdClass();
         $message_body->fullname = fullname($sharer);
-        $message_body->name = $data->item_name;
+        $message_body->name = $item_name;
 
         $template = share_message::create($message_body);
         $message_body = $OUTPUT->render($template);
@@ -80,7 +103,7 @@ final class share_notify_task extends adhoc_task {
         $message->userfrom = $sharer;
         $message->userto = $recipient;
         $message->notification = 1;
-        $message->subject = get_string('share_message_subject', 'totara_engage', $data->component);
+        $message->subject = get_string('share_message_subject', 'totara_engage', $component_name);
         $message->fullmessage = html_to_text($message_body);
         $message->fullmessageformat = FORMAT_HTML;
         $message->fullmessagehtml = $message_body;

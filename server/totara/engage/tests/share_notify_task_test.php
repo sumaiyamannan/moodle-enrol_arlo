@@ -27,6 +27,7 @@ global $CFG;
 require_once($CFG->dirroot . '/totara/core/tests/language_pack_faker_trait.php');
 
 use core\task\manager;
+use totara_engage\access\access;
 use totara_engage\task\share_notify_task;
 
 class totara_engage_share_notify_task_testcase extends advanced_testcase {
@@ -39,13 +40,20 @@ class totara_engage_share_notify_task_testcase extends advanced_testcase {
             $fake_language,
             [
                 'totara_engage' => [
-                    'share_message_subject' => 'Fake language subject string'
-                ]
+                    'share_message_subject' => 'Fake language subject string for \'{$a}\'',
+                    'message_resource' => 'Fake resource string',
+                ],
             ]
         );
 
         $user_one = $generator->create_user(['lang' => $fake_language]);
         $user_two = $generator->create_user();
+
+        $this->setUser($user_two);
+
+        /** @var \engage_article\testing\generator $articlegen */
+        $articlegen = $generator->get_plugin_generator('engage_article');
+        $article = $articlegen->create_article(['access' => access::PUBLIC]);
 
         $task = new share_notify_task();
         $task->set_component('totara_engage');
@@ -55,20 +63,21 @@ class totara_engage_share_notify_task_testcase extends advanced_testcase {
                 'recipient_id' => $user_one->id,
                 'sharer_id' => $user_two->id,
                 'item_name' => 'Resource test name',
+                'share_component' => 'engage_article',
+                'item_id' => $article->get_id()
             ]
         );
 
-        manager::queue_adhoc_task($task);
-
         // Start the sink and execute the adhoc tasks.
         $message_sink = $this->redirectMessages();
-        $this->executeAdhocTasks();
+
+        $task->execute();
 
         $messages = $message_sink->get_messages();
         self::assertCount(1, $messages);
         $message = reset($messages);
 
         self::assertEquals($user_one->id, $message->useridto);
-        self::assertEquals('Fake language subject string', $message->subject);
+        self::assertEquals('Fake language subject string for \'Fake resource string\'', $message->subject);
     }
 }
