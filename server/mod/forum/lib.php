@@ -5503,7 +5503,7 @@ function forum_print_latest_discussions($course, $forum, $maxdiscussions = -1, $
     }
 
     if ($displayformat == 'header') {
-        echo '<table cellspacing="0" class="forumheaderlist">';
+        echo '<table cellspacing="0" class="forumheaderlist generaltable">';
         echo '<thead>';
         echo '<tr>';
         echo '<th class="header topic" scope="col">'.get_string('discussion', 'forum').'</th>';
@@ -5528,9 +5528,10 @@ function forum_print_latest_discussions($course, $forum, $maxdiscussions = -1, $
         echo '<th class="header lastpost" scope="col">'.get_string('lastpost', 'forum').'</th>';
         if ((!is_guest($context, $USER) && isloggedin()) && has_capability('mod/forum:viewdiscussion', $context)) {
             if (\mod_forum\subscriptions::is_subscribable($forum)) {
-                echo '<td class="header discussionsubscription">';
+                echo '<th class="header discussionsubscription" role="presentation" scope="col">';
                 echo forum_get_discussion_subscription_icon_preloaders();
-                echo '</td>';
+                echo '<span class="sr-only">' . get_string('forum_subscription_status', 'mod_forum') . '</span>';
+                echo '</th>';
             }
         }
         echo '</tr>';

@@ -222,6 +222,7 @@ $string['forum'] = 'Forum';
 $string['forum_delete'] = '{$a->forum} - delete {$a->discussion}';
 $string['forum_edit'] = '{$a->forum} - edit {$a->discussion}';
 $string['forum_reply'] = '{$a->forum} - reply to {$a->discussion}';
+$string['forum_subscription_status'] = 'Forum subscription status';
 $string['forum:addinstance'] = 'Add a new forum';
 $string['forum:addnews'] = 'Add announcements';
 $string['forum:addquestion'] = 'Add question';
