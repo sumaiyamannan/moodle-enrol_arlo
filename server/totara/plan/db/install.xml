@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="totara/plan/db" VERSION="20200629" COMMENT="XMLDB file for Moodle totara/plan'"
+<XMLDB PATH="totara/plan/db" VERSION="20211122" COMMENT="XMLDB file for Moodle totara/plan'"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
 >
@@ -376,6 +376,22 @@
       </KEYS>
       <INDEXES>
         <INDEX NAME="comp_user_unique" UNIQUE="true" FIELDS="competency_id, user_id"/>
+      </INDEXES>
+    </TABLE>
+    <TABLE NAME="dp_record_of_learning" COMMENT="Holds the record of learning for a user (courses only for now)">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="true"/>
+        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="The id of the user"/>
+        <FIELD NAME="instanceid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" COMMENT="The id of the item, i.e. courseid"/>
+        <FIELD NAME="type" TYPE="int" LENGTH="1" NOTNULL="true" SEQUENCE="false" COMMENT="Type of the item, i.e. 1 = course, etc."/>
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+        <KEY NAME="user_id_fk" TYPE="foreign" FIELDS="userid" REFTABLE="user" REFFIELDS="id"/>
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="rol_unique" UNIQUE="true" FIELDS="userid, instanceid, type"/>
+        <INDEX NAME="instanceid" UNIQUE="false" FIELDS="instanceid"/>
       </INDEXES>
     </TABLE>
   </TABLES>

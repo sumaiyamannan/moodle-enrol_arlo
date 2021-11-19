@@ -1,8 +1,8 @@
 <?php
-/*
- * This file is part of Totara LMS
+/**
+ * This file is part of Totara Learn
  *
- * Copyright (C) 2010 onwards Totara Learning Solutions LTD
+ * Copyright (C) 2021 onwards Totara Learning Solutions LTD
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,15 +17,25 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * @author Simon Coggins <simon.coggins@totaralms.com>
+ * @author Fabian Derschatta <fabian.derschatta@totaralearning.com>
  * @package totara_plan
  */
 
-defined('MOODLE_INTERNAL') || die();
+namespace totara_plan\observer;
 
-$plugin->version  = 2020100101;       // The current module version (Date: YYYYMMDDXX).
-$plugin->requires = 2017111309;       // Requires this Moodle version.
-$plugin->component = 'totara_plan';   // To check on upgrade, that module sits in correct place
-$plugin->dependencies = array(
-    'totara_evidence' => 2020062600,
-);
+use core\event\user_enrolment_created;
+use totara_plan\record_of_learning;
+
+/**
+ * Observer for enrolment events
+ */
+class enrolment_observer {
+
+    public static function user_enrolment_created(user_enrolment_created $event) {
+        $user_id = (int) $event->relateduserid;
+        $course_id = (int) $event->courseid;
+
+        record_of_learning::insert_course_record($user_id, $course_id);
+    }
+
+}

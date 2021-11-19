@@ -34,6 +34,8 @@ require_once($CFG->dirroot.'/totara/plan/db/upgradelib.php');
 function xmldb_totara_plan_upgrade($oldversion) {
     global $CFG, $DB;
 
+    require_once($CFG->dirroot . '/totara/plan/db/upgradelib.php');
+
     $dbman = $DB->get_manager();
 
     // Totara 10 branching line.
@@ -138,6 +140,14 @@ function xmldb_totara_plan_upgrade($oldversion) {
         // Plan savepoint reached.
         upgrade_plugin_savepoint(true, 2020062901, 'totara', 'plan');
     }
+
+    if ($oldversion < 2020100101) {
+        totara_plan_upgrade_record_of_learning();
+
+        // Plan savepoint reached.
+        upgrade_plugin_savepoint(true, 2020100101, 'totara', 'plan');
+    }
+
 
     return true;
 }

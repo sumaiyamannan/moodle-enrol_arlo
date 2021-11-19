@@ -129,6 +129,9 @@ class totara_reportbuilder_rb_plan_courses_embedded_cache_testcase extends repor
         $rolecoursecreator = $DB->get_record('role', array('shortname'=>'coursecreator'));
         role_assign($rolecoursecreator->id, $this->user3->id, $syscontext);
         assign_capability('totara/plan:accessanyplan', CAP_ALLOW, $rolecoursecreator->id, $syscontext);
+
+        // Just make sure the record of learning table is up-to-date
+        (new \totara_plan\task\update_record_of_learning_task())->execute();
     }
 
     /**

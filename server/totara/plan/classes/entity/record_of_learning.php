@@ -1,8 +1,8 @@
 <?php
-/*
- * This file is part of Totara LMS
+/**
+ * This file is part of Totara Learn
  *
- * Copyright (C) 2010 onwards Totara Learning Solutions LTD
+ * Copyright (C) 2021 onwards Totara Learning Solutions LTD
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,15 +17,27 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * @author Simon Coggins <simon.coggins@totaralms.com>
+ * @author Fabian Derschatta <fabian.derschatta@totaralearning.com>
  * @package totara_plan
  */
 
-defined('MOODLE_INTERNAL') || die();
+namespace totara_plan\entity;
 
-$plugin->version  = 2020100101;       // The current module version (Date: YYYYMMDDXX).
-$plugin->requires = 2017111309;       // Requires this Moodle version.
-$plugin->component = 'totara_plan';   // To check on upgrade, that module sits in correct place
-$plugin->dependencies = array(
-    'totara_evidence' => 2020062600,
-);
+use core\orm\entity\entity;
+
+/**
+ * Record of learning entity
+ *
+ * @property-read int $id ID
+ * @property int $userid User id
+ * @property int $instanceid Id of the item, i.e. courseid
+ * @property int $type Type of the item, i.e. 1 = course
+ */
+class record_of_learning extends entity {
+
+    /**
+     * @var string
+     */
+    public const TABLE = 'dp_record_of_learning';
+
+}
