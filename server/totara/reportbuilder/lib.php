@@ -5955,6 +5955,9 @@ class reportbuilder {
      */
     public function post_config_visibility_where($type, $table, $userid = null, $showhidden = false, $fieldid = 'id',
                                                  $fieldvisible = 'visible', $fieldaudiencevisible = 'audiencevisible') {
+        global $CFG;
+        require_once($CFG->dirroot . '/totara/coursecatalog/lib.php');
+
         // Check that the required columns are all defined.
         if (empty($this->requiredcolumns['visibility-' . $fieldid]) ||
             $this->requiredcolumns['visibility-' . $fieldid]->field != $table . '.' . $fieldid) {

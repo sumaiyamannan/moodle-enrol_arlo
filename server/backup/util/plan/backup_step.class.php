@@ -22,6 +22,9 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+global $CFG;
+require_once $CFG->dirroot.'/backup/util/plan/base_step.class.php';
+
 /**
  * Abstract class defining the needed stuf for one backup step
  *
