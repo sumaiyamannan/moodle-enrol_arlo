@@ -41,7 +41,7 @@
     </div>
     <template v-for="(row, index) in rows">
       <div :key="index" class="tui-repeater__row">
-        <slot :row="row" :index="index" />
+        <slot :row="row" :index="index" :last-row="index == rows.length - 1" />
         <ButtonIcon
           v-if="deleteIcon"
           class="tui-repeater__delete"

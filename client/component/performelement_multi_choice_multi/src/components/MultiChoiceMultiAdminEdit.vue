@@ -43,7 +43,7 @@
             @add="push()"
             @remove="(item, i) => remove(i)"
           >
-            <template v-slot="{ index }">
+            <template v-slot="{ index, lastRow }">
               <div class="tui-multiChoiceMultiAdminEdit__option">
                 <FormText
                   :name="[index, 'value']"
@@ -55,6 +55,7 @@
                       index + 1
                     )
                   "
+                  :autofocus="lastRow"
                 />
               </div>
             </template>
