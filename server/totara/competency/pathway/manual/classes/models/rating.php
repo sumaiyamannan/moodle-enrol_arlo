@@ -30,6 +30,7 @@ use pathway_manual\models\roles\role;
 use pathway_manual\models\roles\role_factory;
 use totara_competency\aggregation_users_table;
 use totara_competency\entity\competency;
+use totara_job\job_assignment;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -207,4 +208,19 @@ class rating {
             ->exists();
     }
 
+    /**
+     * Make sure a logged user can see the rater of users whom he manages.
+     *
+     * @param int $viewing_user_id
+     * @param int $target_user_id
+     * @return bool
+     */
+    public static function can_see_raters_of_staff_members(int $viewing_user_id, int $target_user_id): bool {
+        $staff = job_assignment::get_staff_userids($viewing_user_id);
+
+        return rating_entity::repository()
+            ->where_in('user_id', $staff)
+            ->where('assigned_by', $target_user_id)
+            ->exists();
+    }
 }
