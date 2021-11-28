@@ -3829,7 +3829,8 @@ input[type].tui-formInput {
   border-radius: var(--card-border-radius);
 
   &__info {
-    width: calc(100% - 3.2rem - var(--gap-2) - 2.2em);
+    flex-direction: column;
+    overflow: hidden;
   }
 
   &__fileSize {
@@ -3839,23 +3840,17 @@ input[type].tui-formInput {
   }
 
   &__filename {
-    position: relative;
+    display: flex;
 
-    > p {
+    &-text {
       margin: 0;
       overflow: hidden;
       white-space: nowrap;
       text-overflow: ellipsis;
     }
 
-    &--truncate {
-      &:after {
-        position: absolute;
-        top: 0;
-        left: 100%;
-        width: 2.2em;
-        content: attr(data-file-extension);
-      }
+    &-ext {
+      flex-shrink: 0;
     }
   }
 
@@ -6072,8 +6067,6 @@ $progress-tracker-half-circle: 14px !default;
       height: var(--form-toggle-dot-size);
       border-radius: 50%;
       box-shadow: var(--shadow-2);
-      transition: left var(--transition-toggle-duration)
-        var(--transition-toggle-function);
       content: '';
     }
 

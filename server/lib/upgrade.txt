@@ -1,6 +1,11 @@
 This files describes API changes in core libraries and APIs,
 information provided here is intended especially for developers.
 
+=== 13.14 ===
+
+* Progress bar output component can now receive optional label (used for aria label)
+* Added aria label to progress_bar.mustache
+
 === 13.12 ===
 
 * For security reasons, filelib has been updated so all requests now use emulated redirects.

@@ -1,6 +1,10 @@
 This files describes API changes in /client/component/totara_engage,
 information provided here is intended especially for developers.
 
+=== 13.14 ===
+
+* Updated grid.js to handle zero perRow without causing an infinite loop
+
 === 13.12 ===
 
 * Updated Contribution BaseContent and Filter to allow targeting with better selectors

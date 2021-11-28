@@ -19,7 +19,9 @@ Please contact [licensing@totaralearning.com] for more information.
 import os
 import json
 import langid
+import numpy as np
 import pandas as pd
+from scipy.sparse import csr_matrix
 from sklearn.feature_extraction.text import TfidfVectorizer
 from lightfm.data import Dataset
 from subroutines.pre_processors import PreProcessors
@@ -53,6 +55,17 @@ class DataLoader:
             interaction with an item in the past
         :rtype: tuple
         """
+        # Only keep the latest interactions and ratings
+        interactions_df["timestamp"] = interactions_df.timestamp.astype(int)
+        latest_records = interactions_df.groupby(
+            ["user_id", "item_id"]
+        ).timestamp.transform(max)
+        interactions_df = interactions_df.loc[interactions_df.timestamp == latest_records]
+
+        interactions_df.drop_duplicates(
+            subset=["user_id", "item_id"], keep="first", inplace=True
+        )
+
         positive_interactions = interactions_df[interactions_df.rating == 1]
         users_interacted = positive_interactions.user_id.unique()
         positive_inter_map = dict(
@@ -112,6 +125,21 @@ class DataLoader:
         item_type_map = pd.Series(dataframe_stacked.level_1.values, index=dataframe_stacked.item_id).to_dict()
         return item_type_map
 
+    @staticmethod
+    def docs_empty(docs: list) -> bool:
+        """
+        To check if the list of documents have no content
+
+        :param docs: The list of documents to be checked
+        :type docs: list
+        :return: Whether the documents have no content
+        :rtype: bool
+        """
+        if all("" == s or s.isspace() for s in docs):
+            return True
+
+        return False
+
     def __get_items(self, items_data=None, query='mf'):
         """
         This method uses the pandas DataFrame of the items data exported from the totara instance and returns a
@@ -154,16 +182,22 @@ class DataLoader:
                 processed_document.append(new_doc)
 
             # Convert the list of documents into a matrix of TF-IDF features
-            tf = TfidfVectorizer()
-            tf.fit(processed_document)
-            transformed_doc = tf.transform(processed_document)
+            if self.docs_empty(docs=processed_document):
+                transformed_doc = csr_matrix(
+                    (len(processed_document), 0), dtype=np.float32
+                )
+                features_list = []
+            else:
+                tf = TfidfVectorizer()
+                tf.fit(processed_document)
+                transformed_doc = tf.transform(processed_document)
+                features_list = tf.get_feature_names()
 
             # --------------------------------------------------------------
             # Convert the matrix of TF-IDF features into a list where each row of the matrix
             # is transformed into an element of the list. This element is a dictionary where
             # the keys are the feature names (words from the cleaned document) and each value
             # is TF-IDF value of that word.
-            features_list = tf.get_feature_names()
             text_features = []
             for item in range(transformed_doc.shape[0]):
                 indices = transformed_doc[item, :].indices

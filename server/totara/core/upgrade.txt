@@ -1,6 +1,10 @@
 List of upgrade and API changes in Totara core,
 information provided here is intended especially for developers.
 
+=== 13.14 ===
+
+* Progress bar renderer can now receive optional label (used for aria label)
+
 === 13.5 ===
 
 * totara_core\virtualmeeting\plugin\factory\feature_factory has been added

@@ -13,10 +13,11 @@
 
   &__dropdown {
     width: 100%;
+    margin-top: var(--gap-2);
 
-    @media (min-width: $tui-screen-sm) {
-      /* IE support - :(*/
-      width: auto;
+    @media (min-width: $tui-screen-xs) {
+      width: auto; /* IE support.*/
+      margin-top: 0;
     }
 
     &-button {
@@ -737,8 +738,10 @@
 
   &__title {
     @include tui-font-heading-medium();
+    @include tui-wordbreak--hard();
     margin: 0;
     margin-bottom: var(--gap-12);
+    text-align: center;
   }
 
   &__actionBox {
@@ -1022,8 +1025,7 @@
 
 .tui-recommendedSpaces {
   &__head {
-    display: flex;
-    justify-content: space-between;
+    display: block;
     margin-bottom: var(--gap-4);
   }
 
@@ -1034,6 +1036,13 @@
 
   &__link {
     @include tui-font-link();
+  }
+
+  @media screen and (min-width: $tui-screen-sm) {
+    &__head {
+      display: flex;
+      justify-content: space-between;
+    }
   }
 }
 
@@ -1128,8 +1137,13 @@
     height: 100%;
   }
 
+  &__sideMenu {
+    display: none;
+  }
+
   &__content {
-    padding-right: var(--gap-8);
+    padding-right: var(--gap-4);
+    padding-left: var(--gap-4);
   }
 
   &__header {
@@ -1137,12 +1151,19 @@
     margin-bottom: var(--gap-12);
   }
 
-  &__horizontalLine {
-    margin: 0;
-  }
-
   &__recommendedSpaces {
     margin-top: var(--gap-8);
+  }
+
+  @media screen and (min-width: $tui-screen-sm) {
+    &__sideMenu {
+      display: block;
+    }
+
+    &__content {
+      padding-right: var(--gap-8);
+      padding-left: 0;
+    }
   }
 }
 

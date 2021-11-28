@@ -1,3 +1,121 @@
+Release 13.14 (24th November 2021):
+===================================
+
+
+Security issues:
+
+    TL-32727       Added checking of uncompressed archive file size prior to extraction
+
+                   The total uncompressed size of an archive file is now checked prior to
+                   extracting its content to ensure that it is within an allowed size.
+                   The allowed size is set by a new administration setting, maxbytesextracted.
+
+    TL-32754       Prevented switching off course search result pagination for non-logged in users
+
+                   When the 'Force login' setting is disabled, users that are not logged in
+                   can have access to the course search page. With this patch, users that are
+                   not logged in cannot switch off pagination for the search results any more.
+                   Neither can they set the number of results per page above the default that
+                   is determined by the 'Courses per page' setting. This is to mitigate the
+                   possibility of denial of service attacks.
+
+    TL-32804       Improved capability checks when fetching users' best grades
+    TL-32809       Restricted the allowable inputs for the file types tool revert changes script
+
+Performance improvements:
+
+    TL-33019       Improved performance of the audience report builder content restriction
+
+Improvements:
+
+    TL-31706       Added OAuth2 authentication to outgoing SMTP mail service
+
+                   With this patch outgoing email connections can now be configured using the
+                   XOAuth2 protocol. To make use of this protocol you will need to configure
+                   an OAuth2 service with your provider and connect with a system account.
+                   Afterwards the OAuth2 service can be chosen on the Outgoing email
+                   configuration page.
+
+    TL-32595       Creating a workspace while viewing a workspace discussion takes the user to the newly created workspace
+    TL-32603       Improved the accessibility of progress bars by adding an aria-label
+
+Bug fixes:
+
+    TL-29872       Fixed the help text on the custom rating scale element that was incorrectly stating the scores must be whole numbers
+    TL-30549       Fixed styling issue on empty list inside editor in Firefox browser
+    TL-31011       Made sure to return 0 AUC score in optimisation routine when no users have past interactions with the content
+    TL-32302       Fixed site guests being able to view course grades in the course navigation block
+    TL-32523       Removed 'container_perform' enrolment plugin from the list of manageable plugins
+
+                   Prior to this patch, the management page for enrolment plugins listed the
+                   'container_perform' plugin. This enrolment plugin purely works in the
+                   background and cannot be managed in any way, so this patch removes it from
+                   the list.
+
+    TL-32560       Improved the display of messages when installing through the web interface
+    TL-32588       Fixed the alignment of the save and cancel buttons when creating a program as a tenant manager
+    TL-32590       Deprecated tm_message_set_default_message_preferences function
+    TL-32605       Updated tui file card info (and attachment node in 13 and 14) to use css flex and changed how the file extension is displayed
+    TL-32606       Made use of alt text for the user's profile image consistent by displaying the users' full name by default
+
+                   If the user has set a value in the 'Picture description' profile field then
+                   this is used.
+
+    TL-32609       Fixed playlist title not being correctly formatted in the mobile view of the library
+    TL-32617       Fixed error when saving empty attachment groups in Weka editor
+    TL-32629       Changed tui grid component error to a warning when there are no grid items
+    TL-32638       Applied visual fixes to related playlist/resource card images
+    TL-32653       Updated the job assignments create_assignment GraphQL mutation to ensure organisation or positions exist prior to creating the assignment
+    TL-32654       Added loading indicator in CommentThread and hid comments count in SidePanelCommentBox while loading comments
+    TL-32660       Improved error handling in the profile_competency_details GraphQL query
+    TL-32664       Fixed incorrect notification text (to resource owner) when replying to a comment on resources
+    TL-32691       Fixed flickering issue with the toggle switch component when hovering over text
+    TL-32696       Updated tui sample Grid component handleTextareaInput function to correctly grab the DOM elements from refs
+    TL-32709       Fixed navigation block showing unwanted categories, workspaces and perform activities
+    TL-32724       Fixed outdated default logo being displayed when logging into the mobile app 
+    TL-32741       Fixed HR Import field mapping for date fields in Job Assignment element
+
+                   When using HR Import to import job assignment records, the field mapping of
+                   date fields (eg. startdate, enddate, etc) was not working. The field
+                   mapping of these fields now works as expected.
+
+    TL-32748       Fixed the 'Your Workspaces' page on mobile when the user does not belong to any workspaces
+    TL-32752       Fixed resetting Seminar activities on certification expiry
+    TL-32765       Filtered out duplicate records in user_interactions.csv to use for recommendations if any are exported from the Totara instance
+    TL-32771       Fixed the formatting of section and module names in mobile graphql
+
+                   Previously, if using the mobile app, special characters such as the
+                   ampersand that would have been displayed correctly in the course name,
+                   would have been double encoded in the names of course sections and modules.
+                   This change makes these names consistent with the course name field.
+
+    TL-32780       Fixed PHP errors shown when training editors view course completion settings
+    TL-32790       Made sure no error message appears when expanding category in navigation block
+    TL-32792       Fixed event management menu removing a console error for learners
+
+                   When a learner access a seminar activity, there was a console error due to
+                   the Javascript attempting to intialise seminar administration
+                   functionality. This issue removes the attempted initialisation
+
+    TL-32797       Fixed bookmark button making some Engage card titles misaligned
+    TL-32800       Generated correct creation date for cloned perform activity
+    TL-32818       Fixed reordering of feedback page break and label elements
+    TL-32825       Fixed invalid XML in thirdpartylibs.xml file
+    TL-32971       Added the database name to the lock key to avoid multiple databases on the same database server sharing locks
+    TL-33021       Fixed resources that include topics crashing on save when tags functionality is disabled
+    TL-33101       Removed previously deprecated strings from language file which caused a database error
+
+                   On case insensitive database collation the language customisation tool
+                   showed a database error when opening a language pack for editing. This is
+                   now fixed and the duplicate language strings have been removed.
+
+Tui front end framework:
+
+    TL-32695       Replaced 'char length' field on the NotepadLines page in the tui samples library with a select list
+    TL-32995       Prevented moving an item to the same position on the dragdrop component
+
+
+
 Release 13.13 (26th October 2021):
 ==================================
 

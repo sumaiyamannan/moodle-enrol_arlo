@@ -84,6 +84,14 @@
       border-bottom: var(--border-width-thin) solid var(--color-neutral-5);
     }
   }
+
+  &__loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--gap-4);
+    color: var(--color-neutral-6);
+  }
 }
 
 .tui-commentReplyBox {
