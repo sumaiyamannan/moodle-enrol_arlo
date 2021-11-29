@@ -47,8 +47,12 @@ class core_thirdpartylibs_testcase extends advanced_testcase {
         }
 
         foreach ($files as $component => $xmlpath) {
-            $xml = simplexml_load_file($xmlpath);
-            $this->assertInstanceOf(\SimpleXMLElement::class, $xml);
+            try {
+                $xml = simplexml_load_file($xmlpath);
+                $this->assertInstanceOf(\SimpleXMLElement::class, $xml);
+            } catch (Throwable $e) {
+                $this->fail('Invalid thirdpartylibs.xml file found: "'.$xmlpath.'" (error: '.$e->getMessage().')');
+            }
         }
     }
 
