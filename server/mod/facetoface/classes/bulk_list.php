@@ -22,6 +22,8 @@
  */
 
 namespace mod_facetoface;
+use invalid_parameter_exception;
+
 defined('MOODLE_INTERNAL') || die();
 
 /**
@@ -40,7 +42,7 @@ class bulk_list {
     /**
      * Prepare list or get list data
      * @param string $listid List identifier
-     * @param \moodle_url $returnurl only for first step of list needed for navigation
+     * @param \moodle_url|null $returnurl only for first step of list needed for navigation
      * @param string $srctype specifies type of action that this list is being used for, e.g. 'add', 'addfile' etc
      * @param int $seminareventid
      */
@@ -51,7 +53,7 @@ class bulk_list {
         if (!isset($SESSION->mod_facetoface_attendeeslist[$this->listid])) {
             // New list, so it must set return url and src type
             if (empty($returnurl) || empty($srctype)) {
-                print_error(get_string('error:invaliduserid', 'facetoface'));
+                throw new invalid_parameter_exception('Parameters returnurl and srctype must both be set.');
             }
             $SESSION->mod_facetoface_attendeeslist[$this->listid] = array(
                 'seminareventid' => $seminareventid,

@@ -169,6 +169,15 @@ abstract class moodleform {
     /** @var bool|null stores the validation result of this form or null if not yet validated */
     protected $_validated = null;
 
+    /** @var bool Flag to indicate if double-submit detection is enabled */
+    protected $is_double_submit_detection_enabled = false;
+
+    /** @var string Optional suffix to make the session key for the submit token more distinct */
+    private $double_submit_key_suffix = '';
+
+    // Name for the form's hidden field.
+    private const SUBMIT_TOKEN_NAME = '_qf__submit_token';
+
     /**
      * The constructor function calls the abstract function definition() and it will then
      * process and clean and attempt to validate incoming data.
@@ -680,6 +689,7 @@ abstract class moodleform {
             $data = $mform->exportValues();
             unset($data['sesskey']); // we do not need to return sesskey
             unset($data['_qf__'.$this->_formname]);   // we do not need the submission marker too
+            unset($data[self::SUBMIT_TOKEN_NAME]); // we do not need to return the submit token
             if (empty($data)) {
                 return NULL;
             } else {
@@ -1433,6 +1443,101 @@ abstract class moodleform {
         } else {
             $_POST = $simulatedsubmitteddata;
         }
+    }
+
+    /**
+     * Enable double submit detection
+     *
+     * This generates a unique token which is stored in a session variable and added as a hidden field to the form.
+     *
+     * After enabling you should:
+     *
+     * - Call is_double_submit_detected() before processing the form in your code to find out if it's a repeated submit.
+     * - Call mark_submit_as_processed() after the form has been processed. This invalidates the token in the session
+     *   and allows detecting repeated submits.
+     *
+     * To have unique form tokens even when the same form is opened in several windows in the same session
+     * (e.g. opening the same edit form for a number of items), use the optional $key_suffix parameter to make it
+     * distinct.
+     *
+     * @param string $key_suffix
+     */
+    public function enable_double_submit_detection(string $key_suffix = ''): void {
+        // Let's restrict key suffix to alphanumeric characters because we use it for an array index.
+        if (!preg_match('/^[a-z0-9]{0,32}$/', $key_suffix)) {
+            throw new coding_exception('Invalid key suffix. Up to 32 alphanumeric characters allowed.');
+        }
+        $this->is_double_submit_detection_enabled = true;
+        $this->double_submit_key_suffix = $key_suffix;
+
+        $this->_form->addElement('hidden', self::SUBMIT_TOKEN_NAME, null);
+        $this->_form->setType(self::SUBMIT_TOKEN_NAME, PARAM_ALPHANUM);
+        $this->_form->setDefault(self::SUBMIT_TOKEN_NAME, $this->get_or_create_unique_token());
+    }
+
+    /**
+     * Get the unique token from the session or create a new one when it's not in the session data yet.
+     *
+     * @return string
+     */
+    private function get_or_create_unique_token(): string {
+        global $SESSION;
+
+        if (!isset($SESSION->qf_submit_token) || !is_array($SESSION->qf_submit_token)) {
+            $SESSION->qf_submit_token = [];
+        }
+
+        $key = $this->get_submit_token_session_key();
+        if (empty($SESSION->qf_submit_token[$key])) {
+            $SESSION->qf_submit_token[$key] = bin2hex(random_bytes(16));
+        }
+
+        return $SESSION->qf_submit_token[$key];
+    }
+
+    /**
+     * Create a key for the submit token
+     *
+     * @return string
+     */
+    private function get_submit_token_session_key(): string {
+        return $this->_formname . $this->double_submit_key_suffix;
+    }
+
+    /**
+     * Check if the current submit has already been sent.
+     *
+     * This will return true when the form is re-submitted after calling mark_submit_as_processed().
+     *
+     * @return bool
+     */
+    public function is_double_submit_detected(): bool {
+        global $SESSION;
+
+        if (!$this->is_double_submit_detection_enabled) {
+            return false;
+        }
+
+        // Compare the submitted token with the one stored in the session.
+        $key = $this->get_submit_token_session_key();
+        $submitted_token = $this->_form->exportValue(self::SUBMIT_TOKEN_NAME);
+        if (empty($SESSION->qf_submit_token[$key])
+            || $submitted_token !== $SESSION->qf_submit_token[$key]) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Mark the submit as processed.
+     *
+     * Call this when the processing of the submitted form data is done. Any repeated submits of the same form
+     * then can be detected using the is_double_submit_detected() method.
+     */
+    public function mark_submit_as_processed(): void {
+        global $SESSION;
+        unset($SESSION->qf_submit_token[$this->get_submit_token_session_key()]);
     }
 }
 

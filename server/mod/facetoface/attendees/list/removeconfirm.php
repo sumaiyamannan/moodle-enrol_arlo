@@ -54,7 +54,14 @@ $PAGE->set_cm($cm);
 $PAGE->set_pagelayout('standard');
 $PAGE->set_title($seminar->get_name() . ': ' . $pagetitle);
 
-$list = new bulk_list($listid);
+try {
+    $list = new bulk_list($listid);
+} catch (invalid_parameter_exception $e) {
+    // This can happen when re-sending the form and the bulk list is already removed from the session.
+    // In that case the processing has already been done, and we just redirect without error message.
+    redirect($returnurl);
+}
+
 // Selected users.
 $userlist = $list->get_user_ids();
 if (empty($userlist)) {
@@ -69,14 +76,19 @@ $mform = new attendees_remove_confirm(null, [
     'enablecustomfields' => !$list->has_user_data(),
     'is_notification_active' => $isnotificationactive
 ]);
+$mform->enable_double_submit_detection(md5($listid));
+
 if ($mform->is_cancelled()) {
     $list->clean();
     redirect($returnurl);
 }
 
 if ($fromform = $mform->get_data()) {
-    $fromform->users = $mform->get_user_list($userlist);
-    attendees_list_helper::remove($fromform);
+    if (!$mform->is_double_submit_detected()) {
+        $fromform->users = $mform->get_user_list($userlist);
+        attendees_list_helper::remove($fromform);
+        $mform->mark_submit_as_processed();
+    }
     redirect($returnurl);
 }
 

@@ -675,6 +675,72 @@ class core_formslib_testcase extends advanced_testcase {
         self::assertTrue($form->is_submitted());
         self::assertSame('Mocked Value', $form->get_data()->title);
     }
+
+    public function test_enable_double_submit_detection() {
+        global $SESSION;
+
+        // Enable without key suffix.
+        $mform = new formslib_test_form();
+        self::assertFalse(property_exists($SESSION, 'qf_submit_token'));
+        $mform->enable_double_submit_detection();
+        self::assertEquals(32, strlen($SESSION->qf_submit_token['formslib_test_form']));
+        unset($SESSION->qf_submit_token);
+
+        // Enable with key suffix.
+        $mform = new formslib_test_form();
+        $mform->enable_double_submit_detection('testsuffix123');
+        self::assertEquals(32, strlen($SESSION->qf_submit_token['formslib_test_formtestsuffix123']));
+
+        // Make sure the token is in the form's expected hidden field.
+        $this->expectOutputRegex(
+            '/<input[^>]*name="_qf__submit_token"[^>]*type="hidden"[^>]*value="'
+            . $SESSION->qf_submit_token['formslib_test_formtestsuffix123']
+            . '"/'
+        );
+        $mform->display();
+
+        unset($SESSION->qf_submit_token);
+    }
+
+    public function test_enable_double_submit_detection_invalid_suffix() {
+        $mform = new formslib_test_form();
+        $this->expectException(coding_exception::class);
+        $this->expectExceptionMessage('Invalid key suffix. Up to 32 alphanumeric characters allowed.');
+        $mform->enable_double_submit_detection('includes-bad-char');
+    }
+
+    public function test_is_double_submit_detected() {
+        global $SESSION;
+
+        $mform = new formslib_test_form();
+        self::assertFalse($mform->is_double_submit_detected());
+
+        $mform->enable_double_submit_detection();
+        self::assertFalse($mform->is_double_submit_detected());
+
+        $SESSION->qf_submit_token['formslib_test_form'] = 'wrong token';
+        self::assertTrue($mform->is_double_submit_detected());
+
+        unset($SESSION->qf_submit_token['formslib_test_form']);
+        self::assertTrue($mform->is_double_submit_detected());
+
+        unset($SESSION->qf_submit_token);
+    }
+
+    public function test_mark_submit_as_processed() {
+        global $SESSION;
+
+        $mform = new formslib_test_form();
+        $mform->enable_double_submit_detection();
+        self::assertFalse($mform->is_double_submit_detected());
+        self::assertArrayHasKey('formslib_test_form', $SESSION->qf_submit_token);
+
+        $mform->mark_submit_as_processed();
+        self::assertTrue($mform->is_double_submit_detected());
+        self::assertArrayNotHasKey('formslib_test_form', $SESSION->qf_submit_token);
+
+        unset($SESSION->qf_submit_token);
+    }
 }
 
 
