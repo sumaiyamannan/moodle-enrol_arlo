@@ -486,4 +486,58 @@ class mod_facetoface_notification_testcase extends advanced_testcase {
             $third_message->fullmessage
         );
     }
+
+    public function test_message_substitutions_session_customfields() {
+        self::setAdminUser();
+
+        $generator = self::getDataGenerator();
+        $course = $generator->create_course();
+        $seminar_generator = $generator->get_plugin_generator('mod_facetoface');
+
+        $customfield_generator = $this->getDataGenerator()->get_plugin_generator('totara_customfield');
+        $customfields = $customfield_generator->create_multiselect('facetoface_session', ['event_multi' => ['opt1' => 'Option 1', 'opt2' => 'Option 2', 'opt3' => 'Option 3']]);
+        $customfield = reset($customfields);
+
+        // Create 2 sessions 1 with CF data and one without
+        $seminar = $seminar_generator->create_instance([
+            'name' => 'Test Facetoface',
+            'course' => $course->id
+        ]);
+
+        $session_id = $seminar_generator->add_session(['facetoface' => $seminar->id, 'sessiondates' => []]);
+
+        $seminar_event = new seminar_event($session_id);
+        $seminar_event_record = $seminar_event->to_record();
+        $seminar_event_record->course = $course->id;
+        $seminar_event_record->sessiondates = $seminar_event->get_sessions(true)->to_records(false);
+
+        // No need for a full notification, just some text to test substitutions
+        $notification_text = "This is some custom notification. [session:event_multi]";
+
+        $substituted_text = facetoface_message_substitutions(
+            format_text($notification_text, FORMAT_HTML),
+            format_string($course->fullname),
+            $seminar->name,
+            $this->user_one,
+            $seminar_event_record,
+            $seminar_event_record->id
+        );
+
+        self::assertStringNotContainsString('[session:event_muilti]', $substituted_text);
+
+        // Set data for session custom field and try substitutions again
+        $customfield_generator->set_multiselect($seminar_event_record, $customfield, array('Option 2'), 'facetofacesession', 'facetoface_session');
+
+        $substituted_text_2 = facetoface_message_substitutions(
+            format_text($notification_text, FORMAT_HTML),
+            format_string($course->fullname),
+            $seminar->name,
+            $this->user_one,
+            $seminar_event_record,
+            $seminar_event_record->id
+        );
+
+        self::assertStringNotContainsString('[session:event_muilti]', $substituted_text_2);
+        self::assertStringContainsString('Option 2', $substituted_text_2);
+    }
 }

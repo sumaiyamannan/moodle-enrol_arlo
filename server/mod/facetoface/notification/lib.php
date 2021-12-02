@@ -1874,15 +1874,35 @@ function facetoface_message_substitutions($msg, $coursename, $facetofacename, $u
     }
 
     // Custom session fields (they look like "session:shortname" in the templates)
-    $customfields = customfield_get_data($data, 'facetoface_session', 'facetofacesession', false);
-    foreach ($customfields as $cftitle => $cfvalue) {
+    $session_customfields = customfield_get_fields_definition('facetoface_session');
+    $customfield_data = customfield_get_data($data, 'facetoface_session', 'facetofacesession', false);
+    foreach ($session_customfields as $cfid => $cfdetails) {
+        $cftitle = $cfdetails->shortname;
         $placeholder = "[session:{$cftitle}]";
+
+        if (!empty($customfield_data[$cftitle])) {
+            $cfvalue = $customfield_data[$cftitle];
+        } else {
+            // If there is no data for the customfield just erase the
+            // placeholder so it doesn't show for the message recipient
+            $cfvalue = '';
+        }
+
         $msg = str_replace($placeholder, $cfvalue, $msg);
     }
 
-    $sessioncancellationcustomfields = customfield_get_data($data, 'facetoface_sessioncancel', 'facetofacesessioncancel', false);
-    foreach ($sessioncancellationcustomfields as $cftitle => $cfvalue) {
+    $cancellation_customfields = customfield_get_fields_definition('facetoface_sessioncancel');
+    $sessioncancellationcustomfield_data = customfield_get_data($data, 'facetoface_sessioncancel', 'facetofacesessioncancel', false);
+    foreach ($cancellation_customfields as $cfid => $cfdetails) {
+        $cftitle = $cfdetails->shortname;
         $placeholder = "[sessioncancel:{$cftitle}]";
+
+        if (!empty($sessioncancellationcustomfield_data[$cftitle])) {
+            $cfvalue = $sessioncancellationcustomfield_data[$cftitle];
+        } else {
+            $cfvalue = '';
+        }
+
         $msg = str_replace($placeholder, $cfvalue, $msg);
     }
 
