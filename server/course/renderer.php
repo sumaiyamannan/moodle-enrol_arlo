@@ -1535,7 +1535,7 @@ class core_course_renderer extends plugin_renderer_base {
         $categorycontext = context_coursecat::instance($coursecat->id);
         $capabilities = array('moodle/course:create', 'moodle/category:viewhiddencategories', 'moodle/category:manage');
         $nohascapabilities = !is_siteadmin() && !has_any_capability($capabilities, $categorycontext);
-        if (!empty($CFG->audiencevisibility) && $categorycount == 0 && $nohascapabilities) {
+        if ($categorycount === 0 && $nohascapabilities) {
             return '';
         }
         $categoryname = html_writer::link(new moodle_url('/course/index.php',
@@ -1651,7 +1651,7 @@ class core_course_renderer extends plugin_renderer_base {
 
             // Print the category selector
             $catlist = coursecat::make_categories_list();
-            if ($catlist) {
+            if ($catlist && count($catlist) > 1) {
                 $output .= html_writer::start_tag('div', array('class' => 'categorypicker'));
                 $select = new single_select(new moodle_url('/course/index.php'), 'categoryid',
                         coursecat::make_categories_list(), $coursecat->id, null, 'switchcategory');
