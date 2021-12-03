@@ -48,7 +48,7 @@ class sync_completed extends \core\event\base {
      * @return string
      */
     public function get_description() {
-        return "Totara sync completed";
+        return "Totara sync completed (element: " . $this->other['element'] . ")";
     }
 
     /**
