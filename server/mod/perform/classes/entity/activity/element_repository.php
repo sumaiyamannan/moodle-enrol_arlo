@@ -32,6 +32,7 @@ class element_repository extends repository {
     /**
      * Get all the user ids of subjects using a particular element.
      *
+     * @deprecated since Totara 16
      * @param int $element_id
      * @return array
      */

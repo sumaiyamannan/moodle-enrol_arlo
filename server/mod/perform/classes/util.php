@@ -33,9 +33,16 @@ use core_text;
 use mod_perform\entity\activity\activity as activity_entity;
 use mod_perform\entity\activity\activity_type;
 use mod_perform\entity\activity\element;
+use mod_perform\entity\activity\participant_instance;
+use mod_perform\entity\activity\participant_section;
+use mod_perform\entity\activity\section;
+use mod_perform\entity\activity\section_element;
+use mod_perform\entity\activity\subject_instance as subject_instance_entity;
 use mod_perform\models\activity\activity;
+use mod_perform\models\activity\participant_source;
 use totara_core\access;
 use totara_core\advanced_feature;
+use totara_core\totara\menu\build;
 use totara_tenant\util as tenant_util;
 
 class util {
@@ -176,7 +183,11 @@ class util {
             return true;
         }
 
-        return has_capability_in_any_context('mod/perform:manage_subject_user_participation', null, $user_id);
+        return has_role_with_capability(
+            'mod/perform:manage_subject_user_participation',
+            [CONTEXT_USER, CONTEXT_SYSTEM, CONTEXT_TENANT],
+            $user_id
+        );
     }
 
     public static function get_participant_manageable_activities(int $user_id) {
@@ -189,13 +200,35 @@ class util {
         }
 
         // Early exit if they can not even potentially manage any participants
-        if (!has_capability_in_any_context('mod/perform:manage_subject_user_participation', null, $user_id)) {
+        if (!has_role_with_capability(
+            'mod/perform:manage_subject_user_participation',
+            [CONTEXT_USER, CONTEXT_SYSTEM, CONTEXT_TENANT],
+            $user_id
+        )) {
             return new collection();
         }
 
-        $participation_manageable_users = self::get_permitted_users($user_id, 'mod/perform:manage_subject_user_participation');
+        [$cap_sql, $params] = access::get_has_capability_sql('mod/perform:manage_subject_user_participation', 'c.id', $user_id);
 
-        return activity_entity::repository()->find_by_subject_user_id(...$participation_manageable_users)->map_to(activity::class);
+        $sql = "
+            p.id IN (
+                SELECT a.id 
+                FROM {perform} a
+                JOIN {perform_track} t ON a.id = t.activity_id
+                JOIN {perform_track_user_assignment} tua ON t.id = tua.track_id
+                JOIN {perform_subject_instance} si ON tua.id = si.track_user_assignment_id
+                JOIN {context} c ON si.subject_user_id = c.instanceid AND c.contextlevel = ".CONTEXT_USER."
+                WHERE {$cap_sql}
+            )
+        ";
+
+        return activity_entity::repository()
+            ->as('p')
+            ->filter_by_visible()
+            ->where_raw($sql, $params)
+            ->order_by('id')
+            ->get()
+            ->map_to(activity::class);
     }
 
     public static function has_manage_all_participants_capability(int $user_id): bool {
@@ -209,6 +242,7 @@ class util {
      * the $capability in the user's context. Useful for checking which users a
      * user is permitted to do some action on.
      *
+     * @deprecated since Totara 16
      * @param int $for_user ID of user to check for.
      * @param string $capability Capability string to test.
      * @param int $offset Offset to apply before returning records, null for no offset.
@@ -264,7 +298,11 @@ class util {
         if ($subject_user_context === false) {
             return false;
         }
-        return access::has_capability('mod/perform:manage_subject_user_participation', $subject_user_context, $manager_id);
+        return access::has_capability(
+            'mod/perform:manage_subject_user_participation',
+            $subject_user_context,
+            $manager_id
+        );
     }
 
     /**
@@ -290,7 +328,11 @@ class util {
             return true;
         }
 
-        return has_capability_in_any_context('mod/perform:report_on_subject_responses', null, $user_id);
+        return has_role_with_capability(
+            'mod/perform:report_on_subject_responses',
+            [CONTEXT_USER, CONTEXT_SYSTEM, CONTEXT_TENANT],
+            $user_id
+        );
     }
 
     /**
@@ -307,20 +349,29 @@ class util {
         }
 
         // Early exit if they can not even potentially manage any participants
-        if (!has_capability_in_any_context('mod/perform:report_on_subject_responses', null, $user_id)) {
+        if (!has_role_with_capability(
+            'mod/perform:report_on_subject_responses',
+            [CONTEXT_USER, CONTEXT_SYSTEM, CONTEXT_TENANT],
+            $user_id
+        )) {
             return false;
         }
 
-        $subject_user_ids_with_element = element::repository()->get_subject_user_ids_using_element($element_id);
-        $permitted_user_ids = self::get_permitted_users($user_id, 'mod/perform:report_on_subject_responses');
+        [$sql, $params] = access::get_has_capability_sql('mod/perform:report_on_subject_responses', 'c.id', $user_id);
 
-        foreach ($permitted_user_ids as $permitted_user_id) {
-            if (in_array($permitted_user_id, $subject_user_ids_with_element, true)) {
-                return true;
-            }
-        }
-
-        return false;
+        return builder::table(section_element::TABLE, 'se')
+            ->select_raw('se.id')
+            ->join([section::TABLE, 's'], 's.id', 'se.section_id')
+            ->join([participant_section::TABLE, 'ps'], 'ps.section_id', 's.id')
+            ->join([participant_instance::TABLE, 'pi'], 'pi.id', 'ps.participant_instance_id')
+            ->join([subject_instance_entity::TABLE, 'si'], 'si.id', 'pi.subject_instance_id')
+            ->join(['context', 'c'], function ($join) {
+                $join->where_field('c.instanceid', 'si.subject_user_id')
+                    ->where('c.contextlevel', CONTEXT_USER);
+            })
+            ->where('se.element_id', $element_id)
+            ->where_raw($sql, $params)
+            ->exists();
     }
 
     /**

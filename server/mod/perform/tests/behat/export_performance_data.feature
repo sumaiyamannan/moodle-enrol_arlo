@@ -8,6 +8,7 @@ Feature: Test exporting performance response data
       | user2       | User2       | Last2    | user2@example.com       |
       | user3       | User3       | Last3    | user3@example.com       |
       | user4       | User4       | Last4    | user4@example.com       |
+      | user5       | User5       | Last5    | user5@example.com       |
       | manager     | manager     | user     | manager.one@example.com |
       | sitemanager | sitemanager | user     | sitemanager@example.com |
     And the following "role assigns" exist:
@@ -26,6 +27,8 @@ Feature: Test exporting performance response data
       | activity_name                      | subject_username | subject_is_participating | include_questions | include_required_questions | activity_status |
       | Simple optional questions activity | user1            | true                     | true              |                            | Active          |
       | Simple required questions activity | user1            | true                     | true              | true                       | Active          |
+      | Simple activity                    | user2            | true                     | true              | true                       | Active          |
+      | Simple activity                    | user4            | true                     | true              | true                       | Active          |
 
   Scenario: A user with the global capability can export response data
     Given I log in as "sitemanager"
@@ -35,6 +38,9 @@ Feature: Test exporting performance response data
     And I switch to "Browse records by user" tab
     Then I should see "User1"
     And I should see "User4"
+    And I should see "User2"
+    And I should not see "User3"
+    And I should not see "User5"
     When I click on "Export" "button" in the "User4" "table_row"
     And I wait for pending js
     And I click on "Export" "button" in the ".tui-modal" "css_element"
@@ -48,6 +54,9 @@ Feature: Test exporting performance response data
     Then I should see "Subject users: 2 records shown"
     And I should see "User1"
     And I should see "User2"
+    And I should not see "User3"
+    And I should not see "User4"
+    And I should not see "User5"
     When I click on "Export" "button" in the "User2" "table_row"
     And I wait for pending js
     And I click on "Export" "button" in the ".tui-modal" "css_element"

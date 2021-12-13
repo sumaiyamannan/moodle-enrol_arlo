@@ -23,14 +23,14 @@
  *
  */
 
+use core\entity\user;
 use mod_perform\rb\util;
+use totara_core\advanced_feature;
 
 defined('MOODLE_INTERNAL') || die();
 
 global $CFG;
 require_once($CFG->dirroot . '/totara/reportbuilder/rb_sources/rb_source_user.php');
-
-use totara_core\advanced_feature;
 
 /**
  * Performance reporting user report.
@@ -40,6 +40,8 @@ use totara_core\advanced_feature;
  * Class rb_source_perform_response_user
  */
 class rb_source_perform_response_user extends rb_source_user {
+
+    protected $conditions_added = false;
 
     /**
      * Constructor.
@@ -131,8 +133,32 @@ class rb_source_perform_response_user extends rb_source_user {
     }
 
     public function post_config(reportbuilder $report) {
-        $restrictions = util::get_report_on_subjects_sql($report->reportfor, "base.id");
-        $report->set_post_config_restrictions($restrictions);
+        // Make sure the conditions are only added once
+        if ($this->conditions_added) {
+            return;
+        }
+
+        [$cap_where, $cap_params] = util::get_report_on_subjects_sql(
+            $report->reportfor,
+            "base.id",
+            "user_context"
+        );
+
+        $sql = "
+            EXISTS (
+                SELECT si.id
+                FROM {perform_subject_instance} si
+                JOIN {context} user_context ON si.subject_user_id = user_context.instanceid 
+                    AND user_context.contextlevel = ".CONTEXT_USER."
+                WHERE si.subject_user_id = base.id
+                    AND {$cap_where} 
+            )
+        ";
+
+        $this->sourcewhere .= " AND {$sql}";
+        $this->sourceparams = array_merge($this->sourceparams, $cap_params);
+
+        $this->conditions_added = true;
     }
 
     /**
@@ -141,5 +167,28 @@ class rb_source_perform_response_user extends rb_source_user {
      */
     public static function is_source_ignored() {
         return advanced_feature::is_disabled('performance_activities');
+    }
+
+    /**
+     * Inject column_test data into database.
+     *
+     * @param totara_reportbuilder_column_testcase $testcase
+     */
+    public function phpunit_column_test_add_data(totara_reportbuilder_column_testcase $testcase) {
+        global $CFG;
+
+        if (!PHPUNIT_TEST) {
+            throw new coding_exception('phpunit_column_test_add_data() cannot be used outside of unit tests');
+        }
+
+        require_once($CFG->dirroot.'/lib/testing/generator/component_generator_base.php');
+        require_once($CFG->dirroot.'/lib/testing/generator/data_generator.php');
+        require_once($CFG->dirroot.'/mod/perform/tests/generator/mod_perform_generator.class.php');
+
+        $si = (new mod_perform_generator(new testing_data_generator()))->create_subject_instance([
+            'activity_name' => 'Weekly catchup',
+            'subject_is_participating' => true,
+            'subject_user_id' => user::repository()->get()->last()->id,
+        ]);
     }
 }

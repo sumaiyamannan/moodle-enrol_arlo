@@ -29,7 +29,9 @@ Feature: Test viewing Performance activity response data
       | activity_name                      | subject_username | subject_is_participating | include_questions | include_required_questions | include_static_content | include_reporting_ids | activity_status |
       | Simple optional questions activity | user1            | true                     | true              |                            | true                   |                       | Active          |
       | Simple required questions activity | user1            | true                     | true              | true                       | true                   |                       | Active          |
+      | Simple required questions activity | user2            | true                     | true              | true                       | true                   |                       | Active          |
       | With reporting ids                 | user5            | true                     | true              |                            | true                   | true                  | Active          |
+      | Simple activity                    | user4            | true                     | true              | true                       | true                   |                       | Active          |
 
   Scenario: A user with the global capability can access the performance activity response data from the admin menu
     Given I log in as "sitemanager"
@@ -38,10 +40,15 @@ Feature: Test viewing Performance activity response data
     When I navigate to "Performance activities > Performance activity response data" in site administration
     And I switch to "Browse records by user" tab
     Then I should see "User1"
+    And I should see "User2"
     And I should see "User4"
+    And I should see "User5"
+    And I should not see "User3"
     When I switch to "Browse records by content" tab
     Then the "Select activity" select box should contain "Simple optional questions activity"
     And the "Select activity" select box should contain "Simple required questions activity"
+    And the "Select activity" select box should contain "Simple activity"
+    And the "Select activity" select box should contain "With reporting ids"
     And I set the following fields to these values:
       | Select activity | Simple optional questions activity |
     When I click on "Load records" "button" in the ".tui-performReportPerformanceResponseByContent__activity" "css_element"
@@ -65,6 +72,9 @@ Feature: Test viewing Performance activity response data
     And I switch to "Browse records by content" tab
     Then I should not see "Select reporting IDs"
     And the "Select activity" select box should contain "Simple optional questions activity"
+    And the "Select activity" select box should contain "Simple required questions activity"
+    And the "Select activity" select box should not contain "Simple activity"
+    And the "Select activity" select box should not contain "With reporting ids"
     And I set the following fields to these values:
       | Select activity | Simple optional questions activity |
 
@@ -238,10 +248,12 @@ Feature: Test viewing Performance activity response data
 
     # Check back link goes to the correct tab (by user).
     When I click on "All performance data records" "link"
-    Then I should see "Subject users: 9 records shown"
-
-    When I navigate to the mod perform subject instance report for user "user3"
-    Then I should see "Performance data for User3 Last3: 0 records shown"
+    Then I should see "Subject users: 4 records shown"
+    And I should see "User1"
+    And I should see "User2"
+    And I should see "User4"
+    And I should see "User5"
+    And I should not see "User3"
 
     When I log out
     And I log in as "manager"
@@ -250,9 +262,8 @@ Feature: Test viewing Performance activity response data
     And I should see "2 records selected"
 
     When I navigate to the mod perform subject instance report for user "user2"
-    # Export action card should not be visible
-    Then I should not see "records selected"
-    And I should not see "Export all"
+    Then I should see "Performance data for User2 Last2: 1 record shown"
+    And I should see "1 record selected"
 
     When I navigate to the mod perform subject instance report for user "user3"
     Then I should see "You cannot report on this subject user because you do not have permission"
