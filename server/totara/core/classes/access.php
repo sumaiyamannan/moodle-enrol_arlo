@@ -49,10 +49,12 @@ final class access {
      * @return array Array of the form array($sql, $params) which can be included in the WHERE clause of an SQL statement.
      */
     public static function get_has_capability_sql($capability, $contextidfield, $user = null, $doanything = true) {
-        global $USER, $CFG;
+        global $USER, $CFG, $DB;
 
         // First, validate that we can work with the $contextidfield supplied.
         self::validate_contextidfield($contextidfield);
+
+        $alias = $DB->get_unique_param('ctx_alias');
 
         // Make sure there is a user id specified.
         if ($user === null) {
@@ -80,7 +82,7 @@ final class access {
             }
 
             if (!empty($CFG->tenantsenabled)) {
-                $tenantwhere = "AND hascapabilitycontext.tenantid IS NULL";
+                $tenantwhere = "AND {$alias}.tenantid IS NULL";
             }
 
         } else {
@@ -94,9 +96,9 @@ final class access {
                 if ($usercontext->tenantid) {
                     // NOTE: ignore top level block contexts exceptions here.
                     if (!empty($CFG->tenantsisolated)) {
-                        $tenantwhere = "AND hascapabilitycontext.tenantid = " . $usercontext->tenantid;
+                        $tenantwhere = "AND {$alias}.tenantid = " . $usercontext->tenantid;
                     } else {
-                        $tenantwhere = "AND (hascapabilitycontext.tenantid = " . $usercontext->tenantid . " OR hascapabilitycontext.tenantid IS NULL)";
+                        $tenantwhere = "AND ({$alias}.tenantid = " . $usercontext->tenantid . " OR {$alias}.tenantid IS NULL)";
                     }
                 }
             }
@@ -110,7 +112,7 @@ final class access {
         if (self::has_capability_definition_past_system($capability, $userid)) {
             // The capability has been assigned at sub contexts, we're going to need to traverse.
             // This is known to be an expensive query on some databases (namely mariadb).
-            list($permissionsql, $permissionparams) = self::get_permission_sql_complete($capability, $userid, 'hascapabilitycontext.id');
+            list($permissionsql, $permissionparams) = self::get_permission_sql_complete($capability, $userid, "{$alias}.id");
         } else {
             // The capability has only ever been assigned at the system context.
             // YAY! This is going to be much faster.
@@ -121,8 +123,8 @@ final class access {
         $hascapsql = "
 EXISTS (
     SELECT 'x'
-      FROM {context} hascapabilitycontext
-     WHERE hascapabilitycontext.id = {$contextidfield} $tenantwhere
+      FROM {context} {$alias}
+     WHERE {$alias}.id = {$contextidfield} $tenantwhere
 
        AND EXISTS (
 {$permissionsql}
@@ -197,7 +199,7 @@ EXISTS (
      * @return string sql fragment with embedded parameters
      */
     public static function get_role_assignments_subquery($userid) {
-        global $CFG;
+        global $CFG, $DB;
 
         $systemcontext = \context_system::instance();
         $userid = intval($userid);
@@ -233,8 +235,9 @@ EXISTS (
                 $queries[] = "                             SELECT {$frontpageroleid} AS roleid, {$frontpagecontext->id} AS contextid";
             }
 
+            $alias = $DB->get_unique_param('role_ass_alias');
             // Add all real role assignments.
-            $queries[] = "                             SELECT roleid, contextid FROM {role_assignments} ra WHERE ra.userid = {$userid}";
+            $queries[] = "                             SELECT roleid, contextid FROM {role_assignments} {$alias} WHERE {$alias}.userid = {$userid}";
         }
 
         if ($queries) {
@@ -369,6 +372,9 @@ EXISTS (
     private static function get_permission_sql_complete($capability, $userid, $contextidfield) {
         global $DB;
 
+        $max_depth_alias = $DB->get_unique_param('max_depth_alias');
+        $lineage_alias = $DB->get_unique_param('lineage_alias');
+
         $capallow = CAP_ALLOW;
         $capprevent = CAP_PREVENT;
 
@@ -377,35 +383,45 @@ EXISTS (
 
         $paramcapability = $DB->get_unique_param('cap');
         if ($DB->get_dbfamily() === 'mysql') {
+            $dlineage_alias = $DB->get_unique_param('dlineage_alias');
+            $ctx_map_alias = $DB->get_unique_param('dctxmap_alias');
+            $dra_alias = $DB->get_unique_param('dra_alias');
+            $drc_alias = $DB->get_unique_param('drc_alias');
+            $ctx_alias = $DB->get_unique_param('dctx_alias');
             // MySQL seems to be unable to do the aggregation with outside references.
-            $mysqlhack = "AND maxdepth.childid = lineage.childid";
+            $mysqlhack = "AND {$max_depth_alias}.childid = {$lineage_alias}.childid";
             $maxdepthsql = "
-                  SELECT dlineage.parentid, dra.roleid, MAX(dctx.depth) AS depth, dlineage.childid
-                    FROM {context_map} dlineage
+                  SELECT {$dlineage_alias}.parentid, {$dra_alias}.roleid, MAX({$ctx_alias}.depth) AS depth, {$dlineage_alias}.childid
+                    FROM {context_map} {$dlineage_alias}
                     JOIN (
 {$roleassignmentssql}
-                         ) dra ON dra.contextid = dlineage.parentid
-                    JOIN {context_map} dctxmap ON dctxmap.childid = dlineage.childid
-                    JOIN {role_capabilities} drc ON dra.roleid = drc.roleid AND drc.contextid = dctxmap.parentid
-                         AND drc.capability = :{$paramcapability} AND (drc.permission = {$capallow} OR drc.permission = {$capprevent})
-                    JOIN {context} dctx ON drc.contextid = dctx.id
-                GROUP BY dlineage.parentid, dra.roleid, dlineage.childid
+                         ) {$dra_alias} ON {$dra_alias}.contextid = {$dlineage_alias}.parentid
+                    JOIN {context_map} {$ctx_map_alias} ON {$ctx_map_alias}.childid = {$dlineage_alias}.childid
+                    JOIN {role_capabilities} {$drc_alias} ON {$dra_alias}.roleid = {$drc_alias}.roleid AND {$drc_alias}.contextid = {$ctx_map_alias}.parentid
+                         AND {$drc_alias}.capability = :{$paramcapability} AND ({$drc_alias}.permission = {$capallow} OR {$drc_alias}.permission = {$capprevent})
+                    JOIN {context} {$ctx_alias} ON {$drc_alias}.contextid = {$ctx_alias}.id
+                GROUP BY {$dlineage_alias}.parentid, {$dra_alias}.roleid, {$dlineage_alias}.childid
 ";
         } else {
+            $dlineage_alias = $DB->get_unique_param('dlineage_alias');
+            $ctx_map_alias = $DB->get_unique_param('dctxmap_alias');
+            $dra_alias = $DB->get_unique_param('dra_alias');
+            $drc_alias = $DB->get_unique_param('drc_alias');
+            $ctx_alias = $DB->get_unique_param('dctx_alias');
             // This is probably the heaviest subquery, it might be worth exploring optimisation options later.
             $mysqlhack = "";
             $maxdepthsql = "
-                  SELECT dlineage.parentid, dra.roleid, MAX(dctx.depth) AS depth
-                    FROM {context_map} dlineage
+                  SELECT {$dlineage_alias}.parentid, {$dra_alias}.roleid, MAX({$ctx_alias}.depth) AS depth
+                    FROM {context_map} {$dlineage_alias}
                     JOIN (
 {$roleassignmentssql}
-                         ) dra ON dra.contextid = dlineage.parentid
-                    JOIN {context_map} dctxmap ON dctxmap.childid = dlineage.childid
-                    JOIN {role_capabilities} drc ON dra.roleid = drc.roleid AND drc.contextid = dctxmap.parentid
-                         AND drc.capability = :{$paramcapability} AND (drc.permission = {$capallow} OR drc.permission = {$capprevent})
-                    JOIN {context} dctx ON drc.contextid = dctx.id
-                   WHERE dlineage.childid = {$contextidfield}
-                GROUP BY dlineage.parentid, dra.roleid
+                         ) {$dra_alias} ON {$dra_alias}.contextid = {$dlineage_alias}.parentid
+                    JOIN {context_map} {$ctx_map_alias} ON {$ctx_map_alias}.childid = {$dlineage_alias}.childid
+                    JOIN {role_capabilities} {$drc_alias} ON {$dra_alias}.roleid = {$drc_alias}.roleid AND {$drc_alias}.contextid = {$ctx_map_alias}.parentid
+                         AND {$drc_alias}.capability = :{$paramcapability} AND ({$drc_alias}.permission = {$capallow} OR {$drc_alias}.permission = {$capprevent})
+                    JOIN {context} {$ctx_alias} ON {$drc_alias}.contextid = {$ctx_alias}.id
+                   WHERE {$dlineage_alias}.childid = {$contextidfield}
+                GROUP BY {$dlineage_alias}.parentid, {$dra_alias}.roleid
 ";
         }
         $params = array($paramcapability => $capability);
@@ -416,21 +432,25 @@ EXISTS (
         // - remove prevents, leaving only most specific allows
         // - filter out permissions assigned below the level we are checking
 
+        $ctx_alias = $DB->get_unique_param('ctx_alias');
+        $role_cap_alias = $DB->get_unique_param('role_cap_alias');
+        $role_ass_alias = $DB->get_unique_param('role_ass_alias');
+        $ctx_map_alias = $DB->get_unique_param('ctx_alias_map');
         $paramcapability = $DB->get_unique_param('cap');
         $allowpreventsql = "
           SELECT 'x'
-            FROM {context_map} lineage
+            FROM {context_map} {$lineage_alias}
             JOIN (
 {$roleassignmentssql}
-                 ) ra ON ra.contextid = lineage.parentid
-            JOIN {context_map} ctxmap ON ctxmap.childid = lineage.childid
-            JOIN {role_capabilities} rc ON ra.roleid = rc.roleid AND rc.contextid = ctxmap.parentid
-                 AND rc.capability = :$paramcapability AND rc.permission = {$capallow}
-            JOIN {context} ctx ON rc.contextid = ctx.id
+                 ) {$role_ass_alias} ON {$role_ass_alias}.contextid = {$lineage_alias}.parentid
+            JOIN {context_map} {$ctx_map_alias} ON {$ctx_map_alias}.childid = {$lineage_alias}.childid
+            JOIN {role_capabilities} {$role_cap_alias} ON {$role_ass_alias}.roleid = {$role_cap_alias}.roleid AND {$role_cap_alias}.contextid = {$ctx_map_alias}.parentid
+                 AND {$role_cap_alias}.capability = :$paramcapability AND {$role_cap_alias}.permission = {$capallow}
+            JOIN {context} {$ctx_alias} ON {$role_cap_alias}.contextid = {$ctx_alias}.id
             JOIN (
 {$maxdepthsql}
-                 ) maxdepth ON maxdepth.roleid = ra.roleid AND ctx.depth = maxdepth.depth AND maxdepth.parentid = lineage.parentid $mysqlhack
-           WHERE lineage.childid = {$contextidfield}
+                 ) {$max_depth_alias} ON {$max_depth_alias}.roleid = {$role_ass_alias}.roleid AND {$ctx_alias}.depth = {$max_depth_alias}.depth AND {$max_depth_alias}.parentid = {$lineage_alias}.parentid $mysqlhack
+           WHERE {$lineage_alias}.childid = {$contextidfield}
 ";
         $params = array_merge($params, array($paramcapability => $capability));
 
@@ -463,17 +483,21 @@ EXISTS (
 
         $prohibit = CAP_PROHIBIT;
 
+        $ctx_map_alias = $DB->get_unique_param('ctx_alias_map');
+        $lineage_alias = $DB->get_unique_param('lineage_alias');
+        $ra_alias = $DB->get_unique_param('ra_alias');
+        $rc_alias = $DB->get_unique_param('rc_alias');
         $paramcapability = $DB->get_unique_param('cap');
         $prohibitsql = "
             SELECT 'x'
-              FROM {context_map} lineage
+              FROM {context_map} {$lineage_alias}
               JOIN (
 {$roleassignmentssql}
-                   ) ra ON ra.contextid = lineage.parentid
-              JOIN {context_map} ctxmap ON ctxmap.childid = lineage.childid
-              JOIN {role_capabilities} rc ON ra.roleid = rc.roleid AND rc.contextid = ctxmap.parentid
-                   AND rc.capability = :$paramcapability AND rc.permission = {$prohibit}
-             WHERE lineage.childid = {$contextidfield}
+                   ) {$ra_alias} ON {$ra_alias}.contextid = {$lineage_alias}.parentid
+              JOIN {context_map} {$ctx_map_alias} ON {$ctx_map_alias}.childid = {$lineage_alias}.childid
+              JOIN {role_capabilities} {$rc_alias} ON {$ra_alias}.roleid = {$rc_alias}.roleid AND {$rc_alias}.contextid = {$ctx_map_alias}.parentid
+                   AND {$rc_alias}.capability = :$paramcapability AND {$rc_alias}.permission = {$prohibit}
+             WHERE {$lineage_alias}.childid = {$contextidfield}
 ";
         $params = array($paramcapability => $capability);
         return array($prohibitsql, $params);
