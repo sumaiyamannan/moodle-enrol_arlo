@@ -1,7 +1,12 @@
 This files describes API changes in /mod/perform/*,
 information provided here is intended especially for developers.
 
+=== 13.15 ===
+
+* \mod_perform\entity\activity\element_repository::get_subject_user_ids_using_element() is now marked as deprecated, there's no alternative
+
 === 13.8 ===
+
 * QuestionElementPreviewModal.vue has switched to using the admin preview components instead of the participant form components
 
 === 13.2 ===
