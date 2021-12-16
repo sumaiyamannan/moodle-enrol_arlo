@@ -26,27 +26,17 @@ namespace core\orm\entity\filter;
 use core\orm\query\builder;
 use core\orm\query\field;
 use core\orm\query\raw_field;
+use core\user_orm_helper;
 
 /**
  * Filters for some user name information
  *
  * @package core\entity\filters
  */
-class user_name extends like {
+class user_name extends filter {
 
-    public function __construct() {
-        parent::__construct([
-            new raw_field(builder::concat(
-                new field('firstname', $this->builder),
-                "' '",
-                new field('lastname', $this->builder)
-            )),
-            new raw_field(builder::concat(
-                new field('lastname', $this->builder),
-                "' '",
-                new field('firstname', $this->builder)
-            )),
-        ]);
+    public function apply() {
+        user_orm_helper::filter_by_fullname($this->builder, $this->value);
     }
 
 }

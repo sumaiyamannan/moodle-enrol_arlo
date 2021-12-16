@@ -24,6 +24,8 @@ namespace container_workspace\loader\member;
 
 use container_workspace\member\status;
 use container_workspace\query\member\non_member_query;
+use core\entity\user;
+use core\orm\entity\repository;
 use core\orm\pagination\offset_cursor_paginator;
 use core\orm\query\builder;
 use core\tenant_orm_helper;
@@ -44,76 +46,38 @@ final class non_member_loader {
      * @return offset_cursor_paginator
      */
     public static function get_non_members(non_member_query $query): offset_cursor_paginator {
-        global $CFG;
-
         $workspace_id = $query->get_workspace_id();
 
-        // Create a query of all enrollments in the workspace
-        $members_query = builder::table('user_enrolments', 'ue');
-        $members_query->select('ue.id');
-        $members_query->where_field('ue.userid', 'u.id');
-        $members_query->where('status', status::get_active());
-        $members_query->join(['enrol', 'e'], 'ue.enrolid', 'e.id');
-        $members_query->where('e.courseid', $workspace_id);
-
-        // Select all users excluding those who have a membership
-        $builder = builder::table('user', 'u');
-        $builder->select_raw('u.*');
-        $builder->where_not_exists($members_query);
-
         $search_term = $query->get_search_term();
-        if (null !== $search_term) {
-            require_once("{$CFG->dirroot}/totara/core/searchlib.php");
-            $keywords = totara_search_parse_keywords($search_term);
-            [$sql_search, $parameters] = totara_search_get_keyword_where_clause(
-                $keywords,
-                ['u.firstname', 'u.lastname', 'u.email'],
-                SQL_PARAMS_NAMED
-            );
 
-            $builder->where_raw($sql_search, $parameters);
-        }
+        $exists_query = builder::table('user_enrolments', 'ue')
+            ->join(['enrol', 'e'], 'ue.enrolid', 'e.id')
+            ->where_field('ue.userid', '"user".id')
+            ->where('e.courseid', $workspace_id)
+            ->where('status', status::get_active());
 
-        $guest_id = guest_user()->id;
-        $builder->where('u.id', '<>', $guest_id);
-        $builder->where('u.deleted', 0);
-        $builder->where('u.suspended', 0);
+        $user_repository = user::repository()
+            ->filter_by_not_deleted()
+            ->filter_by_not_guest()
+            ->filter_by_not_suspended()
+            ->when(!empty($search_term), function (repository $repository) use ($search_term) {
+                $repository->filter_by_full_name($search_term);
+            })
+            ->where_not_exists($exists_query)
+            ->when(true, function (repository $repository) use ($workspace_id) {
+                $alias = $repository->get_builder()->get_alias_sql();
 
-        // ================= SQL =====================
-        // SELECT DISTINCT u.*
-        // FROM phpunit_00user "u"
-        // WHERE NOT EXISTS(
-        //      SELECT ue.id
-        //      FROM phpunit_00user_enrolments "ue"
-        //      INNER JOIN phpunit_00enrol "e" ON ue.enrolid = e.id
-        //      WHERE ue.userid = u.id
-        //      AND "ue".status = $1
-        //      AND e.courseid = $2
-        // )
-        // AND u.id <> $3
-        // AND u.deleted = $4
-        // AND u.suspended = $5
-        // AND EXISTS(
-        //      SELECT "mtru5f988f6287dd1".*
-        //      FROM phpunit_00cohort_members "mtru5f988f6287dd1"
-        //      INNER JOIN phpunit_00tenant "t" ON "mtru5f988f6287dd1".cohortid = "t".cohortid
-        //      WHERE t.id = $6
-        //      AND "mtru5f988f6287dd1".userid = u.id
-        // )
-        // ORDER BY u.id ASC
-        // LIMIT 20 OFFSET 0
-        // =============== End Of SQL ================
+                // Apply tenant query.
+                $context = \context_course::instance($workspace_id);
+                tenant_orm_helper::restrict_users(
+                    $repository->get_builder(),
+                    "{$alias}.id",
+                    $context
+                );
+            })
+            ->order_by_full_name();
 
-        // Apply tenant query.
-        $context = \context_course::instance($workspace_id);
-        tenant_orm_helper::restrict_users(
-            $builder,
-            'u.id',
-            $context
-        );
-
-        $builder->order_by('u.id');
         $cursor = $query->get_cursor();
-        return new offset_cursor_paginator($builder, $cursor);
+        return new offset_cursor_paginator($user_repository, $cursor);
     }
 }

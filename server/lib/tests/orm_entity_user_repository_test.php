@@ -51,7 +51,7 @@ class core_orm_entity_user_repository_testcase extends advanced_testcase {
             'username' => 'ewgreg',
             'firstname' => 'Ewan',
             'middlename' => 'Gordon',
-            'lastname' => 'McGregor',
+            'lastname' => 'Leroy',
             'country' => 'UK',
             'department' => 'Lighting',
         ]);
@@ -89,6 +89,74 @@ class core_orm_entity_user_repository_testcase extends advanced_testcase {
         $this->assertCount(1, $complex_query_result);
         $this->assertEquals($this->user_1->id, $complex_query_result[0]->id);
         $this->assertEquals(0, $complex_query_result[0]->preferences_count);
+    }
+
+    /**
+     * This is just a sanity check for the repository specifically,
+     * The actual logic is thoroughly tested in core_datalib_testcase.
+     */
+    public function test_filter_users_by_fullname_with_different_fullnamedisplay_config(): void {
+        set_config('fullnamedisplay', 'firstname middlename lastname');
+
+        $simple_query = user::repository()
+            ->filter_by_full_name('Leroy');
+
+        $simple_query_result = $simple_query->get()->all();
+        $this->assertCount(2, $simple_query_result);
+
+        $simple_query = user::repository()
+            ->filter_by_full_name('Samuel Leroy');
+
+        $simple_query_result = $simple_query->get()->all();
+        $this->assertCount(1, $simple_query_result);
+        $this->assertEquals($this->user_1->id, $simple_query_result[0]->id);
+
+        $simple_query = user::repository()
+            ->filter_by_full_name('Samuel Jackson');
+
+        $simple_query_result = $simple_query->get()->all();
+        $this->assertCount(0, $simple_query_result);
+
+
+        set_config('fullnamedisplay', 'middlename');
+
+        $simple_query = user::repository()
+            ->filter_by_full_name('Leroy');
+
+        $simple_query_result = $simple_query->get()->all();
+        $this->assertCount(1, $simple_query_result);
+        $this->assertEquals($this->user_1->id, $simple_query_result[0]->id);
+
+        // The result should not depend on upper lower case
+        $simple_query = user::repository()
+            ->filter_by_full_name('leroY');
+
+        $simple_query_result = $simple_query->get()->all();
+        $this->assertCount(1, $simple_query_result);
+        $this->assertEquals($this->user_1->id, $simple_query_result[0]->id);
+
+        // Searching by firstname only should get no result
+        $simple_query = user::repository()
+            ->filter_by_full_name('Samuel');
+
+        $simple_query_result = $simple_query->get()->all();
+        $this->assertCount(0, $simple_query_result);
+
+        set_config('fullnamedisplay', 'lastname, firstname');
+
+        $simple_query = user::repository()
+            ->filter_by_full_name('Jackson Samuel');
+
+        $simple_query_result = $simple_query->get()->all();
+        $this->assertCount(1, $simple_query_result);
+        $this->assertEquals($this->user_1->id, $simple_query_result[0]->id);
+
+        // A comma in the result is not supported
+        $simple_query = user::repository()
+            ->filter_by_full_name('Jackson, Samuel');
+
+        $simple_query_result = $simple_query->get()->all();
+        $this->assertCount(0, $simple_query_result);
     }
 
     /**

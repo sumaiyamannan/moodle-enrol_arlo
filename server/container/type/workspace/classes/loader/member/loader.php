@@ -23,14 +23,15 @@
 namespace container_workspace\loader\member;
 
 use container_workspace\entity\workspace;
+use container_workspace\member\member;
+use container_workspace\member\status;
 use container_workspace\query\member\query;
 use container_workspace\query\member\sort;
 use core\orm\pagination\offset_cursor_paginator;
 use core\orm\query\builder;
 use core\orm\query\order;
 use core\orm\query\raw_field;
-use container_workspace\member\member;
-use container_workspace\member\status;
+use core\user_orm_helper;
 
 /**
  * Loader for members within a workspace
@@ -102,17 +103,7 @@ final class loader {
 
         $search_term = $query->get_search_term();
         if (null !== $search_term && '' !== $search_term) {
-            require_once("{$CFG->dirroot}/totara/core/searchlib.php");
-            $user_name_fields = get_all_user_name_fields(false, null, 'u.');
-            $keywords = totara_search_parse_keywords($search_term);
-
-            [$like_sql, $like_parameters] = totara_search_get_keyword_where_clause(
-                $keywords,
-                array_values($user_name_fields),
-                SQL_PARAMS_NAMED
-            );
-
-            $builder->where_raw($like_sql, $like_parameters);
+            user_orm_helper::filter_by_fullname($builder, $search_term, 'u');
         }
 
         $builder->when(
@@ -139,8 +130,7 @@ final class loader {
 
         $sort = $query->get_sort();
         if (sort::is_name($sort)) {
-            $builder->order_by('u.firstname');
-            $builder->order_by('u.lastname');
+            user_orm_helper::order_by_fullname($builder, 'u');
         } else if (sort::is_recent_join($sort)) {
             $builder->order_by('ue.timemodified', order::DIRECTION_DESC);
         }

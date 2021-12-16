@@ -27,6 +27,7 @@ namespace totara_competency;
 use Closure;
 use core\orm\query\builder;
 use core\orm\query\raw_field;
+use core\user_orm_helper;
 
 class expanded_users {
 
@@ -90,10 +91,7 @@ class expanded_users {
 
         // This is not very optimal, have a better idea?
         if (!empty($this->name_filter)) {
-            $user_builder->where(function (builder $builder) {
-                $builder->or_where(new raw_field("{$builder->concat('users.firstname', "' '", 'users.lastname')}"), 'ilike', $this->name_filter)
-                    ->or_where(new raw_field("{$builder->concat('users.lastname', "' '", 'users.firstname')}"), 'ilike', $this->name_filter);
-            });
+            user_orm_helper::filter_by_fullname($user_builder, $this->name_filter, 'users');
         }
 
         // Closure::fromCallable allows to keep map_users hidden within the class
