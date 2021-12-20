@@ -136,7 +136,7 @@ export default {
       const containerW = this.$refs.progress.offsetWidth;
       const labelW = this.$refs.progressLabel.offsetWidth;
 
-      this.insideLabel = labelW < containerW * this.fraction;
+      this.insideLabel = labelW < Math.floor(containerW * this.fraction);
     },
     $_setProgressStyle() {
       let w,
