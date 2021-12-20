@@ -165,9 +165,9 @@
         <location>/client/component/tui/build</location>
         <name>video.js</name>
         <license>Apache 2.0</license>
-        <version>6.3.2</version>
+        <version>6.3.2-totara1</version>
         <licenseversion>2.0</licenseversion>
-        <repository>https://github.com/videojs/video.js</repository>
+        <repository>https://github.com/totara/video.js</repository>
     </library>
     <library>
         <location>/client/component/tui/build</location>
