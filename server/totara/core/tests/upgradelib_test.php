@@ -65,25 +65,26 @@ class totara_core_upgradelib_testcase extends advanced_testcase {
         // 1) First lets check the expected defaults.
         $cats = $DB->get_records('course_categories', [], 'sortorder');
 
-        $misc = $cats['1'];
+        $misc = reset($cats);
         $this->assertSame('Miscellaneous', $misc->name);
         $this->assertSame('0', $misc->issystem);
-        $this->assertSame('10000', $misc->sortorder);
+        $this->assertSame((string)(MAX_COURSES_IN_CATEGORY * key($cats)), $misc->sortorder);
 
-        $perf = $cats['2'];
+        $perf = next($cats);
         $this->assertSame('performance-activities', $perf->name);
         $this->assertSame('1', $perf->issystem);
-        $this->assertSame('20000', $perf->sortorder);
+        $this->assertSame((string)(MAX_COURSES_IN_CATEGORY * key($cats)), $perf->sortorder);
 
-        $work = $cats['3'];
+        $work = next($cats);
         $this->assertSame('Space category', $work->name);
         $this->assertSame('1', $work->issystem);
-        $this->assertSame('30000', $work->sortorder);
+        $this->assertSame((string)(MAX_COURSES_IN_CATEGORY * key($cats)), $work->sortorder);
 
         // 2) Then check that calling it with the default categories does nothing.
         totara_core_refresh_default_category();
+        $expected_cat_count = count($cats);
         $cat2 = $DB->get_records('course_categories', [], 'sortorder');
-        $this->assertCount(3, $cat2);
+        $this->assertCount($expected_cat_count, $cat2);
         foreach ($cats as $key => $cat) {
             if ($new = $cat2[$key]) {
                 $this->assertSame($cat->id, $new->id);
@@ -97,13 +98,14 @@ class totara_core_upgradelib_testcase extends advanced_testcase {
         $this->assertSame($misc->id, get_config('core', 'defaultrequestcategory'));
 
         // 3) Then check that calling it after replacing the default misc does nothing.
-        $misc2 = $this->totara_core_insert_category('Misc2', '40000', null, false);
+        $expected_cat_count ++;
+        $misc2 = $this->totara_core_insert_category('Misc2', (string)(MAX_COURSES_IN_CATEGORY * $expected_cat_count), null, false);
         $cats[$misc2->id] = $misc2;
         set_config('defaultrequestcategory', $misc2->id);
 
         totara_core_refresh_default_category();
         $cat3 = $DB->get_records('course_categories', [], 'sortorder');
-        $this->assertCount(4, $cat3);
+        $this->assertCount($expected_cat_count, $cat3);
         foreach ($cats as $key => $cat) {
             if ($new = $cat3[$key]) {
                 $this->assertSame($cat->id, $new->id);
@@ -119,9 +121,10 @@ class totara_core_upgradelib_testcase extends advanced_testcase {
         // 4) Then check that calling it with misc deleted after being correctly replaced does nothing.
         unset($cats[$misc->id]);
         $DB->delete_records('course_categories', ['id' => $misc->id]);
+        $expected_cat_count--;
         totara_core_refresh_default_category();
         $cat4 = $DB->get_records('course_categories', [], 'sortorder');
-        $this->assertCount(3, $cat4);
+        $this->assertCount($expected_cat_count, $cat4);
         foreach ($cats as $key => $cat) {
             if ($new = $cat4[$key]) {
                 $this->assertSame($cat->id, $new->id);
@@ -138,7 +141,7 @@ class totara_core_upgradelib_testcase extends advanced_testcase {
         set_config('defaultrequestcategory', $perf->id);
         totara_core_refresh_default_category();
         $cat4 = $DB->get_records('course_categories', [], 'sortorder');
-        $this->assertCount(3, $cat4);
+        $this->assertCount($expected_cat_count, $cat4);
         foreach ($cats as $key => $cat) {
             if ($new = $cat4[$key]) {
                 $this->assertSame($cat->id, $new->id);
@@ -157,7 +160,7 @@ class totara_core_upgradelib_testcase extends advanced_testcase {
         $DB->delete_records('course_categories', ['id' => $misc2->id]);
         totara_core_refresh_default_category();
         $cat5 = $DB->get_records('course_categories', [], 'sortorder');
-        $this->assertCount(3, $cat5);
+        $this->assertCount($expected_cat_count, $cat5);
         foreach ($cat5 as $key => $cat) {
             if (isset($cats[$key]) && $old = $cats[$key]) {
                 $this->assertSame($cat->id, $old->id);
@@ -184,20 +187,22 @@ class totara_core_upgradelib_testcase extends advanced_testcase {
         global $DB;
 
         // 1) First fetch and check the default categories.
-        $cats = $DB->get_records('course_categories');
-        $misc = $cats['1'];
+        $cats = $DB->get_records('course_categories', null, 'id ASC');
+
+        $misc = reset($cats);
         $this->assertSame('Miscellaneous', $misc->name);
 
-        $perf = $cats['2'];
+        $perf = next($cats);
         $this->assertSame('performance-activities', $perf->name);
 
-        $work = $cats['3'];
+        $work = next($cats);
         $this->assertSame('Space category', $work->name);
 
         // 2) Check that calling the function when there are no issues changes nothing.
         totara_core_fix_course_sortorder();
+        $expected_cat_count = count($cats);
         $cat2 = $DB->get_records('course_categories', [], 'sortorder');
-        $this->assertCount(3, $cat2);
+        $this->assertCount($expected_cat_count, $cat2);
         foreach ($cats as $key => $cat) {
             if ($new = $cat2[$key]) {
                 $this->assertSame($cat->id, $new->id);
@@ -235,38 +240,40 @@ class totara_core_upgradelib_testcase extends advanced_testcase {
         // Top 3
         //     | -> Course 3.1
 
-        $t1s1 = $this->totara_core_insert_category('Category T1S1', '20000', $misc, false);
-        $c111 = $this->totara_core_insert_course('c111', $t1s1, '20001');
-        $t1s2 = $this->totara_core_insert_category('Category T1S2', '30000', $misc, true);
-        $t1s3 = $this->totara_core_insert_category('Category T1S3', '40000', $misc, false);
-        $c131 = $this->totara_core_insert_course('c131', $t1s3, '40001');
+        $catcount = $expected_cat_count + 1;
 
-        $perf->sortorder = '50000'; // Fix perf sortorder.
+        $t1s1 = $this->totara_core_insert_category('Category T1S1', (string)(MAX_COURSES_IN_CATEGORY * $catcount++), $misc, false);
+        $c111 = $this->totara_core_insert_course('c111', $t1s1, $t1s1->sortorder + 1);
+        $t1s2 = $this->totara_core_insert_category('Category T1S2', (string)(MAX_COURSES_IN_CATEGORY * $catcount++), $misc, true);
+        $t1s3 = $this->totara_core_insert_category('Category T1S3', (string)(MAX_COURSES_IN_CATEGORY * $catcount++), $misc, false);
+        $c131 = $this->totara_core_insert_course('c131', $t1s3, $t1s3->sortorder + 1);
+
+        $perf->sortorder = (string)(MAX_COURSES_IN_CATEGORY * $catcount++); // Fix perf sortorder.
         $DB->update_record('course_categories', $perf);
-        $work->sortorder = '60000'; // Fix work sortorder.
+        $work->sortorder = (string)(MAX_COURSES_IN_CATEGORY * $catcount++); // Fix work sortorder.
         $DB->update_record('course_categories', $work);
 
-        $t2 = $this->totara_core_insert_category('Category Top2', '70000', null, false);
-        $c200 = $this->totara_core_insert_course('c2000', $t2, '70001');
+        $t2 = $this->totara_core_insert_category('Category Top2', (string)(MAX_COURSES_IN_CATEGORY * $catcount++), null, false);
+        $c200 = $this->totara_core_insert_course('c2000', $t2, $t2->sortorder + 1);
 
-        $t2s1 = $this->totara_core_insert_category('Category T2S1', '80000', $t2, false);
-        $c210 = $this->totara_core_insert_course('c2100', $t2s1, '80001');
+        $t2s1 = $this->totara_core_insert_category('Category T2S1', (string)(MAX_COURSES_IN_CATEGORY * $catcount++), $t2, false);
+        $c210 = $this->totara_core_insert_course('c2100', $t2s1, $t2s1->sortorder + 1);
 
-        $t2s11 = $this->totara_core_insert_category('SubCat T2S1.1', '90000', $t2s1, false);
-        $c2111 = $this->totara_core_insert_course('c2111', $t2s11, '90001');
-        $c2112 = $this->totara_core_insert_course('c2112', $t2s11, '90002');
+        $t2s11 = $this->totara_core_insert_category('SubCat T2S1.1', (string)(MAX_COURSES_IN_CATEGORY * $catcount++), $t2s1, false);
+        $c2111 = $this->totara_core_insert_course('c2111', $t2s11, $t2s11->sortorder + 1);
+        $c2112 = $this->totara_core_insert_course('c2112', $t2s11, $t2s11->sortorder + 2);
 
-        $t2s12 = $this->totara_core_insert_category('SubCat T2S1.2', '100000', $t2s1, true);
-        $t2s13 = $this->totara_core_insert_category('SubCat T2S1.3', '110000', $t2s1, false);
-        $c2131 = $this->totara_core_insert_course('c2131', $t2s13, '110001');
+        $t2s12 = $this->totara_core_insert_category('SubCat T2S1.2', (string)(MAX_COURSES_IN_CATEGORY * $catcount++), $t2s1, true);
+        $t2s13 = $this->totara_core_insert_category('SubCat T2S1.3', (string)(MAX_COURSES_IN_CATEGORY * $catcount++), $t2s1, false);
+        $c2131 = $this->totara_core_insert_course('c2131', $t2s13, $t2s13->sortorder + 1);
 
-        $t2s2 = $this->totara_core_insert_category('Category T2S2', '120000', $t2, true);
+        $t2s2 = $this->totara_core_insert_category('Category T2S2', (string)(MAX_COURSES_IN_CATEGORY * $catcount++), $t2, true);
 
-        $t2s3 = $this->totara_core_insert_category('Category T2S3', '130000', $t2, false);
-        $c231 = $this->totara_core_insert_course('c231', $t2s3, '130001');
+        $t2s3 = $this->totara_core_insert_category('Category T2S3', (string)(MAX_COURSES_IN_CATEGORY * $catcount++), $t2, false);
+        $c231 = $this->totara_core_insert_course('c231', $t2s3, $t2s3->sortorder + 1);
 
-        $t3 = $this->totara_core_insert_category('Category Top3', '140000', null, false);
-        $c300 = $this->totara_core_insert_course('c300', $t3, '140001');
+        $t3 = $this->totara_core_insert_category('Category Top3', (string)(MAX_COURSES_IN_CATEGORY * $catcount++), null, false);
+        $c300 = $this->totara_core_insert_course('c300', $t3, $t3->sortorder + 1);
 
         // Rebuild context paths.
         context_helper::build_all_paths(false);
@@ -298,21 +305,22 @@ class totara_core_upgradelib_testcase extends advanced_testcase {
         // (system work)
 
         // Set up the order we expect to see everything.
+        $expectation_count = 1;
         $expectations = [
-            '10000' => $misc,
-            '20000' => $t1s1,
-            '30000' => $t1s3,
-            '40000' => $t1s2,
-            '50000' => $t2,
-            '60000' => $t2s1,
-            '70000' => $t2s11,
-            '80000' => $t2s13,
-            '90000' => $t2s12,
-            '100000' => $t2s3,
-            '110000' => $t2s2,
-            '120000' => $t3,
-            '130000' => $perf,
-            '140000' => $work
+            (string)(MAX_COURSES_IN_CATEGORY * $expectation_count++) => $misc,
+            (string)(MAX_COURSES_IN_CATEGORY * $expectation_count++) => $t1s1,
+            (string)(MAX_COURSES_IN_CATEGORY * $expectation_count++) => $t1s3,
+            (string)(MAX_COURSES_IN_CATEGORY * $expectation_count++) => $t1s2,
+            (string)(MAX_COURSES_IN_CATEGORY * $expectation_count++) => $t2,
+            (string)(MAX_COURSES_IN_CATEGORY * $expectation_count++) => $t2s1,
+            (string)(MAX_COURSES_IN_CATEGORY * $expectation_count++) => $t2s11,
+            (string)(MAX_COURSES_IN_CATEGORY * $expectation_count++) => $t2s13,
+            (string)(MAX_COURSES_IN_CATEGORY * $expectation_count++) => $t2s12,
+            (string)(MAX_COURSES_IN_CATEGORY * $expectation_count++) => $t2s3,
+            (string)(MAX_COURSES_IN_CATEGORY * $expectation_count++) => $t2s2,
+            (string)(MAX_COURSES_IN_CATEGORY * $expectation_count++) => $t3,
+            (string)(MAX_COURSES_IN_CATEGORY * $expectation_count++) => $perf,
+            (string)(MAX_COURSES_IN_CATEGORY * $expectation_count++) => $work
         ];
 
         totara_core_fix_course_sortorder();
