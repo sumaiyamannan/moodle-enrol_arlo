@@ -107,6 +107,8 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use totara_core\access;
+
 defined('MOODLE_INTERNAL') || die();
 
 /** No capability change */
@@ -658,6 +660,9 @@ function has_all_capabilities(array $capabilities, context $context, $user = nul
 /**
  * Find out if user has he capability at given levels (or any level if not specified).
  *
+ * WARNING: This function does not scale very well and should only used in rare cases!
+ * Please be mindful that the runtime of this grows with the amount of contexts in the database.
+ *
  * @since Totara 13
  *
  * @param string $capability capability name
@@ -677,7 +682,7 @@ function has_capability_in_any_context(string $capability, array $levels = null,
         return false;
     }
     if ($levels !== null) {
-        list($levelsql, $levelparams) = $DB->get_in_or_equal($levels, SQL_PARAMS_NAMED, 'xontextlevel');
+        list($levelsql, $levelparams) = $DB->get_in_or_equal($levels, SQL_PARAMS_NAMED, 'contextlevel');
         $levelsql = "AND c.contextlevel $levelsql";
         $params = array_merge($params, $levelparams);
     } else {
@@ -686,6 +691,97 @@ function has_capability_in_any_context(string $capability, array $levels = null,
 
     $params['contextlevel'] = CONTEXT_COURSECAT;
     $sql = "SELECT 'x' FROM {context} c WHERE {$hascapsql} {$levelsql}";
+
+    return $DB->record_exists_sql($sql, $params);
+}
+
+/**
+ * This returns true if the user is assigned to a role which has the given capability for any context.
+ *
+ * This does not mean the user actually has the capability but it gives an indication if this is all you need to determine.
+ *
+ * Therefore this does not replace a proper has_capability check but it is faster
+ * than the accurate @see has_capability_in_any_context() function
+ *
+ * @param string $capability
+ * @param array|null $levels
+ * @param int|null $user_id
+ * @param bool $do_anything
+ * @return bool
+ * @throws \coding_exception
+ * @throws \dml_exception
+ */
+function has_role_with_capability(string $capability, ?array $levels = [], ?int $user_id = null, bool $do_anything = true) {
+    global $USER, $DB, $CFG;
+
+    $user_id = $user_id > 0 ? $user_id : $USER->id;
+    $tenant_where = '';
+
+    // Capability must exist.
+    if (!$cap_info = get_capability_info($capability)) {
+        debugging('Capability "'.$capability.'" was not found! This has to be fixed in code.', DEBUG_DEVELOPER);
+        return false;
+    }
+
+    if (isguestuser($user_id) || $user_id == 0) {
+        // Make sure the guest account and not-logged-in users never get any risky caps no matter what the actual settings are.
+        if (($cap_info->captype === 'write') || ($cap_info->riskbitmask & (RISK_XSS | RISK_CONFIG | RISK_DATALOSS))) {
+            return false;
+        }
+        // Make sure forcelogin cuts off not-logged-in users if enabled.
+        if (!empty($CFG->forcelogin) && $user_id == 0) {
+            return false;
+        }
+
+        if (!empty($CFG->tenantsenabled)) {
+            $tenant_where = "AND c.tenantid IS NULL";
+        }
+    } else {
+        // Make sure that the user exists and is not deleted.
+        $user_context = context_user::instance($user_id, IGNORE_MISSING);
+        if (!$user_context) {
+            return false;
+        }
+
+        if (!empty($CFG->tenantsenabled)) {
+            if ($user_context->tenantid) {
+                // NOTE: ignore top level block contexts exceptions here.
+                if (!empty($CFG->tenantsisolated)) {
+                    $tenant_where = "AND c.tenantid = " . $user_context->tenantid;
+                } else {
+                    $tenant_where = "AND (c.tenantid = " . $user_context->tenantid . " OR c.tenantid IS NULL)";
+                }
+            }
+        }
+    }
+
+    // Site admin can do anything, unless otherwise specified.
+    if (is_siteadmin($user_id) && $do_anything) {
+        return true;
+    }
+
+    $role_assignment_subquery = access::get_role_assignments_subquery($user_id);
+
+    $params = [
+        'capability' => $capability
+    ];
+
+    if (!empty($levels)) {
+        [$level_where, $level_params] = $DB->get_in_or_equal($levels, SQL_PARAMS_NAMED, 'contextlevel');
+        $level_where = "AND c.contextlevel $level_where";
+        $params = array_merge($params, $level_params);
+    } else {
+        $level_where = '';
+    }
+
+    $sql = "
+            SELECT ra.roleid
+            FROM ($role_assignment_subquery) ra
+            JOIN {role_capabilities} rc ON ra.roleid = rc.roleid
+                AND rc.capability = :capability AND (rc.permission = 1 OR rc.permission = -1)
+            JOIN {context} c ON ra.contextid = c.id
+            WHERE 1 = 1 {$tenant_where} {$level_where} {$tenant_where}
+        ";
 
     return $DB->record_exists_sql($sql, $params);
 }

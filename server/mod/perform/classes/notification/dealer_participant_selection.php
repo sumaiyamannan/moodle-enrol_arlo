@@ -79,6 +79,7 @@ class dealer_participant_selection extends dealer {
             foreach ($recipients as $recipient) {
                 $relationships[$recipient->core_relationship_id] = $recipient->relationship;
             }
+            $already_sent_to_selector_ids = [];
             foreach ($instance->manual_relationship_selection_progress as $progress) {
                 // Don't send out notification for users who already selected
                 if ($progress->status != manual_relationship_selection_progress::STATUS_PENDING) {
@@ -91,7 +92,12 @@ class dealer_participant_selection extends dealer {
                         // Only send notification if user is not deleted and notification hasn't been sent yet
                         if (!$selector->notified_at && $selector->user->deleted == 0) {
                             $placeholders->set_participant($selector->user, $selector_relationship);
-                            $mailer->post($selector->user, $selector_relationship, $placeholders);
+
+                            // Only send once per subject_instance to the same selector. Always mark as notified.
+                            if (!in_array($selector->user_id, $already_sent_to_selector_ids)) {
+                                $mailer->post($selector->user, $selector_relationship, $placeholders);
+                                $already_sent_to_selector_ids[] = $selector->user_id;
+                            }
 
                             $selector->notified_at = time();
                             $selector->save();

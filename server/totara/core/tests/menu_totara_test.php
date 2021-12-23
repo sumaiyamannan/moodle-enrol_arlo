@@ -355,22 +355,8 @@ class totara_core_menu_totara_testcase extends advanced_testcase {
         }
         $this->resetDebugging();
 
-        // Check that $PAGE->set_url correctly highlights the values,
-        // and correctly overrides the $FULLME value above
-        $url = '/totara/catalog/index.php';
-        $PAGE->set_url($url);
-
-        $menu = totara_build_menu();
-        foreach ($menu as $k => $node) {
-            if ($node->url === $url) {
-                $this->assertTrue($node->is_selected);
-            } else {
-                $this->assertFalse($node->is_selected);
-            }
-        }
-
         // Test that we can specifically set the menuitem, and that it overrides
-        // $PAGE->set_url above
+        // the $FULLME value above
         $menuitem = '\totara_core\totara\menu\home';
         $PAGE->set_totara_menu_selected($menuitem);
 
@@ -389,6 +375,20 @@ class totara_core_menu_totara_testcase extends advanced_testcase {
         $menu = totara_build_menu();
         foreach ($menu as $k => $node) {
             if ($node->classname === $menuitem) {
+                $this->assertTrue($node->is_selected);
+            } else {
+                $this->assertFalse($node->is_selected);
+            }
+        }
+
+        // Check that $PAGE->set_url correctly highlights the values,
+        // and correctly overrides all other values above
+        $url = '/totara/catalog/index.php';
+        $PAGE->set_url($url);
+
+        $menu = totara_build_menu();
+        foreach ($menu as $k => $node) {
+            if ($node->url === $url) {
                 $this->assertTrue($node->is_selected);
             } else {
                 $this->assertFalse($node->is_selected);

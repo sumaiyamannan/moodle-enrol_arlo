@@ -69,7 +69,8 @@ list($options, $unrecognized) = cli_get_params(
         'non-interactive'   => false,
         'allow-unstable'    => false,
         'help'              => false,
-        'lang'              => $lang
+        'lang'              => $lang,
+        'is-pending'        => false,
     ),
     array(
         'h' => 'help'
@@ -102,6 +103,8 @@ Options:
                       site language if not set. Defaults to 'en' if the lang
                       parameter is invalid or if the language pack is not
                       installed.
+--is-pending          If an upgrade is needed it exits with an error code of
+                      2 so it distinct from other types of errors.
 -h, --help            Print out this help
 
 Example:
@@ -132,6 +135,10 @@ if (!empty($totarainfo->totaraupgradeerror)){
 // Totara: moodle_needs_upgrading() now checks for Totara upgrade too.
 if (!moodle_needs_upgrading()) {
     cli_error(get_string('cliupgradenoneed', 'core_admin', $totarainfo->newversion), 0);
+}
+
+if ($options['is-pending']) {
+    cli_error(get_string('cliupgradepending', 'core_admin'), 2);
 }
 
 // Test environment first.

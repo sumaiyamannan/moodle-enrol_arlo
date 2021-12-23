@@ -22,6 +22,7 @@
  */
 defined('MOODLE_INTERNAL') || die();
 
+use totara_plan\task\update_record_of_learning_task;
 use totara_reportbuilder\report_helper;
 
 class container_course_report_builder_course_report_testcase extends advanced_testcase {
@@ -29,6 +30,10 @@ class container_course_report_builder_course_report_testcase extends advanced_te
      * @return void
      */
     public function test_course_report_does_not_include_workspace_records(): void {
+        // Make sure the record of learning is up to date. For some
+        // reason the record of learning table is not emptied reliably after tests
+        (new update_record_of_learning_task())->execute();
+
         $generator = $this->getDataGenerator();
         $this->setAdminUser();
 
@@ -68,6 +73,10 @@ class container_course_report_builder_course_report_testcase extends advanced_te
      * @return void
      */
     public function test_course_report_does_not_include_other_container_records(): void {
+        // Make sure the record of learning is up to date. For some
+        // reason the record of learning table is not emptied reliably after tests
+        (new update_record_of_learning_task())->execute();
+
         global $DB;
         $generator = $this->getDataGenerator();
 

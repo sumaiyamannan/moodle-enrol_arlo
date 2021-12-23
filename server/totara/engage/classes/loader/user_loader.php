@@ -24,6 +24,7 @@ namespace totara_engage\loader;
 
 use core\orm\pagination\offset_cursor_paginator;
 use core\orm\query\builder;
+use core\user_orm_helper;
 use totara_engage\query\user_query;
 use core\entity\user;
 use context;
@@ -157,20 +158,11 @@ class user_loader {
         );
 
         $search_term = $query->get_search_term();
-
         if (!empty($search_term)) {
-            require_once("{$CFG->dirroot}/totara/core/searchlib.php");
-            $user_name_fields = get_all_user_name_fields(false, null, 'u.');
-            $keywords = totara_search_parse_keywords($search_term);
-
-            [$like_sql, $like_parameters] = totara_search_get_keyword_where_clause(
-                $keywords,
-                array_values($user_name_fields),
-                SQL_PARAMS_NAMED
-            );
-
-            $builder->where_raw($like_sql, $like_parameters);
+            user_orm_helper::filter_by_fullname($builder, $search_term, 'u');
         }
+
+        user_orm_helper::order_by_fullname($builder, 'u');
 
         $cursor = $query->get_cursor();
         return new offset_cursor_paginator($builder, $cursor);

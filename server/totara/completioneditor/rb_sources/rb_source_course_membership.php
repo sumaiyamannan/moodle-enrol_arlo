@@ -30,6 +30,8 @@ class rb_source_course_membership extends rb_base_source {
     use \core_course\rb\source\report_trait;
     use \totara_job\rb\source\report_trait;
 
+    protected $courseid;
+
     public function __construct($groupid, rb_global_restriction_set $globalrestrictionset = null) {
         if ($groupid instanceof rb_global_restriction_set) {
             throw new coding_exception('Wrong parameter orders detected during report source instantiation.');
@@ -67,7 +69,7 @@ class rb_source_course_membership extends rb_base_source {
     }
 
 
-    protected function define_base() {
+    protected function define_base(int $course_id = null) {
         global $DB;
 
         $global_restriction_join = $this->get_global_report_restriction_join('basesub', 'userid');
@@ -77,31 +79,42 @@ class rb_source_course_membership extends rb_base_source {
 
         $uniqueid = $DB->sql_concat_join("','", array('userid', 'courseid'));
 
-        return  "(SELECT " . $uniqueid . " AS id, userid, courseid
+        $course_sql = '';
+        if (!empty($course_id)) {
+            $course_sql = " AND c.id = {$course_id}";
+        }
+
+        $sql = "(SELECT " . $uniqueid . " AS id, userid, courseid
                     FROM (SELECT ue.userid AS userid, e.courseid AS courseid
                            FROM {user_enrolments} ue
                            JOIN {enrol} e ON ue.enrolid = e.id
                            JOIN {course} c ON e.courseid = c.id AND 
                                 (c.containertype = '{$course_type}' OR c.containertype = '{$site_type}')
+                                {$course_sql}
                           UNION
                          SELECT cc.userid AS userid, cc.course AS courseid
                            FROM {course_completions} cc
                            JOIN {course} c ON cc.course = c.id AND 
                                 (c.containertype = '{$course_type}' OR c.containertype = '{$site_type}')
+                                {$course_sql}
                           UNION
                          SELECT cch.userid AS userid, cch.courseid AS courseid
                            FROM {course_completion_history} cch
                            JOIN {course} c ON cch.courseid = c.id AND 
                                 (c.containertype = '{$course_type}' OR c.containertype = '{$site_type}')
+                                {$course_sql}
                           UNION
                          SELECT p1.userid AS userid, pca1.courseid AS courseid
                            FROM {dp_plan_course_assign} pca1
                            JOIN {dp_plan} p1 ON pca1.planid = p1.id
                            JOIN {course} c ON pca1.courseid = c.id AND
                                 (c.containertype = '{$course_type}' OR c.containertype = '{$site_type}')
+                                {$course_sql}
                     )
                 basesub
                 {$global_restriction_join})";
+
+        return $sql;
     }
 
     /**
@@ -290,5 +303,19 @@ class rb_source_course_membership extends rb_base_source {
             return 2; // One record is in course_completion, one in course_completion_history, with different userids.
         }
         return parent::phpunit_column_test_expected_count($columnoption);
+    }
+
+    /**
+     * Used to inject $userid into the base sql to improve base sub-query performance,
+     * and to apply totara_visibility_where SQL restrictions.
+     *
+     * @param reportbuilder $report
+     */
+    public function post_params(reportbuilder $report) {
+        $this->courseid = (int) $report->get_param_value('courseid');
+
+        if (!empty($this->courseid)) {
+            $this->base = $this->define_base($this->courseid);
+        }
     }
 }

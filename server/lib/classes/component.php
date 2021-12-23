@@ -238,18 +238,20 @@ class core_component {
 
     /**
      * Initialise caches, always call before accessing self:: caches.
+     *
+     * @return bool returns true if the cached version got used, false if it wasn't cached yet
      */
-    protected static function init() {
+    protected static function init(): bool {
         global $CFG;
 
         // Init only once per request/CLI execution, we ignore changes done afterwards.
         if (isset(self::$plugintypes)) {
-            return;
+            return true;
         }
 
         if (defined('IGNORE_COMPONENT_CACHE') and IGNORE_COMPONENT_CACHE) {
             self::fill_all_caches();
-            return;
+            return false;
         }
 
         if (!empty($CFG->alternative_component_cache)) {
@@ -263,7 +265,7 @@ class core_component {
                     if (sha1_file($cachefile) !== sha1($content)) {
                         die('Outdated component cache file defined in $CFG->alternative_component_cache, can not continue');
                     }
-                    return;
+                    return false;
                 }
                 $cache = array();
                 include($cachefile);
@@ -275,7 +277,7 @@ class core_component {
                 self::$classmap         = $cache['classmap'];
                 self::$classmaprenames  = $cache['classmaprenames'];
                 self::$filemap          = $cache['filemap'];
-                return;
+                return true;
             }
 
             if (!is_writable(dirname($cachefile))) {
@@ -317,7 +319,7 @@ class core_component {
                     self::$classmap         = $cache['classmap'];
                     self::$classmaprenames  = $cache['classmaprenames'];
                     self::$filemap          = $cache['filemap'];
-                    return;
+                    return true;
                 }
                 // Note: we do not verify $CFG->admin here intentionally,
                 //       they must visit admin/index.php after any change.
@@ -330,7 +332,7 @@ class core_component {
             $content = self::get_cache_content();
             if (file_exists($cachefile)) {
                 if (sha1_file($cachefile) === sha1($content)) {
-                    return;
+                    return true;
                 }
                 // Stale cache detected!
                 unlink($cachefile);
@@ -355,6 +357,8 @@ class core_component {
             @unlink($cachefile.'.tmp'); // Just in case anything fails (race condition).
             self::invalidate_opcode_php_cache($cachefile);
         }
+
+        return false;
     }
 
     /**
@@ -953,7 +957,17 @@ $cache = '.var_export($cache, true).';
      * @return string[] list of full class names in given namespace
      */
     public static function get_namespace_classes($namespace, $instanceof = null, $component = null, $excludeabstract = true) {
-        self::init();
+        $cached_used = self::init();
+
+        if (!during_initial_install()) {
+            $hash_source = $namespace . $instanceof . $component . (int)$excludeabstract;
+            $key = md5($hash_source);
+
+            $cache = \cache::make('core', 'namespace_classes');
+            if ($cached_used && $classes = $cache->get($key)) {
+                return $classes;
+            }
+        }
 
         $interface = null;
         if ($instanceof) {
@@ -1009,6 +1023,10 @@ $cache = '.var_export($cache, true).';
                 }
             }
             $classes[] = $class;
+        }
+
+        if (!during_initial_install()) {
+            $cache->set($key, $classes);
         }
 
         return $classes;

@@ -1734,17 +1734,8 @@ function totara_build_menu_descendants($parentid, $allrecords, $parentdepth = 0)
 function totara_build_menu_selected_node($tree) {
     global $PAGE, $FULLME;
 
-    // Check if the highlighted node has been directly assigned
-    if ($PAGE->totara_menu_selected) {
-        foreach ($tree as $k => $node) {
-            if ($PAGE->totara_menu_selected === $node->classname) {
-                $node->is_selected = true;
-                return;
-            }
-        }
-    }
-
-    // If we haven't found a selected node yet, compare PAGE->url to find a matching node
+    // Check page URL first form manually created menu item so this takes
+    // precedence over selected nodes set by set_totara_menu_selected
     $urlcache = [];
     if ($PAGE->url) {
         foreach ($tree as $k => $node) {
@@ -1753,6 +1744,16 @@ function totara_build_menu_selected_node($tree) {
             if ($PAGE->url->compare($url)) {
                 $node->is_selected = true;
                 unset($urlcache);
+                return;
+            }
+        }
+    }
+
+    // Next check if the highlighted node has been directly assigned
+    if ($PAGE->totara_menu_selected) {
+        foreach ($tree as $k => $node) {
+            if ($PAGE->totara_menu_selected === $node->classname) {
+                $node->is_selected = true;
                 return;
             }
         }

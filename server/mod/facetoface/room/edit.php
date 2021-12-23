@@ -66,14 +66,19 @@ $customdata = [
     'adhoc' => false
 ];
 $mform = new room_edit(null, $customdata, 'post', '', ['class' => 'dialog-nobind'], true, null, 'mform_modal');
+$mform->enable_double_submit_detection($id);
 
 if ($mform->is_cancelled()) {
     redirect($returnurl);
 }
 
 if ($data = $mform->get_data()) {
-    $room = room_helper::save($data);
-    $message = $id ? get_string('roomupdatesuccess', 'mod_facetoface') : get_string('roomcreatesuccess', 'mod_facetoface');
+    $message = '';
+    if (!$mform->is_double_submit_detected()) {
+        $room = room_helper::save($data);
+        $mform->mark_submit_as_processed();
+        $message = $id ? get_string('roomupdatesuccess', 'mod_facetoface') : get_string('roomcreatesuccess', 'mod_facetoface');
+    }
     redirect($returnurl, $message, null, notification::SUCCESS);
 }
 

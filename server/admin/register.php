@@ -78,8 +78,8 @@ if ($formdata = $mform->get_data()) {
         set_config('registrationcode', trim($formdata->registrationcode));
         set_config('registrationcodewwwhash', sha1($CFG->wwwroot));
     }
-    // Send the registration if enabled.
-    if ($CFG->registrationenabled) {
+    // Send the registration if not exempted.
+    if (!is_registration_exempted()) {
         $data = get_registration_data();
         $data['manualupdate'] = '1';
         send_registration_data($data);

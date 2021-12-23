@@ -58,6 +58,7 @@ $string['cachedef_theme_setting_categories'] = 'Theme settings - categories';
 $string['cachedef_themefileclasses'] = 'Theme settings - file classes';
 $string['cachedef_langmenu'] = 'List of available languages';
 $string['cachedef_message_time_last_message_between_users'] = 'Time created for most recent message between users';
+$string['cachedef_namespace_classes'] = 'Classes in specific namespaces';
 $string['cachedef_locking'] = 'Locking';
 $string['cachedef_message_processors_enabled'] = "Message processors enabled status";
 $string['cachedef_navigation_expandcourse'] = 'Navigation expandable courses';

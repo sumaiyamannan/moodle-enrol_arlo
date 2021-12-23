@@ -1,4 +1,4 @@
-@totara @totara_reportbuilder
+@totara @totara_reportbuilder @javascript
 Feature: Use the multi-item course filter
   To filter the courses in a report
   by several courses at a time
@@ -19,7 +19,6 @@ Feature: Use the multi-item course filter
     And the following config values are set as admin:
       | audiencevisibility | 1 |
 
-  @javascript
   Scenario: Use filter with Courses report source
     Given the following "standard_report" exist in "totara_reportbuilder" plugin:
       | fullname | shortname | source  |
@@ -74,7 +73,93 @@ Feature: Use the multi-item course filter
     And I should not see "CourseTwo" in the ".reportbuilder-table" "css_element"
     And I should see "CourseThree" in the ".reportbuilder-table" "css_element"
 
-  @javascript
+  Scenario: Use filter with Courses report source and ensure changing operator back to any course clears pre-selected items
+    Given the following "standard_report" exist in "totara_reportbuilder" plugin:
+      | fullname | shortname | source  |
+      | Courses  | courses   | courses |
+    And I navigate to my "Courses" report
+    And I press "Edit this report"
+    And I switch to "Filters" tab
+    And I select "Course (multi-item)" from the "newstandardfilter" singleselect
+    And I press "Save changes"
+    When I follow "View This Report"
+    Then I should see "CourseOne" in the ".reportbuilder-table" "css_element"
+    And I should see "CourseTwo" in the ".reportbuilder-table" "css_element"
+    And I should see "CourseThree" in the ".reportbuilder-table" "css_element"
+    And the "Choose Courses" "button" should be disabled
+    When I select "is equal to" from the "Course (multi-item)" singleselect
+    Then the "Choose Courses" "button" should be enabled
+    When I press "Choose Courses"
+    And I click on "Miscellaneous" "link" in the "Choose Courses" "totaradialogue"
+    And I wait "1" seconds
+    And I click on "CourseOne" "link" in the "Choose Courses" "totaradialogue"
+    And I click on "CourseTwo" "link" in the "Choose Courses" "totaradialogue"
+    And I click on "Save" "button" in the "Choose Courses" "totaradialogue"
+    And I wait "1" seconds
+    Then I should see "CourseOne" in the "Course (multi-item)" "fieldset"
+    And I should see "CourseTwo" in the "Course (multi-item)" "fieldset"
+    When I click on "Search" "button" in the ".fitem_actionbuttons" "css_element"
+    Then I should see "CourseOne" in the ".reportbuilder-table" "css_element"
+    And I should see "CourseTwo" in the ".reportbuilder-table" "css_element"
+    And I should not see "CourseThree" in the ".reportbuilder-table" "css_element"
+    When I select "is any value" from the "Course (multi-item)" singleselect
+    And I click on "Search" "button" in the ".fitem_actionbuttons" "css_element"
+    Then I should not see "CourseOne" in the "Course (multi-item)" "fieldset"
+    And I should not see "CourseTwo" in the "Course (multi-item)" "fieldset"
+    And I should see "CourseOne" in the ".reportbuilder-table" "css_element"
+    And I should see "CourseTwo" in the ".reportbuilder-table" "css_element"
+    And I should see "CourseThree" in the ".reportbuilder-table" "css_element"
+
+  Scenario: Use filter with Courses report source and ensure I can delete pre-selected items
+    Given the following "standard_report" exist in "totara_reportbuilder" plugin:
+      | fullname | shortname | source  |
+      | Courses  | courses   | courses |
+    And I navigate to my "Courses" report
+    And I press "Edit this report"
+    And I switch to "Filters" tab
+    And I select "Course (multi-item)" from the "newstandardfilter" singleselect
+    And I press "Save changes"
+    When I follow "View This Report"
+    Then I should see "CourseOne" in the ".reportbuilder-table" "css_element"
+    And I should see "CourseTwo" in the ".reportbuilder-table" "css_element"
+    And I should see "CourseThree" in the ".reportbuilder-table" "css_element"
+    And the "Choose Courses" "button" should be disabled
+    When I select "is equal to" from the "Course (multi-item)" singleselect
+    Then the "Choose Courses" "button" should be enabled
+    When I press "Choose Courses"
+    And I click on "Miscellaneous" "link" in the "Choose Courses" "totaradialogue"
+    And I wait "1" seconds
+    And I click on "CourseOne" "link" in the "Choose Courses" "totaradialogue"
+    And I click on "CourseTwo" "link" in the "Choose Courses" "totaradialogue"
+    And I click on "CourseThree" "link" in the "Choose Courses" "totaradialogue"
+    And I click on "Save" "button" in the "Choose Courses" "totaradialogue"
+    And I wait "1" seconds
+    Then I should see "CourseOne" in the "Course (multi-item)" "fieldset"
+    And I should see "CourseTwo" in the "Course (multi-item)" "fieldset"
+    And I should see "CourseThree" in the "Course (multi-item)" "fieldset"
+    When I click on "//div[contains(text(),'CourseOne')]//a[contains(@class, 'action-icon')]" "xpath_element"
+    Then I should not see "CourseOne" in the "Course (multi-item)" "fieldset"
+    And I should see "CourseTwo" in the "Course (multi-item)" "fieldset"
+    And I should see "CourseThree" in the "Course (multi-item)" "fieldset"
+    When I click on "Search" "button" in the ".fitem_actionbuttons" "css_element"
+    Then I should not see "CourseOne" in the "Course (multi-item)" "fieldset"
+    And I should see "CourseTwo" in the "Course (multi-item)" "fieldset"
+    And I should see "CourseThree" in the "Course (multi-item)" "fieldset"
+    And I should not see "CourseOne" in the ".reportbuilder-table" "css_element"
+    And I should see "CourseTwo" in the ".reportbuilder-table" "css_element"
+    And I should see "CourseThree" in the ".reportbuilder-table" "css_element"
+    When I click on "//div[contains(text(),'CourseTwo')]//a[contains(@class, 'action-icon')]" "xpath_element"
+    Then I should not see "CourseOne" in the "Course (multi-item)" "fieldset"
+    And I should not see "CourseTwo" in the "Course (multi-item)" "fieldset"
+    And I should see "CourseThree" in the "Course (multi-item)" "fieldset"
+    When I click on "Search" "button" in the ".fitem_actionbuttons" "css_element"
+    Then I should not see "CourseOne" in the "Course (multi-item)" "fieldset"
+    And I should not see "CourseTwo" in the "Course (multi-item)" "fieldset"
+    And I should see "CourseThree" in the "Course (multi-item)" "fieldset"
+    And I should not see "CourseOne" in the ".reportbuilder-table" "css_element"
+    And I should not see "CourseTwo" in the ".reportbuilder-table" "css_element"
+    And I should see "CourseThree" in the ".reportbuilder-table" "css_element"
+
   Scenario: Test filter with spaces
     Given the following "standard_report" exist in "totara_reportbuilder" plugin:
       | fullname | shortname | source  |
@@ -96,7 +181,6 @@ Feature: Use the multi-item course filter
     And I should see "CourseTwo" in the ".reportbuilder-table" "css_element"
     And I should see "CourseThree" in the ".reportbuilder-table" "css_element"
 
-  @javascript
   Scenario: Add filter with Seminar Sessions report source
     Given the following "standard_report" exist in "totara_reportbuilder" plugin:
       | fullname         | shortname          | source             |

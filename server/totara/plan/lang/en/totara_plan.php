@@ -951,6 +951,7 @@ $string['updateobjectives'] = 'Update objectives';
 $string['updateplan'] = 'Update plan';
 $string['updateprogram'] = 'Update';
 $string['updateprograms'] = 'Update programs';
+$string['update_record_of_learning_task'] = 'Update the record of learning table with the latest data';
 $string['updaterequestedcompetency'] = 'Update requested competencies';
 $string['updatesettings'] = 'Update Settings';
 $string['usepriority'] = 'Use priority';

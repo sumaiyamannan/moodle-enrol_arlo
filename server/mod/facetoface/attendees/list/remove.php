@@ -39,7 +39,7 @@ use mod_facetoface\signup\state\{
 define('MAX_USERS_PER_PAGE', 1000);
 
 $s              = required_param('s', PARAM_INT); // Facetoface session ID.
-$searchtext     = optional_param('searchtext', '', PARAM_USERNAME);
+$searchtext     = optional_param('searchtext', '', PARAM_RAW_TRIMMED);
 $clearsearch    = optional_param('clearsearch', 0, PARAM_BOOL);
 $next           = optional_param('next', false, PARAM_BOOL);
 $cancel         = optional_param('cancel', false, PARAM_BOOL);

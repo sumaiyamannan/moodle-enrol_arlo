@@ -1,3 +1,149 @@
+Release 13.15 (23rd December 2021):
+===================================
+
+
+Security issues:
+
+    TL-27697       User searches within Perform and Engage now always take the fullnamedisplay settings into account
+
+                   Previously the user searches implemented in Perform and Engage features
+                   always searched the firstname and lastname fields regardless of what was
+                   configured to be shown via the $CFG->fullnamedisplay settings.
+
+                   This has been fixed. The user search now only searches in the fields
+                   configured to show up as fullname to not reveal any unwanted information
+                   and to provide a better user experience.
+
+                   In addition the results are now correctly alphabetically ordered by the
+                   name shown on screen.
+
+                   Please note that this patch can have an effect on behaviour of user
+                   searches compared to without the patch. The impact of this depends on what
+                   was configured for the fullnamedisplay. The default configuration for
+                   fullnamedisplay of most language packs is "firstname lastname" and
+                   therefore should not be affected. If you have used a custom value for this
+                   setting the experience for users might change with this patch.
+
+    TL-33289       Fixed XSS vulnerability in video.js (CVE-2021-23414)
+
+Performance improvements:
+
+    TL-31099       Improved performance of the record of learning course report source
+
+                   Previously the report source for the "Record of learning: Course" has been
+                   using a poorly performing base query. This patch introduces a new table
+                   which holds the record of learning records for each user and is now used as
+                   the base for the report. This will improve the performance of the report
+                   considerably.
+
+                   The new table will be automatically filled with the records when a site is
+                   upgraded. This can take a few minutes and depends on the size of the
+                   database. The table is also updated when users are enrolled in courses,
+                   courses are completed or courses are added to learning plans.
+
+                   A new task "\totara_plan\task\update_record_of_learning_task" will run
+                   every 10 minutes to keep the new table in sync. In most cases the table
+                   will automatically be updated through event observers but in rare cases the
+                   task will need to run to keep the table up-to-date.
+
+                   If you experience problems with the Record of Learning report and data not
+                   being displayed correctly you can adjust the frequency of the task to your
+                   needs. The runtime of the task depends on the size of the database but so
+                   we recommend testing its runtime (by running it individually) on the
+                   individual site and take this into account when adjusting the frequency.
+
+                   Apart from the base table the report itself is still working in a fully
+                   backwards compatible way so any adjustments or embedded reports based on
+                   top of it will continue to work as before.
+
+    TL-32776       Improved the performance of the events report source query in seminars.
+    TL-32858       Improved the performance of the user content restriction for direct and temporary reports in the report builder
+    TL-33003       Improved general performance of report exports
+
+                   Previously when exporting a report or displaying a large number of records
+                   in a report display classes for columns were determined for each column and
+                   for each row. This lead to a lot of unnecessary class resolution calls
+                   which can have a noticeable impact on the performance of the export or
+                   display of the report. This patch fixes this and only determines the
+                   display class for each column only once. 
+
+                   In addition the display class for relationships have been improved. They
+                   now cache the result of loading a relationship.
+
+    TL-33048       Implemented a cache for \core_component::get_namespace_classes() to improve performance
+    TL-33071       Improved performance of the report used in the completion editor
+    TL-33222       Improved performance of capability checks for managing performance activities or reporting on user's responses
+
+                   Previously on a large site the performance of the user activity page could
+                   have been severely affected due to the use of the
+                   has_capability_in_any_context() function which is very complex and does not
+                   scale very well. 
+
+                   In places where we don't necessarily need to call this function we changed
+                   it to an alternative approach. In other places we optimised the underlying
+                   queries so that they can perform as fast as possible. On large sites the
+                   reports to manage participation or report on performance activity responses
+                   might still have slightly longer loading times but this should be in the
+                   normal range for complex reports.
+
+                   If you are using \mod_perform\rb\util::get_manage_participation_sql() or
+                   \mod_perform\rb\util::get_report_on_subjects_sql() in your custom code
+                   please note that the query you are using this function in has to join the
+                   context table with the user id and the user context level. This change was
+                   necessary to reduce the number or records the query has to process.
+
+Improvements:
+
+    TL-32367       Added a new option "--is-pending" to the upgrade cli script
+
+                   The new option enables admins to detect whether an upgrade is necessary
+                   without actually running the upgrade. This can be useful for pre-upgrade
+                   checks or automation.
+
+    TL-32788       Added additional spacing when viewing a forum within a course
+
+Bug fixes:
+
+    TL-27118       Suppressed sending of redundant notifications for performance activity participant selection
+    TL-27419       The perform elements 'Multiple choice: Single-select' and 'Multiple choice: Multi-select' now auto-focus the most recently added text input field when it is added
+    TL-32533       Ensured any pre-selected courses in the report builder 'Course (multi-item)' filter are removed when the 'is any value' operator is used
+    TL-32705       Fixed handling of repeated submits for seminar room creation and attendee removal forms
+
+                   Prior to this patch, repeated sending of form data could lead to duplicate
+                   data in two cases. These were the forms for creating seminar rooms and the
+                   confirmation form when removing attendees from a seminar.
+
+                   As part of this patch, a common approach to detect repeated form submits
+                   was added to the form class and used in both cases.
+
+    TL-32720       Removed duplicate keyboard drop targets for course resources 
+    TL-32737       Fixed logic for which main menu item is selected
+
+                   When a page URL matches a custom main menu item, this item will now be
+                   highlighted. 
+
+    TL-32747       Fixed seminar notification substitutions for custom fields when no value is selected
+
+                   If a seminar notification uses a session custom field placeholder and there
+                   was no data when the notification was sent then the placeholder would show
+                   in the notification sent to the recipient. Now if there is no data for a
+                   session custom field the placeholder is removed.
+
+    TL-32885       Fixed search when removing users from a seminar
+
+                   When removing attendees from a seminar, using multiple words as the search
+                   term would result in the spaces being cut out and words combined into one
+                   search term. This now works as expected and returns the correct results.
+
+    TL-33056       Fixed Engage notifications not being fully translated
+    TL-33066       Fixed error for temporary manager on rate competencies page when viewing a rater of one of your staff members
+
+Contributions:
+
+    * Carlos Jurado at Kineo UK - Platinum  - TL-33066
+
+
+
 Release 13.14 (24th November 2021):
 ===================================
 

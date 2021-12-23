@@ -118,6 +118,8 @@ final class manager {
                         'recipient_id' => $share->get_recipient_instanceid(),
                         'sharer_id' => $share->get_sharer_id(),
                         'item_name' => helper::get_resource_name($share->get_component(), $share->get_item_id()),
+                        'share_component' => $share->get_component(),
+                        'item_id' => $share->get_item_id(),
                     ]
                 );
 

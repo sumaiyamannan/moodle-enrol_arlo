@@ -70,7 +70,7 @@ class register_form extends moodleform {
         $mform->addElement('header', 'registrationinfo', get_string('registrationinformation', 'admin'));
         $data = get_registration_data();
         foreach ($data as $key => $value) {
-            if ($key === 'sitetype' or $key === 'registrationcode') {
+            if ($key === 'sitetype' or $key === 'registrationcode' or $key === 'timegenerated') {
                 continue;
             }
             $module = (strpos($key, 'totara') === 0 || ($key == 'debugstatus') || ($key == 'edition')) ? 'totara_core' : 'admin';

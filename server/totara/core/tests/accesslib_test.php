@@ -215,4 +215,177 @@ class totara_core_accesslib_testcase extends advanced_testcase {
         $this->assertFalse(has_capability_in_any_context('moodle/backup:backupcourse', [CONTEXT_COURSECAT, CONTEXT_COURSE], $admin, false));
         $this->assertFalse(has_capability_in_any_context('moodle/site:approvecourse', [CONTEXT_COURSECAT, CONTEXT_COURSE], $admin, false));
     }
+
+    public function test_has_role_with_capability() {
+        global $DB;
+
+        $cat = $this->getDataGenerator()->create_category();
+        $course = $this->getDataGenerator()->create_course(['category' => $cat->id]);
+        $course_context = context_course::instance($course->id);
+        $teacher_role = $DB->get_record('role', ['shortname' => 'editingteacher'], '*', MUST_EXIST);
+        $teacher = $this->getDataGenerator()->create_user();
+        $admin = $this->getDataGenerator()->create_user();
+
+        $this->setUser($teacher);
+
+        $this->assertFalse(has_role_with_capability('moodle/course:managegroups'));
+        $this->assertFalse(has_role_with_capability('moodle/course:managegroups', null, $teacher->id));
+
+        role_assign($teacher_role->id, $teacher->id, $course_context);
+
+        $this->assertTrue(has_role_with_capability('moodle/course:managegroups'));
+        $this->assertTrue(has_role_with_capability('moodle/course:managegroups', null, $teacher->id));
+        $this->assertTrue(has_role_with_capability('moodle/course:managegroups', [CONTEXT_COURSE]));
+        $this->assertTrue(has_role_with_capability('moodle/course:managegroups', [CONTEXT_COURSE, CONTEXT_COURSECAT]));
+        $this->assertFalse(has_role_with_capability('moodle/course:managegroups', [CONTEXT_COURSECAT]));
+
+        $this->setUser($admin);
+
+        $this->assertFalse(has_role_with_capability('moodle/course:managegroups'));
+        $this->assertFalse(has_role_with_capability('moodle/course:managegroups', [CONTEXT_COURSE]));
+        $this->assertFalse(has_role_with_capability('moodle/course:managegroups', [CONTEXT_COURSE, CONTEXT_COURSECAT]));
+        $this->assertFalse(has_role_with_capability('moodle/course:managegroups', [CONTEXT_COURSECAT]));
+
+        $this->assertTrue(has_role_with_capability('moodle/course:managegroups', [], $teacher->id));
+        $this->assertTrue(has_role_with_capability('moodle/course:managegroups', [CONTEXT_COURSE], $teacher->id));
+        $this->assertTrue(has_role_with_capability('moodle/course:managegroups', [CONTEXT_COURSE, CONTEXT_COURSECAT], $teacher->id));
+        $this->assertFalse(has_role_with_capability('moodle/course:managegroups', [CONTEXT_COURSECAT], $teacher->id));
+
+        $this->setAdminUser();
+
+        role_assign($teacher_role->id, $teacher->id, context_coursecat::instance($cat->id));
+        role_unassign($teacher_role->id, $teacher->id, $course_context->id);
+
+        $this->setUser($teacher);
+
+        $this->assertTrue(has_role_with_capability('moodle/course:managegroups'));
+        $this->assertTrue(has_role_with_capability('moodle/course:managegroups', null, $teacher->id));
+        $this->assertTrue(has_role_with_capability('moodle/course:managegroups', [CONTEXT_COURSECAT]));
+        $this->assertTrue(has_role_with_capability('moodle/course:managegroups', [CONTEXT_COURSE, CONTEXT_COURSECAT]));
+        $this->assertFalse(has_role_with_capability('moodle/course:managegroups', [CONTEXT_COURSE]));
+
+        $this->setUser($admin);
+
+        $this->assertFalse(has_role_with_capability('moodle/course:managegroups'));
+        $this->assertFalse(has_role_with_capability('moodle/course:managegroups', [CONTEXT_COURSE]));
+        $this->assertFalse(has_role_with_capability('moodle/course:managegroups', [CONTEXT_COURSE, CONTEXT_COURSECAT]));
+        $this->assertFalse(has_role_with_capability('moodle/course:managegroups', [CONTEXT_COURSECAT]));
+
+        $this->assertTrue(has_role_with_capability('moodle/course:managegroups', [], $teacher->id));
+        $this->assertTrue(has_role_with_capability('moodle/course:managegroups', [CONTEXT_COURSECAT], $teacher->id));
+        $this->assertTrue(has_role_with_capability('moodle/course:managegroups', [CONTEXT_COURSE, CONTEXT_COURSECAT], $teacher->id));
+        // This is one of the limitation of this function: It does not check the parent contexts but this is for performance reasons
+        // so it is always better to check all possible context levels
+        $this->assertFalse(has_role_with_capability('moodle/course:managegroups', [CONTEXT_COURSE], $teacher->id));
+
+        $this->setAdminUser();
+
+        $this->assertTrue(has_role_with_capability('moodle/course:managegroups'));
+        $this->assertTrue(has_role_with_capability('moodle/course:managegroups', [CONTEXT_COURSECAT]));
+        $this->assertTrue(has_role_with_capability('moodle/course:managegroups', [CONTEXT_COURSE, CONTEXT_COURSECAT]));
+        $this->assertTrue(has_role_with_capability('moodle/course:managegroups', [CONTEXT_COURSE]));
+
+        $this->assertFalse(has_role_with_capability('moodle/course:managegroups', null, null, false));
+        $this->assertFalse(has_role_with_capability('moodle/course:managegroups', [CONTEXT_COURSECAT], null, false));
+        $this->assertFalse(has_role_with_capability('moodle/course:managegroups', [CONTEXT_COURSE, CONTEXT_COURSECAT], null, false));
+        $this->assertFalse(has_role_with_capability('moodle/course:managegroups', [CONTEXT_COURSE], null, false));
+
+        $this->setUser(0);
+
+        $this->assertFalse(has_role_with_capability('moodle/course:managegroups'));
+        $this->assertFalse(has_role_with_capability('moodle/course:managegroups', [CONTEXT_COURSECAT]));
+        $this->assertFalse(has_role_with_capability('moodle/course:managegroups', [CONTEXT_COURSE, CONTEXT_COURSECAT]));
+        $this->assertFalse(has_role_with_capability('moodle/course:managegroups', [CONTEXT_COURSE]));
+
+        $this->setGuestUser();
+
+        $this->assertFalse(has_role_with_capability('moodle/course:managegroups'));
+        $this->assertFalse(has_role_with_capability('moodle/course:managegroups', [CONTEXT_COURSECAT]));
+        $this->assertFalse(has_role_with_capability('moodle/course:managegroups', [CONTEXT_COURSE, CONTEXT_COURSECAT]));
+        $this->assertFalse(has_role_with_capability('moodle/course:managegroups', [CONTEXT_COURSE]));
+    }
+
+    public function test_has_role_with_capability_with_multi_tenancy() {
+        global $DB;
+
+        /** @var totara_tenant_generator $tenant_generator */
+        $tenant_generator = $this->getDataGenerator()->get_plugin_generator('totara_tenant');
+        $tenant_generator->enable_tenants();
+
+        $tenant1 = $tenant_generator->create_tenant();
+        $tenant2 = $tenant_generator->create_tenant();
+
+        // Create users.
+        $teacher1 = $this->getDataGenerator()->create_user(['tenantmember' => $tenant1->idnumber]);
+        $teacher2 = $this->getDataGenerator()->create_user(['tenantmember' => $tenant2->idnumber]);
+
+        $cat1 = $this->getDataGenerator()->create_category([
+            'parent' => $tenant1->categoryid
+        ]);
+        $cat2 = $this->getDataGenerator()->create_category([
+            'parent' => $tenant2->categoryid
+        ]);
+        $course1 = $this->getDataGenerator()->create_course(['category' => $cat1->id]);
+        $course_context1 = context_course::instance($course1->id);
+        $course2 = $this->getDataGenerator()->create_course(['category' => $cat2->id]);
+        $course_context2 = context_course::instance($course2->id);
+
+        $teacher_role = $DB->get_record('role', ['shortname' => 'editingteacher'], '*', MUST_EXIST);
+        // System user
+        $system_user = $this->getDataGenerator()->create_user();
+
+        $this->setUser($teacher1);
+
+        $this->assertFalse(has_role_with_capability('moodle/course:managegroups'));
+        $this->assertFalse(has_role_with_capability('moodle/course:managegroups', null, $teacher1->id));
+
+        $this->setAdminUser();
+
+        role_assign($teacher_role->id, $teacher1->id, $course_context1);
+
+        $this->setUser($teacher1);
+
+        $this->assertTrue(has_role_with_capability('moodle/course:managegroups'));
+        $this->assertTrue(has_role_with_capability('moodle/course:managegroups', null, $teacher1->id));
+        $this->assertTrue(has_role_with_capability('moodle/course:managegroups', [CONTEXT_COURSE]));
+        $this->assertTrue(has_role_with_capability('moodle/course:managegroups', [CONTEXT_COURSE, CONTEXT_COURSECAT]));
+        $this->assertFalse(has_role_with_capability('moodle/course:managegroups', [CONTEXT_COURSECAT]));
+
+        $this->setUser($teacher2);
+
+        $this->assertFalse(has_role_with_capability('moodle/course:managegroups', null));
+        $this->assertFalse(has_role_with_capability('moodle/course:managegroups', [CONTEXT_COURSE]));
+        $this->assertFalse(has_role_with_capability('moodle/course:managegroups', [CONTEXT_COURSE, CONTEXT_COURSECAT]));
+        $this->assertFalse(has_role_with_capability('moodle/course:managegroups', [CONTEXT_COURSECAT]));
+
+        $this->assertTrue(has_role_with_capability('moodle/course:managegroups', null, $teacher1->id));
+        $this->assertTrue(has_role_with_capability('moodle/course:managegroups', [CONTEXT_COURSE], $teacher1->id));
+        $this->assertTrue(has_role_with_capability('moodle/course:managegroups', [CONTEXT_COURSE, CONTEXT_COURSECAT], $teacher1->id));
+        $this->assertFalse(has_role_with_capability('moodle/course:managegroups', [CONTEXT_COURSECAT], $teacher1->id));
+
+        $this->setAdminUser();
+
+        role_assign($teacher_role->id, $system_user->id, $course_context1);
+
+        $this->setUser($system_user);
+
+        $this->assertTrue(has_role_with_capability('moodle/course:managegroups'));
+        $this->assertTrue(has_role_with_capability('moodle/course:managegroups', [CONTEXT_COURSE]));
+        $this->assertTrue(has_role_with_capability('moodle/course:managegroups', [CONTEXT_COURSE, CONTEXT_COURSECAT]));
+        $this->assertFalse(has_role_with_capability('moodle/course:managegroups', [CONTEXT_COURSECAT]));
+
+        $this->setUser(0);
+
+        $this->assertFalse(has_role_with_capability('moodle/course:managegroups'));
+        $this->assertFalse(has_role_with_capability('moodle/course:managegroups', [CONTEXT_COURSECAT]));
+        $this->assertFalse(has_role_with_capability('moodle/course:managegroups', [CONTEXT_COURSE, CONTEXT_COURSECAT]));
+        $this->assertFalse(has_role_with_capability('moodle/course:managegroups', [CONTEXT_COURSE]));
+
+        $this->setGuestUser();
+
+        $this->assertFalse(has_role_with_capability('moodle/course:managegroups'));
+        $this->assertFalse(has_role_with_capability('moodle/course:managegroups', [CONTEXT_COURSECAT]));
+        $this->assertFalse(has_role_with_capability('moodle/course:managegroups', [CONTEXT_COURSE, CONTEXT_COURSECAT]));
+        $this->assertFalse(has_role_with_capability('moodle/course:managegroups', [CONTEXT_COURSE]));
+    }
 }

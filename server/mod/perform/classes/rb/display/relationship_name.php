@@ -23,7 +23,7 @@
 
 namespace mod_perform\rb\display;
 
-use totara_core\relationship\relationship;
+use totara_core\relationship\cached_relationship;
 use totara_reportbuilder\rb\display\base;
 
 class relationship_name extends base {
@@ -45,7 +45,7 @@ class relationship_name extends base {
             return get_string('hidden_anonymised', 'mod_perform');
         }
 
-        $relationship = relationship::load_by_idnumber($idnumber);
+        $relationship = cached_relationship::load_by_idnumber($idnumber);
         return $relationship->get_name();
     }
 

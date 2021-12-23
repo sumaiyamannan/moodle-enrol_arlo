@@ -86,6 +86,10 @@ class core_user {
             return true;
         }
 
+        if (rating::can_see_raters_of_staff_members($hook->viewing_user_id, $hook->target_user_id)) {
+            return true;
+        }
+
         return false;
     }
 

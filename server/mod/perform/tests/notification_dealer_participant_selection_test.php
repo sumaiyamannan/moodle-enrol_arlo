@@ -219,9 +219,11 @@ class mod_perform_notification_dealer_participant_selection_testcase extends mod
         $dealer = factory::create_dealer_on_subject_instances_for_manual_participants([$subject_instance]);
         $sink->clear();
         $dealer->dispatch('kia_ora_koutou_katoa');
-        $this->assertCount(2, $sink->get_by_relationship(constants::RELATIONSHIP_SUBJECT));
+        // Subject can select for 2 roles (peer & mentor), but should only get one notification.
+        $this->assertCount(1, $sink->get_by_relationship(constants::RELATIONSHIP_SUBJECT));
         $this->assertCount(0, $sink->get_by_relationship(constants::RELATIONSHIP_APPRAISER));
-        $this->assertCount(2, $sink->get_by_relationship(constants::RELATIONSHIP_MANAGER));
+        // Manager can select for 2 roles (reviewer & external), but should only get one notification.
+        $this->assertCount(1, $sink->get_by_relationship(constants::RELATIONSHIP_MANAGER));
         $this->assertCount(0, $sink->get_by_relationship(constants::RELATIONSHIP_MANAGERS_MANAGER));
         $this->assertCount(0, $sink->get_by_relationship(constants::RELATIONSHIP_REVIEWER));
         $this->assertCount(0, $sink->get_by_relationship(constants::RELATIONSHIP_PEER));

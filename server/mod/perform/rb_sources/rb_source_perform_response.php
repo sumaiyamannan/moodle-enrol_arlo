@@ -61,6 +61,17 @@ class rb_source_perform_response extends rb_source_perform_response_base {
 
         $this->add_course_visibility('perform');
 
+        // We need this join to be able to restrict the query to users
+        // the current user can report on
+        $this->joinlist[] = new \rb_join(
+            'user_context',
+            'INNER',
+            '{context}',
+            "user_context.instanceid = subject_instance.subject_user_id AND user_context.contextlevel = ".CONTEXT_USER,
+            REPORT_BUILDER_RELATION_ONE_TO_ONE,
+            'subject_instance'
+        );
+
         // NOTE: This is necessary here to support restrictions added in $this->post_config()
         // Not ideal but there isn't a way to force joins to be added in post_config
         if (!in_array('subject_instance', $this->sourcejoins)) {
@@ -69,10 +80,16 @@ class rb_source_perform_response extends rb_source_perform_response_base {
     }
 
     public function post_config(reportbuilder $report) {
-        // NOTE: For this to work, subject_instance must be included in the $this->sourcejoins array defined in the constructor.
-        // Not ideal but there isn't a way to force joins to be added in post_config
-        $restrictions = util::get_report_on_subjects_sql($report->reportfor, "subject_instance.subject_user_id");
-        $restrictions = $this->create_course_visibility_restrictions($report, $restrictions);
+        if (!in_array('user_context', $this->sourcejoins)) {
+            $this->sourcejoins[] = 'user_context';
+        }
+        [$this->sourcewhere, $this->sourceparams] = util::get_report_on_subjects_sql(
+            $report->reportfor,
+            "subject_instance.subject_user_id",
+            "user_context"
+        );
+
+        $restrictions = $this->create_course_visibility_restrictions($report, []);
 
         $report->set_post_config_restrictions($restrictions);
     }

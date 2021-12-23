@@ -337,4 +337,28 @@ class pathway_manual_rating_model_testcase extends pathway_manual_base_testcase 
         $this->assertEquals('Hello!', $rating->comment);
     }
 
+    public function test_can_see_raters_of_staff_members(): void {
+        // Create the user who is rated
+        $user = self::getDataGenerator()->create_user();
+        self::setUser($this->user1->id);
+
+        // Create a manager.
+        $manager_ja = job_assignment::create_default($this->user2->id);
+
+        // Create temp manager.
+        $tempmanager_ja = job_assignment::create_default($this->user1->id);
+        job_assignment::create_default(
+            $user->id,
+            [
+                'managerjaid' => $manager_ja->id,
+                'tempmanagerjaid' => $tempmanager_ja->id,
+                'tempmanagerexpirydate' => time() + DAYSECS
+            ]
+        );
+
+        // Rate the user by job manager.
+        $this->generator->create_manual_rating($this->competency1, $user,  $this->user2->id, manager::class);
+        self::assertTrue(rating_model::can_see_raters_of_staff_members($this->user1->id, $this->user2->id));
+    }
+
 }

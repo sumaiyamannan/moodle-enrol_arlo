@@ -27,6 +27,10 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+global $CFG;
+require_once $CFG->dirroot.'/backup/util/plan/backup_execution_step.class.php';
+require_once $CFG->dirroot.'/backup/util/plan/backup_structure_step.class.php';
+
 /**
  * Create the temp dir where backup/restore will happen and create temp ids table.
  */

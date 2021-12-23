@@ -60,8 +60,10 @@ class rb_source_perform_manage_participation_subject_instance extends rb_source_
      * @param reportbuilder $report
      */
     public function post_config(reportbuilder $report) {
-        $restrictions = util::get_manage_participation_sql($report->reportfor, "base.subject_user_id");
-        $report->set_post_config_restrictions($restrictions);
+        if (!in_array('ctx', $this->sourcejoins)) {
+            $this->sourcejoins[] = 'ctx';
+        }
+        [$this->sourcewhere, $this->sourceparams] = util::get_manage_participation_sql($report->reportfor, "base.subject_user_id");
     }
 
     /**

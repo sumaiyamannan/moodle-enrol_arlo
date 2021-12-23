@@ -1,9 +1,8 @@
 <?php
 /*
- * This file is part of Totara LMS
+ * This file is part of Totara Learn
  *
- * Copyright (C) 2010 onwards Totara Learning Solutions LTD
- * Copyright (C) 1999 onwards Martin Dougiamas
+ * Copyright (C) 2021 onwards Totara Learning Solutions LTD
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -19,13 +18,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * @author Simon Coggins <simon.coggins@totaralms.com>
- * @package totara
+ * @author Fabian Derschatta <fabian.derschatta@totaralearning.com>
+ * @package totara_plan
  * @subpackage reportbuilder
  */
 
-use container_site\site;
 use totara_core\advanced_feature;
-use container_course\course;
+use totara_plan\record_of_learning;
 
 defined('MOODLE_INTERNAL') || die();
 
@@ -61,7 +60,13 @@ class rb_source_dp_course extends rb_base_source {
         // Remember the active global restriction set.
         $this->globalrestrictionset = $globalrestrictionset;
 
-        $this->base = $this->get_dp_status_base_sql();
+        $this->base = '(
+            SELECT id, userid, instanceid as courseid 
+            FROM {dp_record_of_learning} 
+            WHERE type = ' . record_of_learning::TYPE_COURSE . '
+        )';
+
+        $this->add_global_report_restriction_join('base', 'userid');
 
         $this->joinlist = $this->define_joinlist();
         $this->columnoptions = $this->define_columnoptions();
@@ -79,38 +84,27 @@ class rb_source_dp_course extends rb_base_source {
         // Caching is disabled because visibility needs to be calculated using live data that cannot be cached.
         $this->cacheable = false;
 
-        $this->sourcewhere = '(base.containertype = :course_type OR base.containertype = :site_type)';
-        $this->sourceparams = [
-            'course_type' => course::get_type(),
-            'site_type' => site::get_type()
-        ];
-
         parent::__construct();
     }
 
     /**
      * Global report restrictions are implemented in this source.
+     *
      * @return boolean
      */
     public function global_restrictions_supported() {
         return true;
     }
 
-    //
-    //
-    // Methods for defining contents of source
-    //
-    //
-
     /**
      * Creates the array of rb_join objects required for this->joinlist
      *
-     * @global object $CFG
      * @return array
+     * @global object $CFG
      */
     protected function define_joinlist() {
         global $CFG, $DB;
-        $joinlist = array();
+        $joinlist = [];
 
         // to get access to position type constants
         require_once($CFG->dirroot . '/totara/reportbuilder/classes/rb_join.php');
@@ -122,9 +116,9 @@ class rb_source_dp_course extends rb_base_source {
          * against the rest of the query
          */
         $joinlist[] = new rb_join(
-                'dp_course',
-                'LEFT',
-                "(select
+            'dp_course',
+            'LEFT',
+            "(select
                     p.id as planid,
                     p.templateid as templateid,
                     p.userid as userid,
@@ -144,94 +138,94 @@ class rb_source_dp_course extends rb_base_source {
                     {dp_plan} p
                   inner join {dp_plan_course_assign} pc
                     on p.id = pc.planid)",
-                'dp_course.userid = base.userid and dp_course.courseid = base.courseid',
-                REPORT_BUILDER_RELATION_ONE_TO_MANY,
-                array('base')
+            'dp_course.userid = base.userid and dp_course.courseid = base.courseid',
+            REPORT_BUILDER_RELATION_ONE_TO_MANY,
+            ['base']
         );
 
         $joinlist[] = new rb_join(
-                'dp_template',
-                'LEFT',
-                '{dp_template}',
-                'dp_course.templateid = dp_template.id',
-                REPORT_BUILDER_RELATION_MANY_TO_ONE,
-                array('dp_course','base')
+            'dp_template',
+            'LEFT',
+            '{dp_template}',
+            'dp_course.templateid = dp_template.id',
+            REPORT_BUILDER_RELATION_MANY_TO_ONE,
+            ['dp_course', 'base']
         );
 
         $joinlist[] = new rb_join(
-                'priority',
-                'LEFT',
-                '{dp_priority_scale_value}',
-                'dp_course.priority = priority.id',
-                REPORT_BUILDER_RELATION_MANY_TO_ONE,
-                array('dp_course','base')
+            'priority',
+            'LEFT',
+            '{dp_priority_scale_value}',
+            'dp_course.priority = priority.id',
+            REPORT_BUILDER_RELATION_MANY_TO_ONE,
+            ['dp_course', 'base']
         );
         // Ideally, this wouldn't have to be set as nonpruneable.
         // The prune_joins() method may need to be updated to not prune joins in required columns
         // or some other solution if we change/remove required columns in the future.
         $joinlist[] = new rb_join_nonpruneable(
-                'course_completion',
-                'LEFT',
-                '{course_completions}',
-                '(base.courseid = course_completion.course
+            'course_completion',
+            'LEFT',
+            '{course_completions}',
+            '(base.courseid = course_completion.course
                     AND base.userid = course_completion.userid)',
-                REPORT_BUILDER_RELATION_ONE_TO_ONE
+            REPORT_BUILDER_RELATION_ONE_TO_ONE
         );
         $joinlist[] = new rb_join(
-                'criteria',
-                'LEFT',
-                '{course_completion_criteria}',
-                '(criteria.course = base.courseid AND ' .
-                    'criteria.criteriatype = ' .
-                    COMPLETION_CRITERIA_TYPE_GRADE . ')',
-                REPORT_BUILDER_RELATION_ONE_TO_ONE
+            'criteria',
+            'LEFT',
+            '{course_completion_criteria}',
+            '(criteria.course = base.courseid AND ' .
+            'criteria.criteriatype = ' .
+            COMPLETION_CRITERIA_TYPE_GRADE . ')',
+            REPORT_BUILDER_RELATION_ONE_TO_ONE
         );
         $joinlist[] = new rb_join(
-                'grade_items',
-                'LEFT',
-                '{grade_items}',
-                '(grade_items.courseid = base.courseid AND ' .
-                    'grade_items.itemtype = \'course\')',
-                REPORT_BUILDER_RELATION_ONE_TO_ONE
+            'grade_items',
+            'LEFT',
+            '{grade_items}',
+            '(grade_items.courseid = base.courseid AND ' .
+            'grade_items.itemtype = \'course\')',
+            REPORT_BUILDER_RELATION_ONE_TO_ONE
         );
         $joinlist[] = new rb_join(
-                'grade_grades',
-                'LEFT',
-                '{grade_grades}',
-                '(grade_grades.itemid = grade_items.id AND ' .
-                    'grade_grades.userid = base.userid)',
-                REPORT_BUILDER_RELATION_ONE_TO_ONE,
-                'grade_items'
+            'grade_grades',
+            'LEFT',
+            '{grade_grades}',
+            '(grade_grades.itemid = grade_items.id AND ' .
+            'grade_grades.userid = base.userid)',
+            REPORT_BUILDER_RELATION_ONE_TO_ONE,
+            'grade_items'
         );
         // Join course_completion_history is deprecated and should be no longer used.
         // Check the course_completion_previous_completion column to see how to fetch this information instead.
         $joinlist[] = new rb_join(
-                'course_completion_history',
-                'LEFT',
-                '(SELECT ' . $DB->sql_concat('userid', 'courseid') . ' uniqueid,
+            'course_completion_history',
+            'LEFT',
+            '(SELECT ' . $DB->sql_concat('userid', 'courseid') . ' uniqueid,
                     userid,
                     courseid,
                     COUNT(id) historycount
                     FROM {course_completion_history}
                     GROUP BY userid, courseid)',
-                '(course_completion_history.courseid = base.courseid AND ' .
-                    'course_completion_history.userid = base.userid)',
-                REPORT_BUILDER_RELATION_ONE_TO_ONE
+            '(course_completion_history.courseid = base.courseid AND ' .
+            'course_completion_history.userid = base.userid)',
+            REPORT_BUILDER_RELATION_ONE_TO_ONE
         );
         $joinlist[] = new rb_join(
-                'enrolment',
-                'LEFT',
-                '(SELECT DISTINCT ue.userid, enrol.courseid, 1 AS enrolled
+            'enrolment',
+            'LEFT',
+            '(SELECT DISTINCT ue.userid, enrol.courseid, 1 AS enrolled
                     FROM {user_enrolments} ue
                     JOIN {enrol} enrol ON ue.enrolid = enrol.id)',
-                '(enrolment.userid = base.userid AND ' .
-                'enrolment.courseid = base.courseid)',
-                REPORT_BUILDER_RELATION_ONE_TO_ONE
+            '(enrolment.userid = base.userid AND ' .
+            'enrolment.courseid = base.courseid)',
+            REPORT_BUILDER_RELATION_ONE_TO_ONE
         );
 
         $this->add_core_course_tables($joinlist, 'base', 'courseid', 'INNER');
         $this->add_context_tables($joinlist, 'course', 'id', CONTEXT_COURSE, 'INNER');
-        $this->add_core_user_tables($joinlist, 'base','userid');
+        $this->add_core_user_tables($joinlist, 'base', 'userid');
         $this->add_totara_job_tables($joinlist, 'base', 'userid');
         $this->add_totara_cohort_course_tables($joinlist, 'base', 'courseid');
 
@@ -245,102 +239,102 @@ class rb_source_dp_course extends rb_base_source {
      * @return array
      */
     protected function define_columnoptions() {
-        $columnoptions = array();
+        $columnoptions = [];
 
         $this->add_core_course_columns($columnoptions);
 
         $columnoptions[] = new rb_column_option(
-                'plan',
-                'name',
-                get_string('planname', 'rb_source_dp_course'),
-                'dp_course.planname',
-                array(
-                    'defaultheading' => get_string('plan', 'rb_source_dp_course'),
-                    'joins' => 'dp_course',
-                    'dbdatatype' => 'char',
-                    'outputformat' => 'text',
-                    'displayfunc' => 'format_string'
-                )
+            'plan',
+            'name',
+            get_string('planname', 'rb_source_dp_course'),
+            'dp_course.planname',
+            [
+                'defaultheading' => get_string('plan', 'rb_source_dp_course'),
+                'joins' => 'dp_course',
+                'dbdatatype' => 'char',
+                'outputformat' => 'text',
+                'displayfunc' => 'format_string'
+            ]
         );
         $columnoptions[] = new rb_column_option(
-                'plan',
-                'planlink',
-                get_string('plannamelink', 'rb_source_dp_course'),
-                'dp_course.planname',
-                array(
-                    'defaultheading' => get_string('plan', 'rb_source_dp_course'),
-                    'joins' => 'dp_course',
-                    'displayfunc' => 'plan_link',
-                    'extrafields' => array( 'plan_id' => 'dp_course.planid' )
-                )
+            'plan',
+            'planlink',
+            get_string('plannamelink', 'rb_source_dp_course'),
+            'dp_course.planname',
+            [
+                'defaultheading' => get_string('plan', 'rb_source_dp_course'),
+                'joins' => 'dp_course',
+                'displayfunc' => 'plan_link',
+                'extrafields' => ['plan_id' => 'dp_course.planid']
+            ]
         );
         $columnoptions[] = new rb_column_option(
-                'plan',
-                'startdate',
-                get_string('planstartdate', 'rb_source_dp_course'),
-                'dp_course.planstartdate',
-                array(
-                    'joins' => 'dp_course',
-                    'displayfunc' => 'nice_date',
-                    'dbdatatype' => 'timestamp'
-                )
+            'plan',
+            'startdate',
+            get_string('planstartdate', 'rb_source_dp_course'),
+            'dp_course.planstartdate',
+            [
+                'joins' => 'dp_course',
+                'displayfunc' => 'nice_date',
+                'dbdatatype' => 'timestamp'
+            ]
         );
         $columnoptions[] = new rb_column_option(
-                'plan',
-                'enddate',
-                get_string('planenddate', 'rb_source_dp_course'),
-                'dp_course.planenddate',
-                array(
-                    'joins' => 'dp_course',
-                    'displayfunc' => 'nice_date',
-                    'dbdatatype' => 'timestamp'
-                )
+            'plan',
+            'enddate',
+            get_string('planenddate', 'rb_source_dp_course'),
+            'dp_course.planenddate',
+            [
+                'joins' => 'dp_course',
+                'displayfunc' => 'nice_date',
+                'dbdatatype' => 'timestamp'
+            ]
         );
         $columnoptions[] = new rb_column_option(
-                'plan',
-                'status',
-                get_string('planstatus', 'rb_source_dp_course'),
-                'dp_course.planstatus',
-                array(
-                    'joins' => 'dp_course',
-                    'displayfunc' => 'plan_status'
-                )
-        );
-
-        $columnoptions[] = new rb_column_option(
-                'plan',
-                'courseduedate',
-                get_string('courseduedate', 'rb_source_dp_course'),
-                'dp_course.duedate',
-                array(
-                    'joins' => 'dp_course',
-                    'displayfunc' => 'nice_date',
-                    'dbdatatype' => 'timestamp'
-                )
+            'plan',
+            'status',
+            get_string('planstatus', 'rb_source_dp_course'),
+            'dp_course.planstatus',
+            [
+                'joins' => 'dp_course',
+                'displayfunc' => 'plan_status'
+            ]
         );
 
         $columnoptions[] = new rb_column_option(
-                'plan',
-                'coursepriority',
-                get_string('coursepriority', 'rb_source_dp_course'),
-                'priority.name',
-                array(
-                    'joins' => 'priority',
-                    'dbdatatype' => 'char',
-                    'outputformat' => 'text',
-                    'displayfunc' => 'format_string'
-                )
+            'plan',
+            'courseduedate',
+            get_string('courseduedate', 'rb_source_dp_course'),
+            'dp_course.duedate',
+            [
+                'joins' => 'dp_course',
+                'displayfunc' => 'nice_date',
+                'dbdatatype' => 'timestamp'
+            ]
         );
 
         $columnoptions[] = new rb_column_option(
-                'plan',
-                'coursestatus',
-                get_string('coursestatus', 'rb_source_dp_course'),
-                'dp_course.approved',
-                array(
-                    'joins' => 'dp_course',
-                    'displayfunc' => 'plan_item_status'
-                )
+            'plan',
+            'coursepriority',
+            get_string('coursepriority', 'rb_source_dp_course'),
+            'priority.name',
+            [
+                'joins' => 'priority',
+                'dbdatatype' => 'char',
+                'outputformat' => 'text',
+                'displayfunc' => 'format_string'
+            ]
+        );
+
+        $columnoptions[] = new rb_column_option(
+            'plan',
+            'coursestatus',
+            get_string('coursestatus', 'rb_source_dp_course'),
+            'dp_course.approved',
+            [
+                'joins' => 'dp_course',
+                'displayfunc' => 'plan_item_status'
+            ]
         );
 
         $columnoptions[] = new rb_column_option(
@@ -348,24 +342,28 @@ class rb_source_dp_course extends rb_base_source {
             'statusandapproval',
             get_string('progressandapproval', 'rb_source_dp_course'),
             "course_completion.status",
-            array(
-                'joins' => array('course_completion', 'dp_course'),
+            [
+                'joins' => ['course_completion', 'dp_course'],
                 'displayfunc' => 'plan_course_completion_progress_and_approval',
                 'defaultheading' => get_string('progress', 'rb_source_dp_course'),
-                'extrafields' => array('approved' => 'dp_course.approved', 'userid' => 'base.userid', 'courseid' => 'base.courseid'),
-            )
+                'extrafields' => [
+                    'approved' => 'dp_course.approved',
+                    'userid' => 'base.userid',
+                    'courseid' => 'base.courseid'
+                ],
+            ]
         );
 
         $columnoptions[] = new rb_column_option(
-                'course_completion',
-                'timecompleted',
-                get_string('coursecompletedate', 'rb_source_dp_course'),
-                'course_completion.timecompleted',
-                array(
-                    'joins' => 'course_completion',
-                    'displayfunc' => 'nice_date',
-                    'dbdatatype' => 'timestamp'
-                )
+            'course_completion',
+            'timecompleted',
+            get_string('coursecompletedate', 'rb_source_dp_course'),
+            'course_completion.timecompleted',
+            [
+                'joins' => 'course_completion',
+                'displayfunc' => 'nice_date',
+                'dbdatatype' => 'timestamp'
+            ]
         );
 
         $columnoptions[] = new rb_column_option(
@@ -373,143 +371,155 @@ class rb_source_dp_course extends rb_base_source {
             'coursestatus',
             get_string('completionstatus', 'rb_source_dp_course'),
             'course_completion.status',
-            array(
+            [
                 'displayfunc' => 'course_completion_status',
                 'outputformat' => 'text',
-            )
+            ]
         );
 
         $columnoptions[] = new rb_column_option(
-                'template',
-                'name',
-                get_string('templatename', 'rb_source_dp_course'),
-                'dp_template.shortname',
-                array(
-                    'defaultheading' => get_string('plantemplate', 'rb_source_dp_course'),
-                    'joins' => 'dp_template',
-                    'dbdatatype' => 'char',
-                    'outputformat' => 'text',
-                    'displayfunc' => 'format_string'
-                )
+            'template',
+            'name',
+            get_string('templatename', 'rb_source_dp_course'),
+            'dp_template.shortname',
+            [
+                'defaultheading' => get_string('plantemplate', 'rb_source_dp_course'),
+                'joins' => 'dp_template',
+                'dbdatatype' => 'char',
+                'outputformat' => 'text',
+                'displayfunc' => 'format_string'
+            ]
         );
         $columnoptions[] = new rb_column_option(
-                'template',
-                'startdate',
-                get_string('templatestartdate', 'rb_source_dp_course'),
-                'dp_template.startdate',
-                array(
-                    'joins' => 'dp_template',
-                    'displayfunc' => 'nice_date',
-                    'dbdatatype' => 'timestamp'
-                )
+            'template',
+            'startdate',
+            get_string('templatestartdate', 'rb_source_dp_course'),
+            'dp_template.startdate',
+            [
+                'joins' => 'dp_template',
+                'displayfunc' => 'nice_date',
+                'dbdatatype' => 'timestamp'
+            ]
         );
         $columnoptions[] = new rb_column_option(
-                'template',
-                'enddate',
-                get_string('templateenddate', 'rb_source_dp_course'),
-                'dp_template.enddate',
-                array(
-                    'joins' => 'dp_template',
-                    'displayfunc' => 'nice_date',
-                    'dbdatatype' => 'timestamp'
-                )
+            'template',
+            'enddate',
+            get_string('templateenddate', 'rb_source_dp_course'),
+            'dp_template.enddate',
+            [
+                'joins' => 'dp_template',
+                'displayfunc' => 'nice_date',
+                'dbdatatype' => 'timestamp'
+            ]
         );
         $columnoptions[] = new rb_column_option(
-                'plan',
-                'courseprogress',
-                get_string('courseprogress', 'rb_source_dp_course'),
-                // use 'live' values except for completed plans
-                "CASE WHEN dp_course.planstatus = " . DP_PLAN_STATUS_COMPLETE . "
+            'plan',
+            'courseprogress',
+            get_string('courseprogress', 'rb_source_dp_course'),
+            // use 'live' values except for completed plans
+            "CASE WHEN dp_course.planstatus = " . DP_PLAN_STATUS_COMPLETE . "
                 THEN
                     dp_course.completionstatus
                 ELSE
                     course_completion.status
                 END",
-                array(
-                    'joins' => array('course_completion','dp_course'),
-                    'displayfunc' => 'plan_course_completion_progress',
-                    'extrafields' => array('userid' => 'base.userid', 'courseid' => 'base.courseid'),
-                )
-            );
+            [
+                'joins' => [
+                    'course_completion',
+                    'dp_course'
+                ],
+                'displayfunc' => 'plan_course_completion_progress',
+                'extrafields' => [
+                    'userid' => 'base.userid',
+                    'courseid' => 'base.courseid'
+                ],
+            ]
+        );
         $columnoptions[] = new rb_column_option(
-                'course_completion',
-                'progresspercentage',
-                get_string('progresspercentage', 'rb_source_dp_course'),
-                "course_completion.status",
-                array(
-                    'joins' => array('course_completion'),
-                    'displayfunc' => 'plan_course_completion_progress_percentage',
-                    'extrafields' => array('userid' => 'base.userid', 'courseid' => 'base.courseid'),
-                )
-            );
+            'course_completion',
+            'progresspercentage',
+            get_string('progresspercentage', 'rb_source_dp_course'),
+            "course_completion.status",
+            [
+                'joins' => ['course_completion'],
+                'displayfunc' => 'plan_course_completion_progress_percentage',
+                'extrafields' => [
+                    'userid' => 'base.userid',
+                    'courseid' => 'base.courseid'
+                ],
+            ]
+        );
         $columnoptions[] = new rb_column_option(
-                'course_completion',
-                'enroldate',
-                get_string('enrolled', 'totara_core'),
-                "course_completion.timeenrolled",
-                array(
-                    'joins' => array('course_completion'),
-                    'displayfunc' => 'nice_date',
-                )
-            );
+            'course_completion',
+            'enroldate',
+            get_string('enrolled', 'totara_core'),
+            "course_completion.timeenrolled",
+            [
+                'joins' => ['course_completion'],
+                'displayfunc' => 'nice_date',
+            ]
+        );
         $columnoptions[] = new rb_column_option(
-                'course_completion',
-                'grade',
-                get_string('grade', 'rb_source_course_completion'),
-                'CASE WHEN course_completion.status = ' . COMPLETION_STATUS_COMPLETEVIARPL . ' THEN course_completion.rplgrade
+            'course_completion',
+            'grade',
+            get_string('grade', 'rb_source_course_completion'),
+            'CASE WHEN course_completion.status = ' . COMPLETION_STATUS_COMPLETEVIARPL . ' THEN course_completion.rplgrade
                       ELSE grade_grades.finalgrade END',
-                array(
-                    'joins' => array(
-                        'grade_grades',
-                        'course_completion'
-                    ),
-                    'extrafields' => array(
-                        'maxgrade' => 'grade_grades.rawgrademax',
-                        'rplgrade' => 'course_completion.rplgrade',
-                        'status' => 'course_completion.status'
-                    ),
-                    'displayfunc' => 'course_grade_percent',
-                )
-            );
+            [
+                'joins' => [
+                    'grade_grades',
+                    'course_completion'
+                ],
+                'extrafields' => [
+                    'maxgrade' => 'grade_grades.rawgrademax',
+                    'rplgrade' => 'course_completion.rplgrade',
+                    'status' => 'course_completion.status'
+                ],
+                'displayfunc' => 'course_grade_percent',
+            ]
+        );
         $columnoptions[] = new rb_column_option(
-                'course_completion',
-                'passgrade',
-                get_string('passgrade', 'rb_source_course_completion'),
-                'grade_items.gradepass',
-                array(
-                    'joins' => 'grade_items',
-                    'displayfunc' => 'percent',
-                )
-            );
+            'course_completion',
+            'passgrade',
+            get_string('passgrade', 'rb_source_course_completion'),
+            'grade_items.gradepass',
+            [
+                'joins' => 'grade_items',
+                'displayfunc' => 'percent',
+            ]
+        );
         $columnoptions[] = new rb_column_option(
-                'course_completion',
-                'gradestring',
-                get_string('requiredgrade', 'rb_source_course_completion'),
-                'CASE WHEN course_completion.status = ' . COMPLETION_STATUS_COMPLETEVIARPL . ' THEN course_completion.rplgrade
+            'course_completion',
+            'gradestring',
+            get_string('requiredgrade', 'rb_source_course_completion'),
+            'CASE WHEN course_completion.status = ' . COMPLETION_STATUS_COMPLETEVIARPL . ' THEN course_completion.rplgrade
                       ELSE grade_grades.finalgrade END',
-                array(
-                    'joins' => array('criteria', 'grade_grades'),
-                    'displayfunc' => 'course_grade_string',
-                    'extrafields' => array(
-                        'gradepass' => 'criteria.gradepass',
-                    ),
-                    'defaultheading' => get_string('grade', 'rb_source_course_completion'),
-                )
-            );
+            [
+                'joins' => [
+                    'criteria',
+                    'grade_grades'
+                ],
+                'displayfunc' => 'course_grade_string',
+                'extrafields' => [
+                    'gradepass' => 'criteria.gradepass',
+                ],
+                'defaultheading' => get_string('grade', 'rb_source_course_completion'),
+            ]
+        );
         $columnoptions[] = new rb_column_option(
             'course_completion_history',
             'course_completion_previous_completion',
             get_string('course_completion_previous_completion', 'rb_source_dp_course'),
             '(SELECT COUNT(*) FROM {course_completion_history} cch1 
                         WHERE cch1.userid = base.userid AND cch1.courseid = base.courseid)',
-            array(
+            [
                 'defaultheading' => get_string('course_completion_previous_completion', 'rb_source_dp_course'),
                 'displayfunc' => 'plan_course_completion_previous_completion',
-                'extrafields' => array(
+                'extrafields' => [
                     'courseid' => 'base.courseid',
                     'userid' => 'base.userid',
-                ),
-            )
+                ],
+            ]
         );
         $columnoptions[] = new rb_column_option(
             'course_completion_history',
@@ -517,9 +527,9 @@ class rb_source_dp_course extends rb_base_source {
             get_string('course_completion_history_count', 'rb_source_dp_course'),
             '(SELECT COUNT(*) FROM {course_completion_history} cch2
                         WHERE cch2.userid = base.userid AND cch2.courseid = base.courseid)',
-            array(
+            [
                 'displayfunc' => 'integer',
-            )
+            ]
         );
 
         $this->add_core_user_columns($columnoptions);
@@ -531,68 +541,69 @@ class rb_source_dp_course extends rb_base_source {
 
     /**
      * Creates the array of rb_filter_option objects required for $this->filteroptions
+     *
      * @return array
      */
     protected function define_filteroptions() {
-        $filteroptions = array();
+        $filteroptions = [];
 
         $filteroptions[] = new rb_filter_option(
-                'user',
-                'id',
-                get_string('userid', 'rb_source_dp_course'),
-                'number'
+            'user',
+            'id',
+            get_string('userid', 'rb_source_dp_course'),
+            'number'
         );
         $filteroptions[] = new rb_filter_option(
-                'course',
-                'courselink',
-                get_string('coursetitle', 'rb_source_dp_course'),
-                'text'
+            'course',
+            'courselink',
+            get_string('coursetitle', 'rb_source_dp_course'),
+            'text'
         );
         $filteroptions[] = new rb_filter_option(
-                'plan',
-                'courseprogress',
-                get_string('completionstatus', 'rb_source_dp_course'),
-                'select',
-                array(
-                    'selectfunc' => 'coursecompletion_status',
-                    'attributes' => rb_filter_option::select_width_limiter(),
-                )
+            'plan',
+            'courseprogress',
+            get_string('completionstatus', 'rb_source_dp_course'),
+            'select',
+            [
+                'selectfunc' => 'coursecompletion_status',
+                'attributes' => rb_filter_option::select_width_limiter(),
+            ]
         );
         $filteroptions[] = new rb_filter_option(
-                'course_completion',
-                'timecompleted',
-                get_string('coursecompletedate', 'rb_source_dp_course'),
-                'date'
+            'course_completion',
+            'timecompleted',
+            get_string('coursecompletedate', 'rb_source_dp_course'),
+            'date'
         );
         $filteroptions[] = new rb_filter_option(
-                'plan',
-                'name',
-                get_string('planname', 'rb_source_dp_course'),
-                'text'
+            'plan',
+            'name',
+            get_string('planname', 'rb_source_dp_course'),
+            'text'
         );
         $filteroptions[] = new rb_filter_option(
-                'plan',
-                'courseduedate',
-                get_string('courseduedate', 'rb_source_dp_course'),
-                'date'
+            'plan',
+            'courseduedate',
+            get_string('courseduedate', 'rb_source_dp_course'),
+            'date'
         );
         $filteroptions[] = new rb_filter_option(
-                'course_completion',
-                'grade',
-                get_string('grade', 'rb_source_course_completion'),
-                'number'
+            'course_completion',
+            'grade',
+            get_string('grade', 'rb_source_course_completion'),
+            'number'
         );
         $filteroptions[] = new rb_filter_option(
-                'course_completion',
-                'passgrade',
-                get_string('reqgrade', 'rb_source_course_completion'),
-                'number'
+            'course_completion',
+            'passgrade',
+            get_string('reqgrade', 'rb_source_course_completion'),
+            'number'
         );
         $filteroptions[] = new rb_filter_option(
-                'course_completion_history',
-                'course_completion_history_count',
-                get_string('course_completion_history_count', 'rb_source_dp_course'),
-                'number'
+            'course_completion_history',
+            'course_completion_history_count',
+            get_string('course_completion_history_count', 'rb_source_dp_course'),
+            'number'
         );
 
         $this->add_core_user_filters($filteroptions);
@@ -604,10 +615,11 @@ class rb_source_dp_course extends rb_base_source {
 
     /**
      * Creates the array of rb_content_option object required for $this->contentoptions
+     *
      * @return array
      */
     protected function define_contentoptions() {
-        $contentoptions = array();
+        $contentoptions = [];
 
         // Add the manager/position/organisation content options.
         $this->add_basic_user_content_options($contentoptions);
@@ -616,18 +628,17 @@ class rb_source_dp_course extends rb_base_source {
     }
 
     protected function define_paramoptions() {
-
-        $paramoptions = array();
+        $paramoptions = [];
         $paramoptions[] = new rb_param_option(
-                'userid',
-                'base.userid',
-                'base'
+            'userid',
+            'base.userid',
+            'base'
         );
         $paramoptions[] = new rb_param_option(
-                'rolstatus',
-                // if plan complete use completion status from within plan
-                // otherwise use 'live' completion status
-                "(CASE WHEN dp_course.planstatus = " . DP_PLAN_STATUS_COMPLETE . "
+            'rolstatus',
+            // if plan complete use completion status from within plan
+            // otherwise use 'live' completion status
+            "(CASE WHEN dp_course.planstatus = " . DP_PLAN_STATUS_COMPLETE . "
                 THEN
                     CASE WHEN dp_course.completionstatus >= " . COMPLETION_STATUS_COMPLETE . "
                     THEN
@@ -643,40 +654,43 @@ class rb_source_dp_course extends rb_base_source {
                         'active'
                     END
                 END)",
-                array('course_completion', 'dp_course'),
-                'string'
+            [
+                'course_completion',
+                'dp_course'
+            ],
+            'string'
         );
         $paramoptions[] = new rb_param_option(
             'enrolled',
             "enrolment.enrolled",
-            array('enrolment')
+            ['enrolment']
         );
         return $paramoptions;
     }
 
     protected function define_defaultcolumns() {
-        $defaultcolumns = array(
-            array(
+        $defaultcolumns = [
+            [
                 'type' => 'course',
                 'value' => 'coursetypeicon',
-            ),
-            array(
+            ],
+            [
                 'type' => 'course',
                 'value' => 'courselink',
-            ),
-            array(
+            ],
+            [
                 'type' => 'plan',
                 'value' => 'planlink',
-            ),
-            array(
+            ],
+            [
                 'type' => 'plan',
                 'value' => 'courseduedate',
-            ),
-            array(
+            ],
+            [
                 'type' => 'plan',
                 'value' => 'statusandapproval',
-            ),
-        );
+            ],
+        ];
         return $defaultcolumns;
     }
 
@@ -692,8 +706,6 @@ class rb_source_dp_course extends rb_base_source {
         $this->userid = (int)$report->get_param_value('userid');
 
         if ($this->userid) {
-            $this->base = $this->get_dp_status_base_sql($this->userid);
-
             // Visibility checks are only applied if viewing a single user's records.
             [$sql, $params] = totara_visibility_where(
                 $this->userid,
@@ -705,12 +717,9 @@ class rb_source_dp_course extends rb_base_source {
                 false,
                 true
             );
-            $this->sourcewhere = "(base.containertype = :course_type OR base.containertype = :site_type)" .
-                " AND ((course_completion.status > :notyetstarted) OR ({$sql}))";
+            $this->sourcewhere = "(course_completion.status > :notyetstarted OR ({$sql}))";
 
             $params['notyetstarted'] = COMPLETION_STATUS_NOTYETSTARTED;
-            $params['course_type'] = course::get_type();
-            $params['site_type'] = site::get_type();
 
             $this->sourceparams = $params;
 
@@ -744,23 +753,26 @@ class rb_source_dp_course extends rb_base_source {
     /**
      * Display course completion progress
      *
-     * @deprecated Since Totara 12.0
      * @param $status
      * @param $row
      * @param $isexport
      * @return mixed|string
+     * @deprecated Since Totara 12.0
      */
     function rb_display_course_completion_progress($status, $row, $isexport) {
-        debugging('rb_source_dp_course::rb_display_course_completion_progress has been deprecated since Totara 12.0. Use totara_plan\rb\display\plan_course_completion_progress::display', DEBUG_DEVELOPER);
+        debugging(
+            'rb_source_dp_course::rb_display_course_completion_progress has been deprecated since Totara 12.0. Use totara_plan\rb\display\plan_course_completion_progress::display',
+            DEBUG_DEVELOPER
+        );
         if ($isexport) {
             global $PAGE;
 
             $renderer = $PAGE->get_renderer('totara_core');
             $content = (array)$renderer->export_course_progress_for_template($row->userid, $row->courseid, $status);
 
-            if (isset($content['percent'])){
+            if (isset($content['percent'])) {
                 return $content['percent'];
-            } else if (isset($content['statustext'])) {
+            } elseif (isset($content['statustext'])) {
                 return $content['statustext'];
             } else {
                 return '';
@@ -773,14 +785,17 @@ class rb_source_dp_course extends rb_base_source {
     /**
      * Display course completion progress and approval
      *
-     * @deprecated Since Totara 12.0
      * @param $status
      * @param $row
      * @param $isexport
      * @return mixed|string
+     * @deprecated Since Totara 12.0
      */
     function rb_display_course_completion_progress_and_approval($status, $row, $isexport) {
-        debugging('rb_source_dp_course::rb_display_course_completion_progress_and_approval has been deprecated since Totara 12.0. Use totara_plan\rb\display\plan_course_completion_progress_and_approval::display', DEBUG_DEVELOPER);
+        debugging(
+            'rb_source_dp_course::rb_display_course_completion_progress_and_approval has been deprecated since Totara 12.0. Use totara_plan\rb\display\plan_course_completion_progress_and_approval::display',
+            DEBUG_DEVELOPER
+        );
         $approved = isset($row->approved) ? $row->approved : null;
 
         // get the progress bar
@@ -801,14 +816,17 @@ class rb_source_dp_course extends rb_base_source {
     /**
      * Display course completion progress percentage
      *
-     * @deprecated Since Totara 12.0
      * @param $status
      * @param $row
      * @param $isexport
      * @return mixed|string
+     * @deprecated Since Totara 12.0
      */
     function rb_display_course_completion_progresspercentage($status, $row, $isexport) {
-        debugging('rb_source_dp_course::rb_display_course_completion_progresspercentage has been deprecated since Totara 12.0. Use totara_plan\rb\display\plan_course_completion_progress_percentage::display', DEBUG_DEVELOPER);
+        debugging(
+            'rb_source_dp_course::rb_display_course_completion_progresspercentage has been deprecated since Totara 12.0. Use totara_plan\rb\display\plan_course_completion_progress_percentage::display',
+            DEBUG_DEVELOPER
+        );
 
         // get the progress percetage
         $content = $this->rb_display_course_completion_progress($status, $row, $isexport);
@@ -826,31 +844,41 @@ class rb_source_dp_course extends rb_base_source {
     /**
      * Display previous completions
      *
-     * @deprecated Since Totara 12.0
      * @param $name
      * @param $row
      * @return string
+     * @deprecated Since Totara 12.0
      */
     public function rb_display_course_completion_previous_completion($name, $row) {
-        debugging('rb_source_dp_course::rb_display_course_completion_previous_completion has been deprecated since Totara 12.0. Use totara_plan\rb\display\plan_course_completion_previous_completion::display', DEBUG_DEVELOPER);
+        debugging(
+            'rb_source_dp_course::rb_display_course_completion_previous_completion has been deprecated since Totara 12.0. Use totara_plan\rb\display\plan_course_completion_previous_completion::display',
+            DEBUG_DEVELOPER
+        );
         global $OUTPUT;
         if ($name !== '') {
-            return $OUTPUT->action_link(new moodle_url('/totara/plan/record/courses.php',
-                    array('courseid' => $row->courseid, 'userid' => $row->userid, 'history' => 1)), $name);
+            return $OUTPUT->action_link(
+                new moodle_url(
+                    '/totara/plan/record/courses.php',
+                    [
+                        'courseid' => $row->courseid,
+                        'userid' => $row->userid,
+                        'history' => 1
+                    ]
+                ), $name
+            );
         } else {
             return '';
         }
     }
 
-    function rb_filter_coursecompletion_status() {
+    public function rb_filter_coursecompletion_status() {
         global $COMPLETION_STATUS;
 
-        $out = array();
+        $out = [];
         foreach ($COMPLETION_STATUS as $code => $statusstring) {
             $out[$code] = get_string($statusstring, 'completion');
         }
         return $out;
-
     }
 
     /**
@@ -860,5 +888,10 @@ class rb_source_dp_course extends rb_base_source {
      */
     public static function is_source_ignored() {
         return !advanced_feature::is_enabled('recordoflearning');
+    }
+
+    public function phpunit_column_test_add_data(totara_reportbuilder_column_testcase $testcase) {
+        $task = new \totara_plan\task\update_record_of_learning_task();
+        $task->execute();
     }
 }

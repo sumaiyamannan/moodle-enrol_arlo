@@ -29,6 +29,7 @@ use mod_perform\entity\activity\track as track_entity;
 use mod_perform\models\activity\activity;
 use mod_perform\models\activity\track;
 use mod_perform\task\service\subject_instance_creation;
+use totara_job\job_assignment;
 
 /**
  * @group perform
@@ -123,23 +124,26 @@ class mod_perform_subject_instance_performance_reporting_testcase extends advanc
 
         self::assertTrue($embedded_object->is_capable(get_admin()->id, $report));
 
+        $manager = self::getDataGenerator()->create_user();
         $user = self::getDataGenerator()->create_user();
+
         self::assertFalse($embedded_object->is_capable($user->id, $report));
 
-        $user_role = builder::get_db()->get_record('role', ['shortname' => 'user']);
-        $subject_user_context_id = context_user::instance($subject_user_id)->id;
+        $staffmanager_role = builder::get_db()->get_record('role', ['shortname' => 'staffmanager']);
         assign_capability(
             'mod/perform:report_on_subject_responses',
             CAP_ALLOW,
-            $user_role->id,
-            $subject_user_context_id,
+            $staffmanager_role->id,
+            context_user::instance($user->id)->id,
             true
         );
-        self::assertTrue($embedded_object->is_capable($user->id, $report));
 
-        unassign_capability('mod/perform:report_on_subject_responses', $user_role->id, $subject_user_context_id);
-        self::assertFalse($embedded_object->is_capable($user->id, $report));
+        $manja = job_assignment::create_default($manager->id);
+        job_assignment::create_default($user->id, ['managerjaid' => $manja->id]);
 
+        self::assertTrue($embedded_object->is_capable($manager->id, $report));
+
+        $user_role = builder::get_db()->get_record('role', ['shortname' => 'user']);
         assign_capability(
             'mod/perform:report_on_all_subjects_responses',
             CAP_ALLOW,

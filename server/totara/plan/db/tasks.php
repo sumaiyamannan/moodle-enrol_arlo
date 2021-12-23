@@ -25,8 +25,8 @@ defined('MOODLE_INTERNAL') || die();
 
 /* List of handlers */
 
-$tasks = array(
-    array(
+$tasks = [
+    [
         'classname' => 'totara_plan\task\autocomplete_plans_task',
         'blocking' => 0,
         'minute' => '0',
@@ -34,5 +34,14 @@ $tasks = array(
         'day' => '*',
         'dayofweek' => '*',
         'month' => '*'
-    ),
-);
+    ],
+    [
+        'classname' => 'totara_plan\task\update_record_of_learning_task',
+        'blocking' => 0,
+        'minute' => '*/10',
+        'hour' => '*',
+        'day' => '*',
+        'dayofweek' => '*',
+        'month' => '*'
+    ],
+];

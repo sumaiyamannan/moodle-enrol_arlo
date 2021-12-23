@@ -32,6 +32,7 @@ use mod_perform\rb\traits\section_trait;
 use mod_perform\rb\traits\subject_instance_trait;
 use totara_core\advanced_feature;
 use totara_job\rb\source\report_trait;
+use totara_reportbuilder\rb\source\report_trait as core_report_trait;
 
 /**
  * Performance participant section report.
@@ -39,6 +40,7 @@ use totara_job\rb\source\report_trait;
  * Class rb_source_perform_participation_participant_section
  */
 class rb_source_perform_participation_participant_section extends rb_base_source {
+    use core_report_trait;
     use activity_trait;
     use participant_instance_trait;
     use participant_section_trait;
@@ -118,6 +120,8 @@ class rb_source_perform_participation_participant_section extends rb_base_source
      */
     protected function define_joinlist() {
         $joinlist = [];
+
+        $this->add_context_tables($joinlist, 'subject_instance', 'subject_user_id', CONTEXT_USER);
 
         return $joinlist;
     }

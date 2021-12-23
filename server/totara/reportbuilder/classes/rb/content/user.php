@@ -65,15 +65,27 @@ class user extends base {
         }
 
         if (($restriction & self::USER_DIRECT_REPORTS) == self::USER_DIRECT_REPORTS) {
-            $conditions[] = "{$field} IN (SELECT d1ja.userid
-                                       FROM {user} u1
-                                 INNER JOIN {job_assignment} u1ja
-                                         ON u1ja.userid = u1.id
-                                 INNER JOIN {job_assignment} d1ja
-                                         ON d1ja.managerjaid = u1ja.id
-                                      WHERE u1.id = :viewer1
-                                        AND d1ja.userid != u1.id
-                                     )";
+            $condition = "d1ja.managerjaid = u1ja.id";
+        }
+
+        if (($restriction & self::USER_TEMP_REPORTS) == self::USER_TEMP_REPORTS) {
+            if (!isset($condition)) {
+                $condition = "d1ja.tempmanagerjaid = u1ja.id";
+            } else {
+                $condition .= " OR d1ja.tempmanagerjaid = u1ja.id";
+            }
+        }
+
+        if (isset($condition)) {
+            $conditions[] = "{$field} IN (SELECT DISTINCT(d1ja.userid)
+                                   FROM {user} u1
+                             INNER JOIN {job_assignment} u1ja
+                                     ON u1ja.userid = u1.id
+                             INNER JOIN {job_assignment} d1ja
+                                     ON ({$condition})
+                                  WHERE u1.id = :viewer1
+                                    AND d1ja.userid != u1.id
+                                 )";
             $params['viewer1'] = $userid;
         }
 
@@ -90,19 +102,6 @@ class user extends base {
                                         AND i2ja.managerjaid != u2ja.id
                                     )";
             $params['viewer2'] = $userid;
-        }
-
-        if (($restriction & self::USER_TEMP_REPORTS) == self::USER_TEMP_REPORTS) {
-            $conditions[] = "{$field} IN (SELECT t3ja.userid
-                                       FROM {user} u3
-                                 INNER JOIN {job_assignment} u3ja
-                                         ON u3ja.userid = u3.id
-                                 INNER JOIN {job_assignment} t3ja
-                                         ON t3ja.tempmanagerjaid = u3ja.id
-                                      WHERE u3.id = :viewer3
-                                        AND t3ja.userid != u3.id
-                                    )";
-            $params['viewer3'] = $userid;
         }
 
         $sql = implode(' OR ', $conditions);

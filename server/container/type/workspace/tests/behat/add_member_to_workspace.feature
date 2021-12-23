@@ -3,21 +3,23 @@ Feature: Add users to a workspace
   Background:
     Given I am on a totara site
     And the following "users" exist:
-      | username   | firstname | lastname | email             |
-      | user_one   | User      | One      | one@example.com   |
-      | user_two   | User      | Two      | two@example.com   |
-      | user_three | User      | Three    | three@example.com |
+      | username   | firstname | middlename | lastname | email             |
+      | user_one   | User      | Jack       | One      | one@example.com   |
+      | user_two   | User      | Jill       | Two      | two@example.com   |
+      | user_three | User      | Jane       | Three    | three@example.com |
+      | user_four  | User      | Joe        | Four     | four@example.com  |
     And the following "workspaces" exist in "container_workspace" plugin:
       | name          | owner    | summary           |
       | Workspace 101 | admin    | Workspace summary |
       | Workspace 102 | user_one | Workspace summary |
+      | Workspace 103 | user_four | Workspace summary |
 
   @javascript
   Scenario: Workspace owner search for non member users.
     Given I am on a totara site
-    And I log in as "admin"
+    And I log in as "user_four"
     When I click on "Your Workspaces" in the totara menu
-    Then I should see "Workspace 101"
+    Then I should see "Workspace 103"
     And "Owner" "button" should exist
     And I click on "Owner" "button"
     And I click on "Add members" "link"
@@ -34,8 +36,38 @@ Feature: Add users to a workspace
     And I should see "User Two"
     And I set the field "Filter users" to "three@example.com"
     Then I should not see "User One"
-    And I should see "User Three"
+    And I should not see "User Three"
     And I should not see "User Two"
+
+  @javascript
+  Scenario: Workspace owner search for non member users with different fullnamedisplay configuration.
+    Given I am on a totara site
+    And the following config values are set as admin:
+      | fullnamedisplay | middlename |
+    And I log in as "user_four"
+    When I click on "Your Workspaces" in the totara menu
+    Then I should see "Workspace 103"
+    And "Owner" "button" should exist
+    When I click on "Owner" "button"
+    And I click on "Add members" "link"
+    Then I should see "Jack"
+    And I should see "Jill"
+    And I should see "Jane"
+    And I should not see "User One"
+    And I should not see "User Two"
+    And I should not see "User Three"
+    When I set the field "Filter users" to "user one"
+    Then I should not see "Jack"
+    And I should not see "Jill"
+    And I should not see "Jane"
+    When I set the field "Filter users" to "Jack"
+    Then I should see "Jack"
+    And I should not see "Jill"
+    And I should not see "Jane"
+    When I set the field "Filter users" to "Jane"
+    Then I should not see "Jack"
+    And I should not see "Jill"
+    And I should see "Jane"
 
   @javascript
   Scenario: Add members should not be available if capability is removed.

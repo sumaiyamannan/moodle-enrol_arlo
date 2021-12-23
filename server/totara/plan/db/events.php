@@ -69,4 +69,20 @@ $observers = array(
         'eventname' => competency_deleted::class,
         'callback'  => 'totara_plan_observer::competency_deleted',
     ),
+    array(
+        'eventname' => '\core\event\user_enrolment_created',
+        'callback'  => '\totara_plan\observer\enrolment_observer::user_enrolment_created',
+    ),
+    array(
+        'eventname' => '\totara_completionimport\event\bulk_course_completionimport',
+        'callback'  => '\totara_plan\observer\completion_observer::bulk_completion',
+    ),
+    array(
+        'eventname' => '\totara_plan\event\component_created',
+        'callback'  => '\totara_plan\observer\plan_observer::course_assigned',
+    ),
+    array(
+        'eventname' => '\core\event\course_completed',
+        'callback'  => '\totara_plan\observer\completion_observer::completed_course',
+    ),
 );

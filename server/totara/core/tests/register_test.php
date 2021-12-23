@@ -172,15 +172,6 @@ class totara_core_register_testcase extends advanced_testcase {
 
         set_config('registrationenabled', 0);
         set_config('registered', time() - 60*60*24*3 - 100);
-        $task = new \totara_core\task\send_registration_data_task();
-        ob_start();
-        $task->execute();
-        $output = ob_get_contents();
-        ob_end_clean();
-        $this->assertSame("Registration updates are disabled\n", $output);
-
-        set_config('registrationenabled', 1);
-        set_config('registered', time() - 60*60*24*3 - 100);
         $this->setCurrentTimeStart();
         $task = new \totara_core\task\send_registration_data_task();
         ob_start();

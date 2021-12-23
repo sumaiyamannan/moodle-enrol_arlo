@@ -489,8 +489,18 @@ class rb_source_facetoface_events extends rb_facetoface_base_source {
             '(  SELECT  sd.sessionid,
                         sd.eventstart,
                         sd.eventfinish,
-                        tzstart.sessiontimezone AS tzstart,
-                        tzfinish.sessiontimezone AS tzfinish
+                        (
+                            SELECT tzstart.sessiontimezone AS tzstart
+                            FROM {facetoface_sessions_dates} tzstart
+                            WHERE sd.eventstart = tzstart.timestart
+                              AND sd.sessionid = tzstart.sessionid
+                        ) AS tzstart,
+                        (
+                            SELECT tzfinish.sessiontimezone AS tzfinish
+                            FROM {facetoface_sessions_dates} tzfinish
+                            WHERE sd.eventfinish = tzfinish.timefinish
+                              AND sd.sessionid = tzfinish.sessionid
+                        ) AS tzfinish
                 FROM (
                         SELECT   sessionid,
                                  MIN(timestart) AS eventstart,
@@ -498,10 +508,7 @@ class rb_source_facetoface_events extends rb_facetoface_base_source {
                         FROM     {facetoface_sessions_dates}
                         GROUP BY sessionid
                      ) sd
-                INNER JOIN {facetoface_sessions_dates} tzstart
-                    ON sd.eventstart = tzstart.timestart AND sd.sessionid = tzstart.sessionid
-                INNER JOIN {facetoface_sessions_dates} tzfinish
-                    ON sd.eventfinish = tzfinish.timefinish AND sd.sessionid = tzfinish.sessionid )',
+                )',
             "eventdateinfo.sessionid = {$join}.{$field}",
             REPORT_BUILDER_RELATION_ONE_TO_MANY
         );

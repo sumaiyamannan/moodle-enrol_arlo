@@ -23,6 +23,7 @@
 defined('MOODLE_INTERNAL') || die();
 
 use container_workspace\member\member;
+use totara_plan\task\update_record_of_learning_task;
 use totara_reportbuilder\report_helper;
 use container_course\course;
 
@@ -31,6 +32,10 @@ class container_course_report_builder_course_membership_report_testcase extends 
      * @return void
      */
     public function test_fetch_member_ship_that_does_not_include_workspace_member(): void {
+        // Make sure the record of learning is up to date. For some
+        // reason the record of learning table is not emptied reliably after tests
+        (new update_record_of_learning_task())->execute();
+
         global $DB;
         $this->setAdminUser();
         $generator = $this->getDataGenerator();

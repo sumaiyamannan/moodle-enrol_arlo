@@ -1036,6 +1036,36 @@ EOD;
     }
 
     /**
+     * Simplified unenrolment of user to course using default options.
+     *
+     * It is strongly recommended to use only this method for 'manual' and 'self' plugins only!!!
+     *
+     * @param int $user_id
+     * @param int $course_id
+     * @param string $enrol name of enrol plugin,
+     *     there must be exactly one instance in course,
+     *     it must support enrol_user() method.
+     * @return bool success
+     */
+    public function unenrol_user($user_id, $course_id, $enrol = 'manual') {
+        global $DB;
+
+        if (!$plugin = enrol_get_plugin($enrol)) {
+            return false;
+        }
+
+        $instances = $DB->get_records('enrol', array('courseid' => $course_id, 'enrol' => $enrol));
+        if (count($instances) != 1) {
+            return false;
+        }
+        $instance = reset($instances);
+
+        $plugin->unenrol_user($instance, $user_id);
+
+        return true;
+    }
+
+    /**
      * Assigns the specified role to a user in the context.
      *
      * @param int $roleid

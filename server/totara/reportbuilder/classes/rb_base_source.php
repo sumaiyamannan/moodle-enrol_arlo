@@ -123,6 +123,20 @@ abstract class rb_base_source {
     private $finalisation_methods = array();
 
     /**
+     * Cache to store already determined classes for display functions
+     *
+     * @var array
+     */
+    private $display_functions_class_cache = [];
+
+    /**
+     * A cache whehter a column display was checked already
+     *
+     * @var array
+     */
+    private $display_check_cache = [];
+
+    /**
      * Class constructor
      *
      * Call from the constructor of all child classes with:
@@ -478,10 +492,16 @@ abstract class rb_base_source {
         $results = array();
         $isexport = ($format !== 'html');
 
-        foreach ($report->columns as $column) {
-            if (!$column->display_column($isexport)) {
+        foreach ($report->columns as $key => $column) {
+            $display_function = $column->get_displayfunc();
+            // For performance reasons we want to call this only once per actual column
+            if (!isset($this->display_check_cache[$format][$key])
+                && !$column->display_column($isexport)
+            ) {
                 continue;
             }
+
+            $this->display_check_cache[$format][$key] = true;
 
             $type = $column->type;
             $value = $column->value;
@@ -492,7 +512,12 @@ abstract class rb_base_source {
                 continue;
             }
 
-            $classname = $column->get_display_class($report);
+            if (isset($this->display_functions_class_cache[$display_function])) {
+                $classname = $this->display_functions_class_cache[$display_function];
+            } else {
+                $classname = $column->get_display_class($report);
+                $this->display_functions_class_cache[$display_function] = $classname;
+            }
             $results[] = $classname::display($row->$field, $format, $row, $column, $report);
         }
 

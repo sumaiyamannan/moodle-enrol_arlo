@@ -25,7 +25,7 @@ namespace mod_perform\rb;
 
 use context_user;
 use core\entity\tenant;
-use mod_perform\util as perform_util;
+use totara_core\access;
 
 class util {
 
@@ -47,6 +47,7 @@ class util {
             JOIN {perform_track} t ON a.id = t.activity_id
             JOIN {perform_track_user_assignment} tua ON t.id = tua.track_id
             JOIN {perform_subject_instance} si ON tua.id = si.track_user_assignment_id
+            JOIN {context} c ON si.subject_user_id = c.instanceid AND c.contextlevel = ".CONTEXT_USER."
         ";
         $params = [];
 
@@ -72,22 +73,22 @@ class util {
             return ['1 = 1', []];
         }
 
-        // Early exit if they can not even potentially manage any participants
-        if (!has_capability_in_any_context('mod/perform:report_on_subject_responses', null, $user_id)) {
+        // Early exit if they can not even potentially report on any participants
+        if (!has_role_with_capability(
+            'mod/perform:report_on_subject_responses',
+            [CONTEXT_USER, CONTEXT_SYSTEM, CONTEXT_TENANT],
+            $user_id
+        )) {
             return ['1 = 0', []];
         }
 
-        $users = perform_util::get_permitted_users($user_id, 'mod/perform:report_on_subject_responses');
-        if (empty($users)) {
-            return ['1 = 0', []];
-        }
+        [$cap_sql, $cap_params] = access::get_has_capability_sql('mod/perform:report_on_subject_responses', 'c.id', $user_id);
 
-        [$sql_in, $params_in] = $DB->get_in_or_equal($users, SQL_PARAMS_NAMED);
-        $sql .= " WHERE si.subject_user_id {$sql_in}";
-
-        $params = array_merge($params, $params_in);
+        $params = array_merge($params, $cap_params);
+        $sql .= " WHERE {$cap_sql}";
 
         $sql = "{$activity_id_column} IN ({$sql})";
+
         return [$sql, $params];
     }
 
@@ -100,8 +101,6 @@ class util {
      * @return array Array containing SQL string and array of params
      */
     public static function get_manage_participation_sql(int $report_for, string $user_id_field) {
-        global $DB;
-
         // If user can manage participation across all users don't do the per-row restriction at all.
         $user_context = context_user::instance($report_for);
         if (has_capability('mod/perform:manage_all_participation', $user_context, $report_for)) {
@@ -109,18 +108,17 @@ class util {
         }
 
         $capability = 'mod/perform:manage_subject_user_participation';
-        $permitted_users = perform_util::get_permitted_users($report_for, $capability);
 
-        if (empty($permitted_users)) {
-            // No access at all if not permitted to see any users.
-            return ['1=0', []];
+        // Early exit if they can not even potentially manage any participants
+        if (!has_role_with_capability(
+            $capability,
+            [CONTEXT_USER, CONTEXT_SYSTEM, CONTEXT_TENANT],
+            $report_for
+        )) {
+            return ['1 = 0', []];
         }
 
-        // Restrict to specific subject users.
-        list($sourcesql, $sourceparams) = $DB->get_in_or_equal($permitted_users, SQL_PARAMS_NAMED);
-        $wheresql = "$user_id_field {$sourcesql}";
-        $whereparams = $sourceparams;
-        return [$wheresql, $whereparams];
+        return access::get_has_capability_sql($capability, 'ctx.id', $report_for);
     }
 
     /**
@@ -129,11 +127,10 @@ class util {
      *
      * @param int $report_for User ID of user who is viewing
      * @param string $user_id_field String referencing database column containing user ids to filter.
+     * @param string $context_join
      * @return array Array containing SQL string and array of params
-     * @throws \coding_exception
-     * @throws \dml_exception
      */
-    public static function get_report_on_subjects_sql(int $report_for, string $user_id_field) {
+    public static function get_report_on_subjects_sql(int $report_for, string $user_id_field, string $context_join = 'ctx') {
         global $DB;
 
         // If user can manage participation across all users don't do the per-row restriction at all.
@@ -143,16 +140,16 @@ class util {
         }
 
         $capability = 'mod/perform:report_on_subject_responses';
-        $permitted_users = perform_util::get_permitted_users($report_for, $capability);
-
-        if (empty($permitted_users)) {
-            // No access at all if not permitted to see any users.
-            return ['1=0', []];
+        // Early exit if they can not even potentially report on any participants
+        if (!has_role_with_capability(
+            $capability,
+            [CONTEXT_USER, CONTEXT_SYSTEM, CONTEXT_TENANT],
+            $report_for
+        )) {
+            return ['1 = 0', []];
         }
 
-        // Restrict to specific subject users.
-        list($sourcesql, $sourceparams) = $DB->get_in_or_equal($permitted_users, SQL_PARAMS_NAMED);
-        return ["{$user_id_field} {$sourcesql}", $sourceparams];
+        return access::get_has_capability_sql($capability, $context_join.'.id', $report_for);
     }
 
     /**
