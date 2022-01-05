@@ -1,6 +1,11 @@
 This file describes API changes in reportbuilder,
 information provided here is intended especially for developers.
 
+=== 13.17 ===
+
+--- Update to graphQL ---
+* Updated field 'title' scalar type 'param_text' to 'String' for mutation 'totara_reportbuilder_update_report_title'
+
 === 13.3 ===
 
 * rb_filter_text::setupForm() now receives a new optional parameter 'hiddenoperator' which allows change an array of comparison operators

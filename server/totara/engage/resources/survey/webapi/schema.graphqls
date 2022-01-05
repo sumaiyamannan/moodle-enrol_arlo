@@ -85,9 +85,9 @@ input engage_survey_question_parameter {
   If id is null, then this is about adding new question. Otherwise updating the question with specific id.
   """
   id: Int
-  value: param_text!
+  value: String!
   answertype: param_integer!
-  options: [param_text!]!
+  options: [String!]!
 }
 
 extend type Query {

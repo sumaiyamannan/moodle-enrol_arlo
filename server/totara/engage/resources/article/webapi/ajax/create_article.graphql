@@ -1,6 +1,6 @@
 mutation engage_article_create_article(
   $content: String!
-  $name: param_text!
+  $name: String!
   $format: param_integer
   $access: totara_engage_access
   $topics: [param_integer!]

@@ -7,6 +7,7 @@ information provided here is intended especially for developers.
 * Added the manually deletion process(including the participant pending status) for Manage participation subject instances
 * Added a 'close_pending' parameter (default is false) to \mod_perform\models\activity\subject_instance::manually_close() that allows closing of pending subject instances.
   Any custom observers of the 'subject_instance_availability_closed' event should be checked to take that into account.
+* Updated field 'name' and 'description' scalar type 'param_text' to 'String' for mutation 'mod_perform_update_activity' and 'mod_perform_create_activity'
 
 === 13.15 ===
 

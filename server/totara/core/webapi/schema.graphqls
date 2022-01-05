@@ -120,7 +120,7 @@ extend type Query {
 extend type Mutation {
   totara_core_delete_draft_file(
     draftid: param_integer!
-    filename: param_text!
+    filename: String!
   ): totara_core_delete_draft_file_result!
 }
 

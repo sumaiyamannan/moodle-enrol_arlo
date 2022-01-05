@@ -40,7 +40,7 @@ extend type Query {
 
 extend type Mutation {
   engage_article_create(
-    name: param_text!
+    name: String!
     content: String!
     format: param_integer
     access: totara_engage_access
@@ -58,7 +58,7 @@ extend type Mutation {
 
   engage_article_update(
     resourceid: param_integer!
-    name: param_text
+    name: String
     content: String
     format: param_integer
     access: totara_engage_access
