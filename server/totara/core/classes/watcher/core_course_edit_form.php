@@ -424,7 +424,7 @@ class core_course_edit_form {
         }
 
         // Only show the Audiences Visibility functionality to users with the appropriate permissions.
-        $beforename = 'groups';
+        $beforename = 'filehdr';
 
         $mform->insertElementBefore(
             $mform->createElement('header', 'visiblecohortshdr', get_string('audiencevisibility', 'totara_cohort')),
