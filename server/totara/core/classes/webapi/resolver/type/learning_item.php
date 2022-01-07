@@ -99,6 +99,15 @@ class learning_item implements type_resolver {
             }
         }
 
+        if ($field === 'progress_summary') {
+            // Make sure we have the percentage in the progress.
+            if ($item instanceof item_has_progress) {
+                return $item->get_progress_summary();
+            } else {
+                return null;
+            }
+        }
+
         if ($field == 'duedate_state') {
             if (empty($item->duedate) || $item->duedate == -1) {
                 $item->duedate_state = null; // For consistency.

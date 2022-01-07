@@ -1,6 +1,10 @@
 List of upgrade and API changes in Totara core,
 information provided here is intended especially for developers.
 
+=== 13.16 ===
+
+* Added field progress_summary to GraphQL type totara_core_learning_item
+
 === 13.14 ===
 
 * Progress bar renderer can now receive optional label (used for aria label)

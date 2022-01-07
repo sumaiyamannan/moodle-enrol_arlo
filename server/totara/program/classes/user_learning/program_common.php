@@ -24,6 +24,9 @@
 
 namespace totara_program\user_learning;
 
+use totara_program\user_learning\item as program_item;
+use totara_certification\user_learning\item as certification_item;
+
 trait program_common {
     /**
      * Process coursesets so that they display correctly.
@@ -178,6 +181,29 @@ trait program_common {
     public function get_progress_percentage() {
         $this->ensure_completion_loaded();
         return $this->progress_percentage;
+    }
+
+    /**
+     * Checks completion is loaded and returns the progress summary.
+     *
+     * @return string|null
+     */
+    public function get_progress_summary(): ?string {
+        if ($this instanceof program_item) {
+            $completion = $this->program->get_completion_data($this->user);
+        } else if ($this instanceof certification_item) {
+            $completion = $this->certification->get_completion_data($this->user);
+        } else {
+            throw new \coding_exception("Invalid learning item");
+        }
+        switch ($completion->status) {
+            case STATUS_PROGRAM_INCOMPLETE:
+                return get_string('incomplete', 'totara_program');
+            case STATUS_PROGRAM_COMPLETE:
+                return get_string('complete', 'totara_program');
+            default:
+                return get_string('error:invalidstatus', 'totara_program');
+        }
     }
 
     /**

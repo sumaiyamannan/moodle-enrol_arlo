@@ -350,6 +350,10 @@ class behat_totara_data_generators extends behat_base {
                 'datagenerator' => 'manual_rating_for_behat',
                 'required' => array('competency', 'subject_user', 'rater_user', 'role', 'scale_value')
             ),
+            'achievement configuration' => array(
+                'datagenerator' => 'achievement_configuration_for_behat',
+                'required' => array('competency', 'aggregation_type')
+            ),
         ),
         'totara_criteria' => array(
             'childcompetency' => array(
