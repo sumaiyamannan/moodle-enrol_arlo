@@ -134,6 +134,8 @@ class program_content_edit_form extends moodleform {
      * the user
      */
     function add_errors() {
+        global $OUTPUT;
+
         $mform = $this->_form;
         $html = '';
 
@@ -151,6 +153,7 @@ class program_content_edit_form extends moodleform {
                 $html .= html_writer::start_tag('li', array('class' => 'error')) .'%'.$error_element.'_error%' . html_writer::end_tag('li');
             }
             $html .= html_writer::end_tag('ul');
+            $html = $OUTPUT->notification($html, 'notifyproblem');
 
             $this->template_html = $html.$this->template_html;
         }
