@@ -20,5 +20,5 @@
 import { createUniformInputWrapper } from './util';
 import Select from 'tui/components/form/Select';
 
-export default createUniformInputWrapper(Select);
+export default createUniformInputWrapper(Select, { touchOnChange: true });
 </script>

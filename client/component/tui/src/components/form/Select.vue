@@ -42,6 +42,7 @@
       :name="name"
       :required="required"
       :size="size"
+      @blur="$emit('blur', $event)"
     >
       <template v-for="(option, i) in normalizedOptions">
         <optgroup v-if="option.options" :key="i" :label="option.label">
