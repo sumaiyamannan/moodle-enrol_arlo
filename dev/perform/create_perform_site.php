@@ -22,11 +22,23 @@
  * @package totara_competency
  */
 
+use core\entity\cohort as cohort_entity;
 use core\orm\query\builder;
+use core\webapi\execution_context;
 use criteria_childcompetency\childcompetency;
 use criteria_coursecompletion\coursecompletion;
 use criteria_linkedcourses\linkedcourses;
 use criteria_onactivate\onactivate;
+use mod_perform\constants;
+use mod_perform\dates\date_offset;
+use mod_perform\entity\activity\activity;
+use mod_perform\entity\activity\subject_instance;
+use mod_perform\expand_task as expand_assignments_task;
+use mod_perform\models\activity\track;
+use mod_perform\models\activity\track_assignment_type;
+use mod_perform\task\service\subject_instance_creation;
+use mod_perform\user_groups\grouping;
+use mod_perform\webapi\resolver\mutation\update_track_schedule;
 use pathway_manual\models\roles\appraiser;
 use pathway_manual\models\roles\manager;
 use pathway_manual\models\roles\self_role;
@@ -3364,9 +3376,283 @@ Feel free to browse, list of users is below, their password is 12345.
         link_evidence_to_plan($plan, $competencies, $data, $evidence_generator);
     }
 
+    $activities = [
+        [
+            'general' => [
+                'activity_name' => multilang('Mid-year appraisal'),
+                'description' => multilang('Appraiser answers questions about an employee'),
+                'activity_type' => 'appraisal',
+                'status' => 'ACTIVE',
+                'create_track' => true,
+                'anonymous_responses' => false,
+                'manual_relationships' => null,
+                'tenant' => 1,
+            ],
+            'track_schedule' => [
+                'schedule_is_open' => false,
+                'schedule_is_fixed' => true,
+                'schedule_fixed_from' => ['iso' => date('Y-m-d', time() - WEEKSECS), 'timezone' => 'Pacific/Auckland'],
+                'schedule_fixed_to' => ['iso' => date('Y-m-d', time() + WEEKSECS), 'timezone' => 'Pacific/Auckland'],
+                'due_date_is_enabled' => true,
+                'due_date_is_fixed' => false,
+                'due_date_offset' => [
+                    'count' => 2,
+                    'unit' => date_offset::UNIT_DAY
+                ],
+                'repeating_is_enabled' => false,
+                'subject_instance_generation' => constants::SUBJECT_INSTANCE_GENERATION_ONE_PER_SUBJECT,
+            ],
+            'assignments' => [
+                'audiences' => [
+                    'Content makers',
+                    'IT Department',
+                    'VIP',
+                ]
+            ],
+            'relationships' => [
+                constants::RELATIONSHIP_SUBJECT => [true, false], // can view, can answer
+                constants::RELATIONSHIP_APPRAISER => [true, true],
+            ]
+        ],
+
+        [
+            'general' => [
+                'activity_name' => multilang('Overdue feedback'),
+                'description' => multilang('All the subject instances are set to overdue after this has been created'),
+                'activity_type' => 'feedback',
+                'status' => 'ACTIVE',
+                'create_track' => true,
+                'anonymous_responses' => false,
+                'manual_relationships' => null,
+                'tenant' => 1,
+                'make_all_participants_overdue' => true,
+            ],
+            'track_schedule' => [
+                'schedule_is_open' => false,
+                'schedule_is_fixed' => true,
+                'schedule_fixed_from' => ['iso' => date('Y-m-d', time() - WEEKSECS), 'timezone' => 'Pacific/Auckland'],
+                'schedule_fixed_to' => ['iso' => date('Y-m-d', time() + WEEKSECS), 'timezone' => 'Pacific/Auckland'],
+                'due_date_is_enabled' => true,
+                'due_date_is_fixed' => true,
+                'due_date_fixed' => ['iso' => date('Y-m-d', time() + (2 * WEEKSECS)), 'timezone' => 'Pacific/Auckland'],
+                'repeating_is_enabled' => false,
+                'subject_instance_generation' => constants::SUBJECT_INSTANCE_GENERATION_ONE_PER_SUBJECT,
+            ],
+            'assignments' => [
+                'audiences' => [
+                    'Content makers',
+                    'IT Department',
+                    'VIP',
+                ]
+            ],
+            'relationships' => [
+                constants::RELATIONSHIP_SUBJECT => [true, true], // can view, can answer
+                constants::RELATIONSHIP_MANAGER => [true, true],
+                constants::RELATIONSHIP_MANAGERS_MANAGER => [true, false],
+            ]
+        ],
+
+        [
+            'general' => [
+                'activity_name' => multilang('Check-in with due date'),
+                'description' => multilang('This is created with a due date in two weeks'),
+                'activity_type' => 'check-in',
+                'status' => 'ACTIVE',
+                'create_track' => true,
+                'anonymous_responses' => false,
+                'manual_relationships' => null,
+                'tenant' => 2,
+            ],
+            'track_schedule' => [
+                'schedule_is_open' => false,
+                'schedule_is_fixed' => true,
+                'schedule_fixed_from' => ['iso' => date('Y-m-d', time() - WEEKSECS), 'timezone' => 'Pacific/Auckland'],
+                'schedule_fixed_to' => ['iso' => date('Y-m-d', time() + WEEKSECS), 'timezone' => 'Pacific/Auckland'],
+                'due_date_is_enabled' => true,
+                'due_date_is_fixed' => true,
+                'due_date_fixed' => ['iso' => date('Y-m-d', time() + (2 * WEEKSECS)), 'timezone' => 'Pacific/Auckland'],
+                'repeating_is_enabled' => false,
+                'subject_instance_generation' => constants::SUBJECT_INSTANCE_GENERATION_ONE_PER_SUBJECT,
+            ],
+            'assignments' => [
+                'audiences' => [
+                    'Content makers',
+                    'IT Department',
+                    'VIP',
+                ]
+            ],
+            'relationships' => [
+                constants::RELATIONSHIP_SUBJECT => [true, true], // can view, can answer
+                constants::RELATIONSHIP_MANAGER => [true, false],
+                constants::RELATIONSHIP_APPRAISER => [true, true],
+            ]
+        ],
+
+        [
+            'general' => [
+                'activity_name' => multilang('Monthly Check-in'),
+                'description' => multilang('Check-in with the line manager - just a basic draft'),
+                'activity_type' => 'check-in',
+                'status' => 'DRAFT',
+                'create_track' => true,
+                'anonymous_responses' => false,
+                'manual_relationships' => null,
+                'tenant' => 2,
+            ],
+        ],
+
+        [
+            'general' => [
+                'activity_name' => multilang('Anonymous feedback about non-participating subject'),
+                'description' => multilang('The subject user is not a participant in this activity. Responses remain anonymous. Still, please keep it civil.'),
+                'activity_type' => 'feedback',
+                'status' => 'ACTIVE',
+                'create_track' => true,
+                'anonymous_responses' => true,
+                'manual_relationships' => null,
+                'tenant' => 1,
+            ],
+            'track_schedule' => [
+                'schedule_is_open' => false,
+                'schedule_is_fixed' => true,
+                'schedule_fixed_from' => ['iso' => date('Y-m-d', time() - WEEKSECS), 'timezone' => 'Pacific/Auckland'],
+                'schedule_fixed_to' => ['iso' => date('Y-m-d', time() + WEEKSECS), 'timezone' => 'Pacific/Auckland'],
+                'due_date_is_enabled' => true,
+                'due_date_is_fixed' => false,
+                'due_date_offset' => [
+                    'count' => 5,
+                    'unit' => date_offset::UNIT_DAY
+                ],
+                'repeating_is_enabled' => false,
+                'subject_instance_generation' => constants::SUBJECT_INSTANCE_GENERATION_ONE_PER_SUBJECT,
+            ],
+            'assignments' => [
+                'audiences' => [
+                    'Content makers',
+                    'IT Department',
+                    'VIP',
+                ]
+            ],
+            'relationships' => [
+                constants::RELATIONSHIP_MANAGER => [true, true], // can view, can answer
+                constants::RELATIONSHIP_APPRAISER => [true, true],
+            ]
+        ],
+
+    ];
+
+    create_activities($activities, $data['tenants']);
+
     run_tasks();
 
     create_info_block($data);
+}
+
+function create_activities(array $activities_data, $tenants): void {
+    foreach ($activities_data as $activity_data) {
+        create_activity($activity_data, $tenants);
+    }
+    // Run the expand tasks for the activities.
+    $expand_task = expand_assignments_task::create();
+    $expand_task->expand_all();
+    $expand_task = new subject_instance_creation();
+    $expand_task->generate_instances();
+
+    // Set subject instances to overdue for the activities where this is configured.
+    foreach ($activities_data as $activity_data) {
+        if ($activity_data['general']['status'] === 'ACTIVE'
+            && isset($activity_data['general']['make_all_participants_overdue'])
+            && $activity_data['general']['make_all_participants_overdue'] === true) {
+
+            $activity = activity::repository()
+                ->where('name', $activity_data['general']['activity_name'])
+                ->one(true);
+
+            subject_instance::repository()
+                ->filter_by_activity_id($activity->id)
+                ->get()
+                ->map(function(subject_instance $subject_instance) {
+                    $subject_instance->due_date = time() - DAYSECS;
+                    $subject_instance->save();
+                });
+        }
+    }
+}
+
+function create_activity(array $activity_data, $tenants): void {
+    $perform_generator = perform_generator();
+
+    // Set the tenant category if necessary.
+    if (!empty($tenants) && isset($activity_data['general']['tenant'])) {
+        if (!isset($tenants[$activity_data['general']['tenant']])) {
+            throw new coding_exception('Unknown tenant ' . $activity_data['general']['tenant'] . ' for activity');
+        }
+        $tenant = $tenants[$activity_data['general']['tenant']];
+        $activity_data['general']['category'] = $tenant->categoryid;
+    }
+
+    // Create activity
+    $activity_data['general']['create_section'] = false; // We create the section ourselves later below.
+    $activity_data['general']['activity_status'] = 'DRAFT'; // Always create as draft, we activate later below.
+
+    $activity = $perform_generator->create_activity_in_container($activity_data['general']);
+    /** @var track $track */
+    $track = $activity->get_tracks()->first();
+
+    // Track schedule
+    if (isset($activity_data['track_schedule'])) {
+        $activity_data['track_schedule']['track_id'] = $track->id;
+
+        // Use the update_track_schedule resolver, so we can make use of the nice format that it expects.
+        update_track_schedule::resolve(
+            ['track_schedule' => $activity_data['track_schedule']],
+            execution_context::create('dev')
+        );
+    }
+
+    // Assignments
+    if (isset($activity_data['assignments'])) {
+        foreach ($activity_data['assignments'] as $type => $assignments) {
+            switch ($type) {
+                case 'audiences':
+                    foreach ($assignments as $audience_name) {
+                        $audience_name = empty($tenants)
+                            ? $audience_name
+                            : $audience_name . " (Tenant {$activity_data['general']['tenant']})";
+                        $audience = cohort_entity::repository()->where('name', $audience_name)->one(true);
+                        $track->add_assignment(track_assignment_type::ADMIN, grouping::cohort($audience->id));
+                    }
+                    break;
+                default:
+                    throw new coding_exception('Assignment type not implemented: ' . $type);
+            }
+        }
+    }
+
+    // Section relationships.
+    $section_name = multilang("First section for {$activity->name}"); // Could be made configurable for multi-section.
+    $section = $perform_generator->create_section($activity, ['title' => $section_name]);
+    if (isset($activity_data['relationships'])) {
+        foreach ($activity_data['relationships'] as $relationship_key => $permissions) {
+            $perform_generator->create_section_relationship(
+                $section,
+                ['relationship' => $relationship_key],
+                $permissions[0],
+                $permissions[1]
+            );
+        }
+    }
+
+    // Create one section element
+    $perform_generator->create_section_element_from_name([
+        'section_name' => $section_name,
+        'element_name' => 'short_text',
+        'title' => multilang('First and only question')
+    ]);
+
+    if ($activity_data['general']['status'] === 'ACTIVE') {
+        $activity->activate();
+    }
 }
 
 /**
@@ -4304,6 +4590,15 @@ function assignment_generator() {
  */
 function evidence_generator() {
     return generator()->get_plugin_generator('totara_evidence');
+}
+
+/**
+ * Get Perform generator
+ *
+ * @return mod_perform_generator|component_generator_base
+ */
+function perform_generator() {
+    return generator()->get_plugin_generator('mod_perform');
 }
 
 function run_tasks() {
