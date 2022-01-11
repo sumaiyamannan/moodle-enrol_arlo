@@ -81,6 +81,12 @@ export default {
             }
             this.$emit('input', newValue);
           },
+          blur: e => {
+            // We don't want to trigger the blur event if the user is just tabbing between different options in this CheckboxGroup
+            if (!this.$el.contains(e.relatedTarget)) {
+              this.$emit('blur', e);
+            }
+          },
         },
       };
     },
