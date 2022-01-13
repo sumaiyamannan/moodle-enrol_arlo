@@ -5,6 +5,8 @@ information provided here is intended especially for developers.
 
 * Updated AttachmentNode.vue to correctly support different file extensions
   * Template and SCSS changes
+* Added "contextMode" prop to LabelledButtonTrigger with default set to "uncontained"
+  * Template changes
 
 === 13.8 ===
 

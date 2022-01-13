@@ -29,6 +29,7 @@
 
     <Popover
       v-if="$scopedSlots['hover-label-content']"
+      :context-mode="contextMode"
       :triggers="['focus', 'hover']"
       :closeable="closeablePopover"
       @open-changed="$emit('popover-open-changed', $event)"
@@ -96,6 +97,10 @@ export default {
     closeablePopover: {
       type: Boolean,
       default: true,
+    },
+    contextMode: {
+      type: String,
+      default: 'uncontained',
     },
   },
 
