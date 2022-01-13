@@ -41,12 +41,12 @@ class tool_totara_sync_events_testcase extends advanced_testcase {
      * Test sync completed event.
      */
     public function test_sync_completed () {
-        $event = \tool_totara_sync\event\sync_completed::create();
+        $event = \tool_totara_sync\event\sync_completed::create(['other' => ['element' => 'org']]);
         $event->trigger();
 
         $this->assertSame('u', $event->crud);
         $this->assertSame($event::LEVEL_OTHER, $event->edulevel);
-        $this->assertSame(null, $event->other);
+        $this->assertNotNull($event->other); // As of Totara 12, 'other' data entry now contains 'element'.
 
         $this->assertEventContextNotUsed($event);
     }
