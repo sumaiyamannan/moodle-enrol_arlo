@@ -361,6 +361,9 @@ class condition extends \core_availability\condition {
      */
     protected function get_cached_user_profile_field($userid) {
         global $USER, $DB, $CFG;
+
+        static $currentuser_customfields_loaded = null;
+
         $iscurrentuser = $USER->id == $userid;
         if (isguestuser($userid) || ($iscurrentuser && !isloggedin())) {
             // Must be logged in and can't be the guest.
@@ -403,22 +406,21 @@ class condition extends \core_availability\condition {
                     throw new \coding_exception('Requested user profile field does not exist');
                 }
             }
-            // Checking if the custom profile fields are already available.
-            if (!isset($USER->profile)) {
-                // Drat! they're not. We need to use a temp object and load them.
-                // We don't use $USER as the profile fields are loaded into the object.
-                $user = new \stdClass;
-                $user->id = $USER->id;
-                // This should ALWAYS be set, but just in case we check.
+
+            // The custom fields may not be available or fully up-to-date in the users session data.
+            // Lets just fully load all available custom fields for the user.
+            // Not great for performance but ensure we're fully up to date and we only need to run this once.
+            if (!$currentuser_customfields_loaded || PHPUNIT_TEST) {
+                // This should ALWAYS be set, but just in case.
                 require_once($CFG->dirroot . '/user/profile/lib.php');
-                profile_load_custom_fields($user);
-                if (array_key_exists($field, $user->profile)) {
-                    return $user->profile[$field];
-                }
-            } else if (array_key_exists($field, $USER->profile)) {
-                // Hurrah they're available, this is easy.
+                profile_load_custom_fields($USER);
+                $currentuser_customfields_loaded = true;
+            }
+
+            if (array_key_exists($field, $USER->profile)) {
                 return $USER->profile[$field];
             }
+
             // The profile field doesn't exist.
             return false;
         } else {
