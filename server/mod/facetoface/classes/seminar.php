@@ -578,7 +578,7 @@ final class seminar implements seminar_iterator_item {
      * @return string
      */
     public function get_name(): string {
-        return $this->name;
+        return format_string($this->name);
     }
     /**
      * @param string $name
