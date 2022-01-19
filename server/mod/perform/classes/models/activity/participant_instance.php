@@ -27,9 +27,12 @@ use coding_exception;
 use context_module;
 use core\collection;
 use core\orm\entity\model;
+use core\orm\query\builder;
 use mod_perform\controllers\activity\view_external_participant_activity;
 use mod_perform\controllers\activity\view_user_activity;
 use mod_perform\entity\activity\participant_instance as participant_instance_entity;
+use mod_perform\entity\activity\element_response as element_response_entity;
+use mod_perform\event\participant_instance_manually_deleted;
 use mod_perform\models\response\participant_section;
 use mod_perform\notification\factory;
 use mod_perform\state\participant_instance\complete;
@@ -362,4 +365,28 @@ class participant_instance extends model {
         return $this->subject_instance->is_subject_user_deleted() || $this->is_participant_deleted();
     }
 
+    /**
+     * Manually delete participant instance and linked records
+     *
+     * @return void
+     */
+    public function manually_delete(): void {
+        $deleted_event = participant_instance_manually_deleted::create_from_participant_instance($this);
+        builder::get_db()->transaction(function () {
+            if ($this->get_availability_state() instanceof open) {
+                $this->manually_close();
+            }
+            $participant_sections = $this->get_participant_sections();
+            foreach ($participant_sections as $participant_section) {
+                (participant_section::load_by_id($participant_section->id))->delete();
+            }
+            foreach ($this->entity->element_responses as $element_response) {
+                element_response_entity::repository()
+                    ->where('id', $element_response->id)
+                    ->delete();
+            }
+            $this->entity->delete();
+        });
+        $deleted_event->trigger();
+    }
 }

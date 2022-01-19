@@ -18,6 +18,13 @@
 
 <template>
   <div>
+    <ParticipantDeleteActionModal
+      v-if="isParticipantReport"
+      :participant-instance-id="id"
+      :report-type="reportType"
+      :delete-modal-open="deleteModalOpen"
+      @modal-close="closeDeleteModal"
+    />
     <SubjectOpenCloseActionModal
       v-if="isSubjectReport"
       :modal-open="showModalOpen"
@@ -66,17 +73,27 @@
       >
         <UnlockIcon />
       </ButtonIcon>
+      <ButtonIcon
+        v-if="isParticipantReport"
+        :aria-label="$str('button_delete', 'mod_perform')"
+        :styleclass="{ transparentNoPadding: true }"
+        @click="showDeleteModal()"
+      >
+        <DeleteIcon />
+      </ButtonIcon>
     </template>
   </div>
 </template>
 <script>
 import ButtonIcon from 'tui/components/buttons/ButtonIcon';
 import LockIcon from 'tui/components/icons/Lock';
+import ParticipantDeleteActionModal from 'mod_perform/components/report/manage_participation/ParticipantDeleteActionModal';
 import ParticipantOpenCloseActionModal from 'mod_perform/components/report/manage_participation/ParticipantOpenCloseActionModal';
 import SectionOpenCloseActionModal from 'mod_perform/components/report/manage_participation/SectionOpenCloseActionModal';
 import SubjectOpenCloseActionModal from 'mod_perform/components/report/manage_participation/SubjectInstanceOpenCloseActionModal';
 import ParticipantAddIcon from 'tui/components/icons/AddUser';
 import UnlockIcon from 'tui/components/icons/Unlock';
+import DeleteIcon from 'tui/components/icons/Delete';
 
 const REPORT_TYPE_SUBJECT_INSTANCE = 'SUBJECT_INSTANCE';
 const REPORT_TYPE_PARTICIPANT_INSTANCE = 'PARTICIPANT_INSTANCE';
@@ -86,11 +103,13 @@ export default {
   components: {
     ButtonIcon,
     LockIcon,
+    ParticipantDeleteActionModal,
     ParticipantOpenCloseActionModal,
     ParticipantAddIcon,
     SectionOpenCloseActionModal,
     SubjectOpenCloseActionModal,
     UnlockIcon,
+    DeleteIcon,
   },
   props: {
     reportType: {
@@ -114,6 +133,7 @@ export default {
   data() {
     return {
       showModalOpen: false,
+      deleteModalOpen: false,
     };
   },
   computed: {
@@ -147,6 +167,12 @@ export default {
     showModal() {
       this.showModalOpen = true;
     },
+    showDeleteModal() {
+      this.deleteModalOpen = true;
+    },
+    closeDeleteModal() {
+      this.deleteModalOpen = false;
+    },
   },
 };
 </script>
@@ -155,7 +181,8 @@ export default {
   "mod_perform": [
     "activity_participants_add",
     "button_reopen",
-    "button_close"
+    "button_close",
+    "button_delete"
   ]
   }
 </lang-strings>

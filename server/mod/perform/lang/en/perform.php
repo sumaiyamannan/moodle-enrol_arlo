@@ -88,6 +88,7 @@ $string['bulk_export_filter_changed_warning_message'] = 'New report filters have
 $string['bulk_export_no_params_warning_message'] = 'This report can only be accessed from the performance reporting interface - to select records to export, go to the <a href="{$a->url}">performance reporting</a> page, and select some data to export.';
 $string['bulk_export_type_incorrect'] = 'Invalid bulk export type';
 $string['bulk_export_shortname_incorrect'] = 'Bulk export with an invalid embedded report shortname attempted.';
+$string['button_delete']  = 'Delete';
 $string['button_cancel']  = 'Cancel';
 $string['button_close'] = 'Close';
 $string['button_continue'] = 'Continue';
@@ -196,6 +197,7 @@ $string['event_activity_deleted'] = 'Performance activity deleted';
 $string['event_participant_instance_availability_closed'] = 'Performance activity participant instance closed';
 $string['event_participant_instance_availability_opened'] = 'Performance activity participant instance opened';
 $string['event_participant_instance_manually_added'] = 'Performance activity participant instance manually added';
+$string['event_participant_instance_manually_deleted'] = 'Performance activity participant instance manually deleted';
 $string['event_participant_section_availability_closed_name'] = 'Performance participant section availability closed';
 $string['event_participant_section_availability_opened_name'] = 'Performance participant section availability opened';
 $string['event_participant_section_saved_as_draft'] = 'Performance participant section saved as draft';
@@ -309,6 +311,9 @@ $string['modal_element_move_message'] = 'It will be added as the final element i
 $string['modal_element_move_title'] = 'Move element to another section';
 $string['modal_element_move_to'] = 'Move to';
 $string['modal_notification_preview'] = 'Notification preview';
+$string['modal_participant_instance_delete_title'] = 'Confirm participant instance deletion';
+$string['modal_participant_instance_delete_message'] = 'This will permanently delete the participant instance and all associated records. This may affect aggregated data based on these records.';
+$string['modal_participant_instance_delete_confirmation_line'] = 'Are you sure you would like to delete this participant instance?';
 $string['modal_section_delete_message'] = 'This will also delete all content elements contained in this section';
 $string['modal_section_delete_title'] = 'Confirm section deletion';
 $string['modulename'] = 'Performance activity';
@@ -355,6 +360,7 @@ $string['participant_instances_close_confirmation']  = 'Participant instance (an
 $string['participant_instances_close_title'] = 'Close participant instance';
 $string['participant_instances_close_message_line1'] = 'This will prevent any further submission of responses from this participant, regardless of their progress.';
 $string['participant_instances_close_message_line2'] = 'If this is a multi-section activity, this applies to all sections (but those already closed will not be affected). If you want to close only some sections for the participant, click on the linked sections to navigate to the “participant sections” tab and select the relevant ones.';
+$string['participant_instances_delete_confirmation'] = 'The participant instance and all associated records have been successfully deleted.';
 $string['participant_instances_manually_added_toast'] = '{$a} participant instances created';
 $string['participant_instances_manually_added_toast_singular'] = '1 participant instance created';
 $string['participant_instances_reopen_confirmation'] = 'Participant instance (and any sections within) reopened';
@@ -1183,7 +1189,6 @@ Your {$a->activity_name} {$a->activity_type} has been reopened and requires furt
 
 You can access the activity through this link: {$a->activity_link}';
 $string['template_reopened_subject_subject'] = 'Reopened activity - {$a->activity_name} {$a->activity_type}';
-
 $string['toast_error_create_activity'] = 'An error occurred while saving, and the activity could not be created.';
 $string['toast_error_generic_update'] = 'An error occurred, and your latest changes have not been saved.';
 $string['toast_error_save_response'] = 'An error occurred while saving, and the activity responses could not be updated.';
