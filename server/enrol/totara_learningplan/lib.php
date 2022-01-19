@@ -239,6 +239,53 @@ class enrol_totara_learningplan_plugin extends enrol_plugin {
     }
 
     /**
+     * Restore instance and map settings.
+     *
+     * @param restore_enrolments_structure_step $step
+     * @param stdClass $data
+     * @param stdClass $course
+     * @param int $oldid
+     */
+    public function restore_instance(restore_enrolments_structure_step $step, stdClass $data, $course, $oldid) {
+        global $DB;
+
+        // There is only one totara_learningplan instance allowed per course.
+        if ($instances = $DB->get_records('enrol', array('courseid' => $data->courseid, 'enrol' => 'totara_learningplan'), 'id')) {
+            $instance = reset($instances);
+            $instanceid = $instance->id;
+        } else {
+            $instanceid = $this->add_instance($course, (array)$data);
+        }
+        $step->set_mapping('enrol', $oldid, $instanceid);
+    }
+
+    /**
+     * Restore user enrolment.
+     *
+     * @param restore_enrolments_structure_step $step
+     * @param stdClass $data
+     * @param stdClass $instance
+     * @param int $oldinstancestatus
+     * @param int $userid
+     */
+    public function restore_user_enrolment(restore_enrolments_structure_step $step, $data, $instance, $userid, $oldinstancestatus) {
+        $defaultrole = $this->get_config('roleid');
+        $this->enrol_user($instance, $userid, $defaultrole, $data->timestart, $data->timeend, $data->status);
+    }
+
+    /**
+     * Restore role assignment.
+     *
+     * @param stdClass $instance
+     * @param int $roleid
+     * @param int $userid
+     * @param int $contextid
+     */
+    public function restore_role_assignment($instance, $roleid, $userid, $contextid) {
+        role_assign($roleid, $userid, $contextid, 'enrol_'.$this->get_name(), $instance->id);
+    }
+
+    /**
      * Can current user disable learning plan enrolments in a course?
      *
      * @param stdClass $instance
