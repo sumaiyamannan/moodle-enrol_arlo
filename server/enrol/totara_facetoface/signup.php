@@ -85,6 +85,8 @@ if ($seminar->get_approvaltype() == seminar::APPROVAL_ROLE) {
 
 require_login();
 
+$PAGE->set_context($context);
+
 $signup = signup::create($USER->id, $seminarevent);
 // Choose header depending on resulting state: waitlist or booked.
 $heading = get_string('signupfor', 'mod_facetoface', $seminar->get_name());
@@ -94,7 +96,6 @@ if (!$currentstate->can_switch(signup\state\booked::class) &&
     $heading = get_string('waitlistfor', 'mod_facetoface', $seminar->get_name());
 }
 
-$PAGE->set_context($context);
 $PAGE->set_pagelayout('noblocks');
 $PAGE->set_cm($cm);
 $PAGE->set_url(new moodle_url('/enrol/totara_facetoface/signup.php', ['s' => $s]));
