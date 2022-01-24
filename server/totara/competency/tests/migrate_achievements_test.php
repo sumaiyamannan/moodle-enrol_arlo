@@ -364,15 +364,30 @@ class totara_competency_migrate_achievements_testcase extends advanced_testcase 
         $listening_alice_latest = $this->add_comp_record_history($listening, $alice, $listening_alice->proficiency, $listening_alice->timemodified);
 
         $talking_bob_previous = $this->add_comp_record_history($talking, $bob, $talking_not_proficient->id, $talking_bob->timemodified - 10);
+
         $talking_alice_previous = $this->add_comp_record_history($talking, $alice, $talking_not_proficient->id, $talking_alice->timemodified - 10);
         // Bob has no previous history for listening.
         $listening_alice_previous = $this->add_comp_record_history($listening, $alice, $listening_not_proficient->id, $listening_alice->timemodified - 10);
 
-        $talking_bob_oldest = $this->add_comp_record_history($talking, $bob, null, $talking_bob->timemodified - 20);
+        $talking_bob_previous0 = $this->add_comp_record_history($talking, $bob, null, $talking_bob->timemodified - 20);
         $listening_alice_oldest = $this->add_comp_record_history($listening, $alice, $listening_proficient->id, $listening_alice->timemodified - 20);
 
         // Eve only has a history record, but no comp_record. This could be invalid data, but let's be aware of what happens with it.
         $listening_eve = $this->add_comp_record_history($listening, $eve, $listening_proficient->id, 500);
+
+        // Let's create mutiple history records to simulate one usr being in two batches
+        $talking_bob_previous1 = $this->add_comp_record_history($talking, $bob, $talking_not_proficient->id, $talking_bob->timemodified - 30);
+        $talking_bob_previous2 = $this->add_comp_record_history($talking, $bob, $talking_not_proficient->id, $talking_bob->timemodified - 40);
+        $talking_bob_previous3 = $this->add_comp_record_history($talking, $bob, $talking_not_proficient->id, $talking_bob->timemodified - 50);
+        $talking_bob_previous4 = $this->add_comp_record_history($talking, $bob, $talking_not_proficient->id, $talking_bob->timemodified - 60);
+        $talking_bob_previous5 = $this->add_comp_record_history($talking, $bob, $talking_not_proficient->id, $talking_bob->timemodified - 70);
+        $talking_bob_previous6 = $this->add_comp_record_history($talking, $bob, $talking_not_proficient->id, $talking_bob->timemodified - 80);
+        $talking_bob_previous7 = $this->add_comp_record_history($talking, $bob, $talking_not_proficient->id, $talking_bob->timemodified - 90);
+        $talking_bob_previous8 = $this->add_comp_record_history($talking, $bob, $talking_not_proficient->id, $talking_bob->timemodified - 100);
+        $talking_bob_previous9 = $this->add_comp_record_history($talking, $bob, $talking_not_proficient->id, $talking_bob->timemodified - 110);
+        $talking_bob_previous10 = $this->add_comp_record_history($talking, $bob, $talking_not_proficient->id, $talking_bob->timemodified - 120);
+        $talking_bob_previous11 = $this->add_comp_record_history($talking, $bob, $talking_not_proficient->id, $talking_bob->timemodified - 130);
+        $talking_bob_previous12 = $this->add_comp_record_history($talking, $bob, $talking_not_proficient->id, $talking_bob->timemodified - 140);
 
         /** @var totara_plan_generator $plan_generator */
         $plan_generator = $this->getDataGenerator()->get_plugin_generator('totara_plan');
@@ -385,14 +400,14 @@ class totara_competency_migrate_achievements_testcase extends advanced_testcase 
         $plan_generator->add_learning_plan_competency($plan2->id, $talking);
 
         migration_helper::queue_migration();
-        migration_helper::migrate_achievements();
+        migration_helper::migrate_achievements(10);
 
         // Only two users have competencies in the learning plan
         $plan_values = $DB->get_records('dp_plan_competency_value');
         $this->assertCount(2, $plan_values);
 
         // There should be 1 record for each of the history records added above.
-        $this->assertEquals(10, $DB->count_records('totara_competency_achievement'));
+        $this->assertEquals(22, $DB->count_records('totara_competency_achievement'));
 
         // Only 5 assignments should be created.
         $assignments = $DB->get_records('totara_competency_assignments');
@@ -400,8 +415,8 @@ class totara_competency_migrate_achievements_testcase extends advanced_testcase 
 
         /* Bob / Talking */
 
-        $bob_talking_achievements = $DB->get_records('totara_competency_achievement', ['competency_id' => $talking, 'user_id' => $bob], 'time_created desc');
-        $this->assertCount(3, $bob_talking_achievements);
+        $bob_talking_achievements = $DB->get_records('totara_competency_achievement', ['competency_id' => $talking, 'user_id' => $bob], 'time_created desc, id desc');
+        $this->assertCount(15, $bob_talking_achievements);
 
         $achievement = array_shift($bob_talking_achievements);
         $this->assertEquals($talking_bob_latest->timemodified, $achievement->time_created);
@@ -427,20 +442,102 @@ class totara_competency_migrate_achievements_testcase extends advanced_testcase 
         $this->assertEquals($talking_bob_previous->proficiency, $achievement->scale_value_id);
         $this->assertEquals(0, $achievement->proficient);
         $this->assertEquals(competency_achievement::SUPERSEDED, $achievement->status);
-
         $this->assertEquals($achievement->assignment_id, $assignment->id);
 
         $achievement = array_shift($bob_talking_achievements);
-        $this->assertEquals($talking_bob_oldest->timemodified, $achievement->time_created);
-        $this->assertEquals($talking_bob_oldest->proficiency, $achievement->scale_value_id);
+        $this->assertEquals($talking_bob_previous0->timemodified, $achievement->time_created);
+        $this->assertEquals($talking_bob_previous0->proficiency, $achievement->scale_value_id);
+        $this->assertEquals(0, $achievement->proficient);
+        $this->assertEquals(competency_achievement::SUPERSEDED, $achievement->status);
+        $this->assertEquals($achievement->assignment_id, $assignment->id);
+
+        $achievement = array_shift($bob_talking_achievements);
+        $this->assertEquals($talking_bob_previous1->timemodified, $achievement->time_created);
+        $this->assertEquals($talking_bob_previous1->proficiency, $achievement->scale_value_id);
+        $this->assertEquals(0, $achievement->proficient);
+        $this->assertEquals(competency_achievement::SUPERSEDED, $achievement->status);
+        $this->assertEquals($achievement->assignment_id, $assignment->id);
+
+        $achievement = array_shift($bob_talking_achievements);
+        $this->assertEquals($talking_bob_previous2->timemodified, $achievement->time_created);
+        $this->assertEquals($talking_bob_previous2->proficiency, $achievement->scale_value_id);
         $this->assertEquals(0, $achievement->proficient);
         $this->assertEquals(competency_achievement::SUPERSEDED, $achievement->status);
 
+        $achievement = array_shift($bob_talking_achievements);
+        $this->assertEquals($talking_bob_previous3->timemodified, $achievement->time_created);
+        $this->assertEquals($talking_bob_previous3->proficiency, $achievement->scale_value_id);
+        $this->assertEquals(0, $achievement->proficient);
+        $this->assertEquals(competency_achievement::SUPERSEDED, $achievement->status);
         $this->assertEquals($achievement->assignment_id, $assignment->id);
+
+        $achievement = array_shift($bob_talking_achievements);
+        $this->assertEquals($talking_bob_previous4->timemodified, $achievement->time_created);
+        $this->assertEquals($talking_bob_previous4->proficiency, $achievement->scale_value_id);
+        $this->assertEquals(0, $achievement->proficient);
+        $this->assertEquals(competency_achievement::SUPERSEDED, $achievement->status);
+        $this->assertEquals($achievement->assignment_id, $assignment->id);
+
+        $achievement = array_shift($bob_talking_achievements);
+        $this->assertEquals($talking_bob_previous5->timemodified, $achievement->time_created);
+        $this->assertEquals($talking_bob_previous5->proficiency, $achievement->scale_value_id);
+        $this->assertEquals(0, $achievement->proficient);
+        $this->assertEquals(competency_achievement::SUPERSEDED, $achievement->status);
+        $this->assertEquals($achievement->assignment_id, $assignment->id);
+
+        $achievement = array_shift($bob_talking_achievements);
+        $this->assertEquals($talking_bob_previous6->timemodified, $achievement->time_created);
+        $this->assertEquals($talking_bob_previous6->proficiency, $achievement->scale_value_id);
+        $this->assertEquals(0, $achievement->proficient);
+        $this->assertEquals(competency_achievement::SUPERSEDED, $achievement->status);
+        $this->assertEquals($achievement->assignment_id, $assignment->id);
+
+        $achievement = array_shift($bob_talking_achievements);
+        $this->assertEquals($talking_bob_previous7->timemodified, $achievement->time_created);
+        $this->assertEquals($talking_bob_previous7->proficiency, $achievement->scale_value_id);
+        $this->assertEquals(0, $achievement->proficient);
+        $this->assertEquals(competency_achievement::SUPERSEDED, $achievement->status);
+        $this->assertEquals($achievement->assignment_id, $assignment->id);
+
+        $achievement = array_shift($bob_talking_achievements);
+        $this->assertEquals($talking_bob_previous8->timemodified, $achievement->time_created);
+        $this->assertEquals($talking_bob_previous8->proficiency, $achievement->scale_value_id);
+        $this->assertEquals(0, $achievement->proficient);
+        $this->assertEquals(competency_achievement::SUPERSEDED, $achievement->status);
+        $this->assertEquals($achievement->assignment_id, $assignment->id);
+
+        $achievement = array_shift($bob_talking_achievements);
+        $this->assertEquals($talking_bob_previous9->timemodified, $achievement->time_created);
+        $this->assertEquals($talking_bob_previous9->proficiency, $achievement->scale_value_id);
+        $this->assertEquals(0, $achievement->proficient);
+        $this->assertEquals(competency_achievement::SUPERSEDED, $achievement->status);
+        $this->assertEquals($achievement->assignment_id, $assignment->id);
+
+        $achievement = array_shift($bob_talking_achievements);
+        $this->assertEquals($talking_bob_previous10->timemodified, $achievement->time_created);
+        $this->assertEquals($talking_bob_previous10->proficiency, $achievement->scale_value_id);
+        $this->assertEquals(0, $achievement->proficient);
+        $this->assertEquals(competency_achievement::SUPERSEDED, $achievement->status);
+        $this->assertEquals($achievement->assignment_id, $assignment->id);
+
+        $achievement = array_shift($bob_talking_achievements);
+        $this->assertEquals($talking_bob_previous11->timemodified, $achievement->time_created);
+        $this->assertEquals($talking_bob_previous11->proficiency, $achievement->scale_value_id);
+        $this->assertEquals(0, $achievement->proficient);
+        $this->assertEquals(competency_achievement::SUPERSEDED, $achievement->status);
+        $this->assertEquals($achievement->assignment_id, $assignment->id);
+
+        $achievement = array_shift($bob_talking_achievements);
+        $this->assertEquals($talking_bob_previous12->timemodified, $achievement->time_created);
+        $this->assertEquals($talking_bob_previous12->proficiency, $achievement->scale_value_id);
+        $this->assertEquals(0, $achievement->proficient);
+        $this->assertEquals(competency_achievement::SUPERSEDED, $achievement->status);
+        $this->assertEquals($achievement->assignment_id, $assignment->id);
+
 
         /* Bob / Listening */
 
-        $bob_listening_achievements = $DB->get_records('totara_competency_achievement', ['competency_id' => $listening, 'user_id' => $bob], 'time_created desc');
+        $bob_listening_achievements = $DB->get_records('totara_competency_achievement', ['competency_id' => $listening, 'user_id' => $bob], 'time_created desc, id desc');
         $this->assertCount(1, $bob_listening_achievements);
 
         $achievement = array_shift($bob_listening_achievements);
@@ -464,7 +561,7 @@ class totara_competency_migrate_achievements_testcase extends advanced_testcase 
 
         /* Alice / Talking */
 
-        $alice_talking_achievements = $DB->get_records('totara_competency_achievement', ['competency_id' => $talking, 'user_id' => $alice], 'time_created desc');
+        $alice_talking_achievements = $DB->get_records('totara_competency_achievement', ['competency_id' => $talking, 'user_id' => $alice], 'time_created desc, id desc');
         $this->assertCount(2, $alice_talking_achievements);
 
         $achievement = array_shift($alice_talking_achievements);
@@ -496,7 +593,7 @@ class totara_competency_migrate_achievements_testcase extends advanced_testcase 
 
         /* Alice / Listening */
 
-        $alice_listening_achievements = $DB->get_records('totara_competency_achievement', ['competency_id' => $listening, 'user_id' => $alice], 'time_created desc');
+        $alice_listening_achievements = $DB->get_records('totara_competency_achievement', ['competency_id' => $listening, 'user_id' => $alice], 'time_created desc, id desc');
         $this->assertCount(3, $alice_listening_achievements);
         $achievement = array_shift($alice_listening_achievements);
         $this->assertEquals($listening_alice_latest->timemodified, $achievement->time_created);
@@ -535,7 +632,7 @@ class totara_competency_migrate_achievements_testcase extends advanced_testcase 
 
         /* Eve / Listening */
 
-        $eve_listening_achievements = $DB->get_records('totara_competency_achievement', ['competency_id' => $listening, 'user_id' => $eve], 'time_created desc');
+        $eve_listening_achievements = $DB->get_records('totara_competency_achievement', ['competency_id' => $listening, 'user_id' => $eve], 'time_created desc, id desc');
         $this->assertCount(1, $eve_listening_achievements);
 
         $achievement = array_shift($eve_listening_achievements);

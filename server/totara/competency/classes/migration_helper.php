@@ -115,9 +115,12 @@ class migration_helper {
     }
 
     /**
-     * Migrate all existing competency achievements from the comp_record and comp_record_history tables in to the new totara_competency_achievement tables
+     * Migrate all existing competency achievements from the comp_record
+     * and comp_record_history tables in to the new totara_competency_achievement tables
+     *
+     * @param int $batch_size determines the batch size of records to process in one batch
      */
-    public static function migrate_achievements(): void {
+    public static function migrate_achievements(int $batch_size = 10000): void {
         global $DB;
 
         if (!self::is_migration_queued()) {
@@ -125,7 +128,7 @@ class migration_helper {
         }
 
         // Wrapping this in a transaction to avoid a half-migrated state
-        $DB->transaction(function () {
+        $DB->transaction(function () use ($batch_size) {
             global $DB;
 
             self::start_migration();
@@ -169,11 +172,13 @@ class migration_helper {
             // We've ordered by competency and user so that records for each combination are grouped together.
             $current_competency = null;
             $current_user = null;
+            $comp_assignment = [];
+
             // This is true when we are at the first record for a given user and competency.
             $first = true;
 
             $offset = 0;
-            $limit = 10000;
+            $limit = $batch_size;
             $has_items = true;
             while ($has_items) {
                 $histories = $DB->get_recordset_sql($query_sql, [], $offset, $limit);
@@ -181,7 +186,6 @@ class migration_helper {
                 $offset += $limit;
 
                 $comp_achievements = [];
-                $comp_assignment = [];
 
                 foreach ($histories as $history) {
                     if ($current_competency != $history->competencyid || $current_user != $history->userid) {
