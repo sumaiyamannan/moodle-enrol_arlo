@@ -236,3 +236,37 @@ function totara_shared_src_directory(environment_results $result) {
 
     return $result;
 }
+
+/**
+ * Check that the database has memoization disabled.
+ *
+ * @param environment_results $result
+ * @return environment_results|null
+ */
+function totara_core_database_memoize_environment_check(environment_results $result): ?environment_results {
+    global $DB;
+
+    $result->setInfo(get_string('dbmemoizeinfo', 'totara_core'));
+    if ($DB->get_dbfamily() === 'postgres') {
+        // For postgres >= 14, we need to confirm enable_memoize is off
+        $info = $DB->get_server_info();
+        $pg_version = normalize_version($info['version']);
+        if (version_compare($pg_version, '14.0', '<')) {
+            // Don't report any status for older postgres versions
+            return null;
+        }
+
+        $setting = $DB->get_field_sql("SELECT current_setting('enable_memoize')");
+        if ($setting !== 'off') {
+            $result->setRestrictStr(['dbmemoizerestrictedpg', 'totara_core']);
+            $result->setStatus(false);
+        } else {
+            $result->setStatus(true);
+        }
+
+        return $result;
+    }
+
+    // Do not show anything for other databases.
+    return null;
+}
