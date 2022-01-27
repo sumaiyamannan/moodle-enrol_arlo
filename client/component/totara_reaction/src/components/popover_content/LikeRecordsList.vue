@@ -132,6 +132,7 @@ export default {
 
 <style lang="scss">
 .tui-likeRecordsList {
+  @include tui-wordbreak--hyphens;
   &__list {
     margin: 0;
     list-style-type: none;

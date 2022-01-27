@@ -35,7 +35,7 @@
       >
         <FormNumber
           name="lowValue"
-          :validations="v => [v.required(), v.number()]"
+          :validations="v => [v.required(), v.integer()]"
           char-length="10"
         />
       </FormRow>
@@ -50,7 +50,7 @@
       >
         <FormNumber
           name="highValue"
-          :validations="v => [v.required(), v.number(), v.min(minValue)]"
+          :validations="v => [v.required(), v.integer(), v.min(minValue)]"
           char-length="10"
         />
       </FormRow>
@@ -68,7 +68,7 @@
         <FormNumber
           name="defaultValue"
           :validations="
-            v => [v.number(), v.required(), v.min(lowValue), v.max(highValue)]
+            v => [v.required(), v.integer(), v.min(lowValue), v.max(highValue)]
           "
           char-length="10"
         />

@@ -47,6 +47,12 @@ interface item_has_progress {
     public function get_progress_percentage();
 
     /**
+     * Returns the user progress as a text string.
+     * @return string|null
+     */
+    public function get_progress_summary(): ?string;
+
+    /**
      * Exports the users progress on this learning item as context data for use with templates.
      *
      * @return \stdClass

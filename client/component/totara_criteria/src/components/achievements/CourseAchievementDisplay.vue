@@ -65,6 +65,7 @@
               :class="'tui-criteriaCourseAchievement__progress'"
               :column-header="$str('progress', 'totara_criteria')"
             >
+              <!-- If the user started with this course there should be progress otherwise just print the summary -->
               <div
                 v-if="hasProgress(row)"
                 class="tui-criteriaCourseAchievement__progress-bar"
@@ -72,7 +73,7 @@
                 <Progress v-if="displayed" :value="row.course.progress" />
               </div>
               <div v-else class="tui-criteriaCourseAchievement__progress-empty">
-                {{ $str('not_available', 'totara_criteria') }}
+                {{ getProgressSummary(row) }}
               </div>
             </Cell>
 
@@ -241,6 +242,18 @@ export default {
      */
     hasProgress(row) {
       return row.course && row.course.progress > 0;
+    },
+
+    /**
+     * Return progress summary.
+     *
+     * @param row
+     * @return {String}
+     */
+    getProgressSummary(row) {
+      return row.course && row.course.progress_summary
+        ? row.course.progress_summary
+        : this.$str('not_available', 'totara_criteria');
     },
 
     /**

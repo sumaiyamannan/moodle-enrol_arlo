@@ -577,17 +577,23 @@ class totara_core_webapi_resolver_type_learning_item_testcase extends advanced_t
         // Check that each core instance of learning item gets resolved correctly.
         $item = array_pop($items);
         $value = $this->resolve('progress', $item);
+        $progress_summary = $this->resolve('progress_summary', $item);
         $this->assertEquals(0, $value);
+        $this->assertEquals('Not complete', $progress_summary);
         $this->assertTrue(is_float($value));
 
         $item = array_pop($items);
         $value = $this->resolve('progress', $item);
+        $progress_summary = $this->resolve('progress_summary', $item);
         $this->assertEquals(null, $value);
+        $this->assertEquals('Not tracked', $progress_summary);
         // Note: This course doesn't have completions set up.
 
         $item = array_pop($items);
         $value = $this->resolve('progress', $item);
+        $progress_summary = $this->resolve('progress_summary', $item);
         $this->assertEquals(0, $value);
+        $this->assertEquals('Not complete', $progress_summary);
         $this->assertTrue(is_float($value));
     }
 

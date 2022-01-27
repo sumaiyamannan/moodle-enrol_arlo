@@ -103,7 +103,7 @@ if (!$id) {
             \core\notification::success(get_string('userhomepagechanged', 'totara_dashboard'));
             redirect($url);
         }
-        if ($userhomepagepref != HOMEPAGE_TOTARA_DASHBOARD || !in_array($userhomedashboardid, $availabledash)) {
+        if ($userhomepagepref != HOMEPAGE_TOTARA_DASHBOARD || $userhomedashboardid != $dashboard->get_id()) {
             $newhomestring = get_string('makehomepage', 'totara_core');
             $newhomeurl =
                 new moodle_url('/totara/dashboard/index.php', ['setdefaulthome' => 1, 'id' => $id, 'sesskey' => sesskey()]);

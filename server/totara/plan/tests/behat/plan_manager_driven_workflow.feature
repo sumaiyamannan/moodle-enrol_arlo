@@ -33,7 +33,7 @@ Feature: Test plan manager driven workflow settings
       | Name             | template 1 |
       | id_enddate_month | December   |
       | id_enddate_day   | 31         |
-      | id_enddate_year  | 2021       |
+      | id_enddate_year  | 2037       |
     And I press "Save changes"
     And I switch to "Workflow" tab
     And I click on "Manager driven workflow" "radio"

@@ -57,6 +57,10 @@ type totara_core_learning_item {
   Learning item image URL
   """
   image_src: String
+  """
+  Progress summary text
+  """
+  progress_summary: String
 }
 
 """

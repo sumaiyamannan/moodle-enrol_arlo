@@ -49,6 +49,7 @@ export default {
 
   &__title {
     @include tui-font-heading-page-title;
+    @include tui-wordbreak--hard;
   }
 
   &__buttons {

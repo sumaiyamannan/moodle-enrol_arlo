@@ -362,7 +362,7 @@ class access_controller {
                         $this::is_current_user_an_admin() || // The admin is allowed the users email.
                         $this->iscurrentuser || // Of course the current user is as well.
                         $this->has_course_email_capability() ||  // This is a capability in course context, it will be false in usercontext.
-                        $this->has_plugin_granting_view_profile() || // Those with a plugin or component defined relationship are allowed to see.
+                        $this->has_plugin_granting_view_field('email') || // Those with a plugin or component defined relationship are allowed to see.
                         in_array('email', $this->get_identify_fields()) || // It's an identify field.
                         ($this->usermaildisplay === 2 && $this->do_users_share_courses()) // It's available to those who share courses.
                     );

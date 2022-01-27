@@ -261,6 +261,14 @@ class totara_core_ddl_testcase extends database_driver_testcase {
         $table9->add_key('courseid', XMLDB_KEY_FOREIGN, ['courseid'], 'test_course', ['id'], null, 'restrict');
         $dbman->create_table($table9);
 
+        // This one has no primary key
+        $table10 = new xmldb_table('test_other10');
+        $table10->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table10->add_field('courseid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
+        $table10->add_field('name', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null);
+        $table10->add_key('courseid', XMLDB_KEY_UNIQUE, ['courseid'], 'test_course', ['id']);
+        $dbman->create_table($table10);
+
         $this->assertTrue($dbman->key_exists($table1, $table1->getKey('primary')));
         $this->assertTrue($dbman->key_exists($table2, $table2->getKey('courseid')));
         $this->assertTrue($dbman->key_exists($table3, $table3->getKey('courseid')));
@@ -270,6 +278,7 @@ class totara_core_ddl_testcase extends database_driver_testcase {
         $this->assertTrue($dbman->key_exists($table7, $table7->getKey('courseid')));
         $this->assertTrue($dbman->key_exists($table8, $table8->getKey('courseid')));
         $this->assertTrue($dbman->key_exists($table9, $table9->getKey('courseid')));
+        $this->assertTrue($dbman->key_exists($table10, $table10->getKey('courseid')));
 
         $this->assertFalse($dbman->key_exists($table2, $table4->getKey('courseid')));
         $this->assertFalse($dbman->key_exists($table3, $table4->getKey('courseid')));
@@ -283,6 +292,7 @@ class totara_core_ddl_testcase extends database_driver_testcase {
         $this->assertFalse($dbman->key_exists($table3, $table8->getKey('courseid')));
         $this->assertFalse($dbman->key_exists($table2, $table9->getKey('courseid')));
         $this->assertFalse($dbman->key_exists($table3, $table9->getKey('courseid')));
+        $this->assertFalse($dbman->key_exists($table10, $table9->getKey('primary')));
 
         // Now the unexpected results.
 
@@ -338,6 +348,7 @@ class totara_core_ddl_testcase extends database_driver_testcase {
         $this->assertTrue($dbman->key_exists($table9, $table7->getKey('courseid')));
         $this->assertTrue($dbman->key_exists($table9, $table8->getKey('courseid')));
 
+        $dbman->drop_table($table10);
         $dbman->drop_table($table9);
         $dbman->drop_table($table8);
         $dbman->drop_table($table7);

@@ -56,6 +56,8 @@ class rb_source_evidence_item extends rb_base_source {
         $this->paramoptions   = $this->define_paramoptions();
         $this->defaultcolumns = $this->define_defaultcolumns();
         $this->defaultfilters = $this->define_defaultfilters();
+        // Apply global user restrictions.
+        $this->add_global_report_restriction_join('base', 'user_id');
 
         $this->requiredcolumns = [];
         $this->sourcetitle = get_string('source_title', 'rb_source_evidence_item');

@@ -9,6 +9,10 @@ Feature: Test Dashboard defaults
     And the following "users" exist:
       | username | firstname | lastname | email                   |
       | student1 | Student   | One      | student.one@example.com |
+    And the following totara_dashboards exist:
+      | name             | locked | published |
+      | Test Dashboard 1 | 0      | 2         |
+      | Test Dashboard 2 | 0      | 2         |
     # Login to get the Latest announcements created.
     And I log in as "admin"
     And I set the following administration settings values:
@@ -130,3 +134,27 @@ Feature: Test Dashboard defaults
     And I should see "Current Learning"
     And I should not see "Make home page"
     And I log out
+
+  Scenario: Confirm that we are able to change the home page from one dashboard to another
+    Given I log in as "admin"
+    And I set the following administration settings values:
+      | defaulthomepage | Front page |
+    And I log out
+    And I log in as "student1"
+    And I am on "Dashboard" page
+
+    # Navigate to Test Dashboard 1 and confirm we can set it as home page
+    When I click on "Test Dashboard 1" "link"
+    Then "Make home page" "button" should be visible
+    When I press "Make home page"
+    Then "Make home page" "button" should not be visible
+
+    # Navigate to Test Dashboard 2 and confirm we can set it as home page
+    When I click on "Test Dashboard 2" "link"
+    Then "Make home page" "button" should be visible
+    When I press "Make home page"
+    Then "Make home page" "button" should not be visible
+
+    # When navigating back to Test Dashboard 1 the 'make home page' button should be available again
+    When I click on "Test Dashboard 1" "link"
+    Then "Make home page" "button" should be visible

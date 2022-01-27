@@ -32,6 +32,7 @@ const pathMethods = [
   'getTouched',
   'update',
   'blur',
+  'touch',
   'getInputName',
   '$_internalUpdateSliceState',
 ];

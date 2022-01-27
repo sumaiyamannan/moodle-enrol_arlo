@@ -673,7 +673,7 @@ class totara_program_renderer extends plugin_renderer_base {
         }
         $capabilities = array('moodle/category:viewhiddencategories', 'moodle/category:manage', $createcapability);
         $nohascapabilities = !is_siteadmin() && !has_any_capability($capabilities, $categorycontext);
-        if (!empty($CFG->audiencevisibility) && $categorycount == 0 && $nohascapabilities) {
+        if ($categorycount === 0 && $nohascapabilities) {
             return '';
         }
         $categoryname = html_writer::link(new moodle_url('/totara/program/index.php',

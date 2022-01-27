@@ -65,7 +65,7 @@ function(ajax, BootstrapTour, $, templates, str, log, notification) {
                         args: {
                             tourid:     tourId,
                             context:    usertours.context,
-                            pageurl:    window.location.href,
+                            pageurl:    usertours.getPageURL(),
                         }
                     }
                 ])[0],
@@ -206,7 +206,7 @@ function(ajax, BootstrapTour, $, templates, str, log, notification) {
                         args: {
                             tourid:     usertours.tourId,
                             context:    usertours.context,
-                            pageurl:    window.location.href,
+                            pageurl:    usertours.getPageURL(),
                             stepid:     stepConfig.stepid,
                             stepindex:  this.getCurrentStepNumber(),
                         }
@@ -229,7 +229,7 @@ function(ajax, BootstrapTour, $, templates, str, log, notification) {
                         args: {
                             tourid:     usertours.tourId,
                             context:    usertours.context,
-                            pageurl:    window.location.href,
+                            pageurl:    usertours.getPageURL(),
                             stepid:     stepConfig.stepid,
                             stepindex:  this.getCurrentStepNumber(),
                         }
@@ -252,7 +252,7 @@ function(ajax, BootstrapTour, $, templates, str, log, notification) {
                         args: {
                             tourid:     tourId,
                             context:    usertours.context,
-                            pageurl:    window.location.href,
+                            pageurl:    usertours.getPageURL(),
                         }
                     }
                 ])[0]
@@ -262,6 +262,19 @@ function(ajax, BootstrapTour, $, templates, str, log, notification) {
                 }
                 return;
             }).fail(notification.exception);
+        },
+
+        /**
+         * Get the current page URL.
+         *
+         * @method  getPageURL
+         * @return  {String} Page URL
+         */
+        getPageURL: function() {
+            if (window.getPageConfig && window.getPageConfig().pageurl !== '') {
+                return window.getPageConfig().pageurl;
+            }
+            return window.location.href;
         }
     };
 

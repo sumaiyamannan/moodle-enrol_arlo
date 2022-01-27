@@ -34,6 +34,7 @@ use pathway_manual\manual;
 use pathway_manual\models\roles\role;
 use pathway_manual\models\roles\role_factory;
 use pathway_test_pathway\test_pathway;
+use totara_competency\achievement_configuration;
 use totara_competency\aggregation_users_table;
 use totara_competency\entity\competency;
 use totara_competency\entity\competency_framework;
@@ -341,6 +342,15 @@ class totara_competency_generator extends component_generator_base {
         return $instance;
     }
 
+    /**
+     * Create an achievement configuration.
+     */
+    public function create_achievement_configuration(competency $competency, string $aggregation_type): achievement_configuration {
+        $configuration = new achievement_configuration($competency);
+        $configuration->set_aggregation_type($aggregation_type);
+        $configuration->save_aggregation();
+        return $configuration;
+    }
 
     /**************************************************************************
      * Non-competency related helpers
@@ -599,6 +609,16 @@ class totara_competency_generator extends component_generator_base {
             'usermodified' => $USER ? $USER->id : get_admin()->id,
             'linktype' => (bool) ($attributes['mandatory'] ?? 0),
         ]);
+    }
+
+    /**
+     * Create an achievement configuration.
+     */
+    public function create_achievement_configuration_for_behat(array $attributes = []) {
+        global $DB;
+        $competency_id = $DB->get_field(competency::TABLE, 'id', ['idnumber' => $attributes['competency']]);
+        $competency = new competency($competency_id);
+        $this->create_achievement_configuration($competency, $attributes['aggregation_type']);
     }
 
 

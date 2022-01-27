@@ -1,3 +1,93 @@
+Release 13.16 (27th January 2022):
+==================================
+
+Security issues
+---------------
+
+  TL-32423 Added autocomplete='off' attribute to password field on login page
+
+    The autocomplete attribute on password fields is ignored by modern browsers, but
+    some automated security scanners flag it as an issue if they don't see one
+    there.
+
+Improvements
+------------
+
+  TL-31869 Improved form error notifications when editing programs
+  TL-32253 Improved behaviour of closing attempts for timed quizzes
+
+    This pulls in 5 patches for the quiz module from Moodle:
+    MDL-65864 question engine: fix re-saving a new usage
+    MDL-54907 quiz generator: defaults should match a new Moodle install
+    MDL-66685 questions: should able to save an empty question usage
+    MDL-54907 quiz: better timefinish for attempts finished asynchronously
+    MDL-68970 quiz: prevent page caching during attempts
+
+  TL-33005 Added the ability to authenticate incoming email using OAuth2
+  TL-33212 Updated HR import completed log entries to include the element name
+
+    The element name associated with the HR Import run is now shown to the user.
+
+  TL-33213 Added support for detecting missing primary keys in the database schema check CLI script
+  TL-33302 Moved the 'audience-based visibility' setting away from the 'enrolled audiences' setting on the 'Edit course' page
+
+    This is to help prevent configuration errors due to their associated labels.
+
+  TL-33304 Amended the wrapping on page layouts with titles containing long words
+
+Bug fixes
+---------
+
+  TL-28730 Fixed behaviour of email display setting in user profile
+
+    The email display setting was not displaying as expected according to the
+    setting (hiding the email when the setting specified it should be shown). The
+    setting now behaves as expected to show the email address when the setting
+    specifies.
+
+  TL-29871 Added integer validation for min, max, and default form number fields on the numeric rating scale element
+
+    Also updated the integer validation method to fail if there is a .0 decimal when
+    the value is a string.
+
+  TL-31809 Fixed ability to reset homepage to another dashboard
+  TL-32670 Fixed progress summary for linked courses in competency profile
+  TL-32744 Stopped the category drop-down showing in the category catalogue when there is only category in the system
+
+    Now the category drop-down is only shown in the category catalogue when there
+    are more than one category in the system.
+
+    This patch also fixed inconsistent behaviour when choosing a 'category'
+    catalogue view by not showing categories with empty visible courses in the list
+    when clicking Find courses. This behaviour was already present when audience
+    visibility was ON and now it's also true for when it is OFF.
+
+  TL-32760 Fixed user tours not resetting properly on the primary dashboard
+  TL-32875 Added the Global report restrictions to the Evidence user reports
+  TL-33198 Ensured custom profile fields are loaded correctly when used in availability profile conditions
+  TL-33281 Fixed the display of single digit values in the progress bar component
+  TL-33388 Ensured that the multi language filter is being consistently applied to Seminar names
+
+Technical changes
+-----------------
+
+  TL-33358 Improved the robustness of the course category sortorder tests
+  TL-33494 Configured pytest to log with the xmlunit1 log format for the recommendations system unit tests.
+
+Tui front end framework
+-----------------------
+
+  TL-30762 Updated TUI Select and FormSelect components to correctly trigger required validation on blur
+
+    Also fixed issue where 'touch' wasn't included in the FormScope Reform element
+    reformScope.
+
+  TL-33197 Added "contextMode" prop to LabelledButtonTrigger with default set to "uncontained" to fix display issues with long names
+
+    Also added hyphenation to text in LikeRecordsList for overflowing names
+
+
+
 Release 13.15 (23rd December 2021):
 ===================================
 

@@ -110,3 +110,5 @@ $string['validateaddress_help'] = 'When a message is received from a user, Totar
 If the sender does not match, then the user is sent a notification to confirm that they really did send the email.
 
 If this setting is disabled, then the email address of the sender is not checked at all.';
+$string['xoauth2'] = 'Use XOAUTH2';
+$string['xoauth2_desc'] = 'Use XOAUTH2 to authenticate to the IMAP server. You need to specify the OAuth2 Service to be used for this.';

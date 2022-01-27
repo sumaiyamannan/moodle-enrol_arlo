@@ -8,6 +8,7 @@ exports[`totara_engage/components/sidepanel/media/share matches snapshot 1`] = `
   <buttoniconwithlabel-stub
     buttonarialabel="Share resource \\"unicorn\\""
     class="tui-shareSetting__buttonLabel"
+    contextmode="uncontained"
     labelarialabel="numberofshares, totara_engage"
     labeltext="5"
     styleclass="[object Object]"

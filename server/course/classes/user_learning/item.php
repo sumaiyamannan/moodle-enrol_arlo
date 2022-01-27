@@ -254,6 +254,16 @@ class item extends item_base implements item_has_progress, item_has_image {
     }
 
     /**
+     * Checks completion is loaded and returns the progress summary.
+     *
+     * @return string|null
+     */
+    public function get_progress_summary(): ?string {
+        $this->ensure_completion_loaded();
+        return $this->progress_summary;
+    }
+
+    /**
      * Export progress information to display in template
      *
      * @return \stdClass Object containing progress info

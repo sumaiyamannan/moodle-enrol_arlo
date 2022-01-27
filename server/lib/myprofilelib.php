@@ -203,10 +203,12 @@ function core_myprofile_navigation(core_user\output\myprofile\tree $tree, $user,
     } else {
         $hiddenfields = array_flip(explode(',', $CFG->hiddenuserfields));
     }
-    if (has_capability('moodle/site:viewuseridentity', $courseorusercontext)) {
-        $identityfields = array_flip(explode(',', $CFG->showuseridentity));
-    } else {
-        $identityfields = array();
+    $identityfields = array_flip(explode(',', $CFG->showuseridentity));
+
+    // If not the current user or don't have view identity permissions then unset all
+    // except email (which is handled separately below)
+    if (!$iscurrentuser && !has_capability('moodle/site:viewuseridentity', $courseorusercontext)) {
+        $identityfields = array_intersect_key($identityfields, ['email' => 0]);
     }
 
     if (is_mnet_remote_user($user)) {
@@ -227,11 +229,8 @@ function core_myprofile_navigation(core_user\output\myprofile\tree $tree, $user,
         $tree->add_node($node);
     }
 
-    if (isset($identityfields['email']) and ($iscurrentuser
-                                             or $user->maildisplay == 1
-                                             or has_capability('moodle/course:useremail', $courseorusercontext)
-                                             or has_capability('moodle/site:viewuseridentity', $courseorusercontext)
-                                             or ($user->maildisplay == 2 and enrol_sharing_course($user, $USER)))) {
+    if (isset($identityfields['email']) and $access_controller->can_view_field('email')) {
+
         // TOTARA - Escape potential XSS in user email.
         $node = new core_user\output\myprofile\node('contact', 'email', get_string('email'), null, null,
             obfuscate_mailto(clean_string($user->email), ''));

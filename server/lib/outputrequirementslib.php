@@ -837,8 +837,8 @@ require(['core/autoinitialise'], function(ai) {
                                     ),
                                     'strings'  => array(array('lastmodified', 'moodle'), array('name', 'moodle'), array('type', 'repository'), array('size', 'repository'),
                                         array('displayfileiconaslinks', 'repository'), array('displayfiledetailsintable', 'repository'),
-                                        array('displayfiletreeintable', 'repository'), array('invalidjson', 'repository'), array('error', 'moodle'), 
-                                        array('info', 'moodle'), array('nofilesattached', 'repository'), array('filepicker', 'repository'), 
+                                        array('displayfiletreeintable', 'repository'), array('invalidjson', 'repository'), array('error', 'moodle'),
+                                        array('info', 'moodle'), array('nofilesattached', 'repository'), array('filepicker', 'repository'),
                                         array('logout', 'repository'), array('nofilesavailable', 'repository'), array('norepositoriesavailable', 'repository'),
                                         array('fileexistsdialogheader', 'repository'), array('fileexistsdialog_editor', 'repository'),
                                         array('fileexistsdialog_filemanager', 'repository'), array('renameto', 'repository'),
@@ -1784,6 +1784,7 @@ require(['core/autoinitialise'], function(ai) {
                 'language' => $currentlanguage,
                 'debugstringids' => get_config('core', 'debugstringids'),
             ],
+            'pageurl' => !empty($page->_url) ? $page->url->out() : '',
         ];
         if (defined('BEHAT_SITE_RUNNING')) {
             $config['behatSiteRunning'] = true;

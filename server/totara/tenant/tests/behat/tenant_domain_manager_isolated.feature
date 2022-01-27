@@ -62,9 +62,7 @@ Feature: Tenant domain manager with isolation enabled
     And I click on "[aria-label='Show admin menu window']" "css_element"
     And I click on "Courses and categories" "link" in the "#quickaccess-popover-content" "css_element"
     Then I should see "Course categories"
-    And I should see "Miscellaneous"
     And I should see "First T Category"
-    And I should see "Second T Category"
     And I follow "First T Category"
 
     When I navigate to "Tenant participants" node in "First tenant"
