@@ -73,6 +73,9 @@ const factory = (option, instanceId, compact, useFullMount) => {
   const mountFunction = useFullMount ? mount : shallowMount;
 
   return mountFunction(Weka, {
+    directives: {
+      'focus-within': jest.fn(),
+    },
     propsData: {
       options: option,
       usageIdentifier: {
