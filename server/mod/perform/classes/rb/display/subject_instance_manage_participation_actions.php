@@ -56,11 +56,6 @@ class subject_instance_manage_participation_actions extends base {
 
         $extrafields = self::get_extrafields_row($row, $column);
 
-        // Do not allow to do any actions on pending instances
-        if ($extrafields->status == pending::get_code()) {
-            return '';
-        }
-
         $is_open = $extrafields->subject_instance_availability != closed::get_code();
 
         return $OUTPUT->render(
@@ -73,6 +68,7 @@ class subject_instance_manage_participation_actions extends base {
                     'isOpen'             => $is_open,
                     'canAddParticipants' => $extrafields->deleted !== null && $extrafields->deleted == 0,
                     'showActions'        => true,
+                    'isParticipantPending' => $extrafields->status == pending::get_code(),
                 ]
             )
 

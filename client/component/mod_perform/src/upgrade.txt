@@ -1,6 +1,10 @@
 This file describes API changes in /client/component/mod_perform,
 information provided here is intended especially for developers.
 
+=== 13.17 ===
+* Extended the performance activity manage participant view Actions.vue to allow deletion of subject and participant instances
+    * Template, JS changes
+
 === 13.3 ===
 * Updated the template structure of ActivityContentPrint.vue to add new icons, add new pieces of information, and improve element spacing and font sizes
     * Template, SCSS changes & lang string changes

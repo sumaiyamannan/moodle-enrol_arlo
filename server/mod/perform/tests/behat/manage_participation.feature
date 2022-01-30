@@ -247,3 +247,42 @@ Feature: Test management of activity participation
       | manager One        | User Five    | Manager           | 1 section | Not started     | Open           |
       | manager One        | User Four    | Manager           | 1 section | Not started     | Open           |
       | manager One        | User Two     | Manager           | 1 section | Not started     | Open           |
+
+  Scenario: manually delete subject instance
+    Given I log in as "admin"
+    And I navigate to the manage perform activities page
+    And I click on "Manage participation" "link" in the tui datatable row with "3 participants" "Name"
+    And the following should exist in the "perform_manage_participation_subject_instance" table:
+      | Subject's full name | Instance number | Participants |
+      | User Four           | 1               | 3            |
+      | User Four           | 2               | 3            |
+      | User Four           | 3               | 3            |
+      | User One            | 1               | 1            |
+      | User One            | 2               | 1            |
+      | User One            | 3               | 1            |
+      | User Three          | 1               | 2            |
+      | User Three          | 2               | 2            |
+      | User Three          | 3               | 2            |
+      | User Two            | 1               | 2            |
+      | User Two            | 2               | 2            |
+      | User Two            | 3               | 2            |
+    When I click on "Delete" "button" in the "User Three 99999997" "table_row"
+    Then I should see "Confirm subject instance deletion" in the tui modal
+    And I confirm the tui confirmation modal
+    Then I should see "The subject instance and all associated records have been successfully deleted"
+    And the following should not exist in the "perform_manage_participation_subject_instance" table:
+      | Subject name        |
+      | User Three 99999997 |
+    And the following should exist in the "perform_manage_participation_subject_instance" table:
+      | Subject's full name | Instance number | Participants |
+      | User Four           | 1               | 3            |
+      | User Four           | 2               | 3            |
+      | User Four           | 3               | 3            |
+      | User One            | 1               | 1            |
+      | User One            | 2               | 1            |
+      | User One            | 3               | 1            |
+      | User Three          | 1               | 2            |
+      | User Three          | 2               | 2            |
+      | User Two            | 1               | 2            |
+      | User Two            | 2               | 2            |
+      | User Two            | 3               | 2            |

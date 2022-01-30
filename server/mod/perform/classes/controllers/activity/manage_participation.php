@@ -200,7 +200,11 @@ class manage_participation extends perform_controller {
             $lang_str = null;
             switch ($report_type) {
                 case subject_instance_manage_participation_actions::SUBJECT_INSTANCE_REPORT_TYPE:
-                    $lang_str = $is_opened ? 'subject_instance_reopen_confirmation' : 'subject_instance_closed_confirmation';
+                    if ($is_deleted) {
+                        $lang_str = 'subject_instance_delete_confirmation';
+                    } else {
+                        $lang_str = $is_opened ? 'subject_instance_reopen_confirmation' : 'subject_instance_closed_confirmation';
+                    }
                     break;
                 case participant_instance_manage_participation_actions::PARTICIPANT_INSTANCE_REPORT_TYPE:
                     if ($is_deleted) {

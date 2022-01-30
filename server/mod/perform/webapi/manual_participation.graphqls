@@ -66,9 +66,19 @@ Input type to delete participant instance.
 """
 input mod_perform_manually_delete_participant_input {
   """
-  ID of the participant instance to update
+  ID of the participant instance to delete
   """
   participant_instance_id: core_id!
+}
+
+"""
+Input type to delete a subject instance.
+"""
+input mod_perform_manually_delete_subject_input {
+  """
+  ID of the subject instance to delete
+  """
+  subject_instance_id: core_id!
 }
 
 extend type Mutation {
@@ -98,5 +108,12 @@ extend type Mutation {
   """
   mod_perform_manually_delete_participant_instance(
     input: mod_perform_manually_delete_participant_input!
+  ): Boolean!
+
+  """
+  Manually delete subject instance
+  """
+  mod_perform_manually_delete_subject_instance(
+    input: mod_perform_manually_delete_subject_input!
   ): Boolean!
 }

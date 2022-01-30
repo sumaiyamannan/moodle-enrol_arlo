@@ -1,6 +1,13 @@
 This files describes API changes in /mod/perform/*,
 information provided here is intended especially for developers.
 
+=== 13.17 ===
+
+* Added the manually deletion process for Manage participation participant instances
+* Added the manually deletion process(including the participant pending status) for Manage participation subject instances
+* Added a 'close_pending' parameter (default is false) to \mod_perform\models\activity\subject_instance::manually_close() that allows closing of pending subject instances.
+  Any custom observers of the 'subject_instance_availability_closed' event should be checked to take that into account.
+
 === 13.15 ===
 
 * \mod_perform\entity\activity\element_repository::get_subject_user_ids_using_element() is now marked as deprecated, there's no alternative
