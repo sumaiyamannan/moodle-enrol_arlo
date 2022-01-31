@@ -22,6 +22,7 @@
  */
 namespace core_user\profile;
 
+use core\orm\query\builder;
 use core_user\profile\field\field_helper;
 
 final class display_setting {
@@ -49,6 +50,13 @@ final class display_setting {
      * @var string
      */
     public const SETTING_PICTURE_KEY = 'profile_card_display_user_picture';
+
+    /**
+     * Support data type from 'user info field;
+     *
+     * @var array
+     */
+    public const SUPPORT_DATA_TYPES = ['text', 'menu'];
 
     /**
      * display_setting constructor.
@@ -233,5 +241,33 @@ final class display_setting {
     public static function save_display_user_profile(bool $value): void {
         $int_value = $value ? 1 : 0;
         set_config(static::SETTING_PICTURE_KEY, $int_value, 'core_user');
+    }
+
+    /**
+     * @param int $id
+     * @return void
+     */
+    public static function remove_display_field_by_id(int $id): void {
+        $db = builder::get_db();
+
+        $record = $db->get_record('user_info_field',  ['id' => $id], 'datatype,shortname', MUST_EXIST);
+        if (!in_array($record->datatype, self::SUPPORT_DATA_TYPES)) {
+            return;
+        }
+
+        $format_name = field_helper::format_custom_field_short_name($record->shortname);
+        if (!in_array($format_name, array_values(self::get_display_fields()))) {
+            return;
+        }
+
+        $display_fields_text = get_config('core_user', static::SETTING_FIELD_KEY);
+
+        if (empty($display_fields_text)) {
+            return;
+        }
+
+        $display_fields = array_diff(explode(',', $display_fields_text), [$format_name]);
+        $display_fields = implode(',', $display_fields);
+        set_config('profile_card_display_fields', $display_fields, 'core_user');
     }
 }

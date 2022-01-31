@@ -22,6 +22,8 @@
  */
 namespace core_user\profile\field;
 
+use core_user\profile\display_setting;
+
 /**
  * This class is used for providing the list of fields that are available.
  */
@@ -198,7 +200,7 @@ final class summary_field_provider {
         $custom_fields = profile_get_custom_fields();
         foreach ($custom_fields as $custom_field) {
             // Note: for now we are only looking for text input and menu field.
-            if (!in_array($custom_field->datatype, ['text', 'menu'])) {
+            if (!in_array($custom_field->datatype, display_setting::SUPPORT_DATA_TYPES)) {
                 continue;
             }
 

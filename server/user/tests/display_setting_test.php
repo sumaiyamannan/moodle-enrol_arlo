@@ -135,4 +135,29 @@ class core_user_display_setting_testcase extends advanced_testcase {
         );
         display_setting::save_display_fields(['skypeid', 'skypeid', 'me', 'ddd']);
     }
+
+    /**
+     * @return void
+     */
+    public function test_remove_display_setting(): void {
+        global $DB;
+
+        $shortname = 'newfield';
+        $custom_profile_id = $DB->insert_record(
+            'user_info_field',
+            [
+                'shortname' => $shortname,
+                'name' => 'Description of new field',
+                'categoryid' => 1,
+                'datatype' => 'text'
+            ]
+        );
+
+        $format_name = field_helper::format_custom_field_short_name($shortname);
+        display_setting::save_display_fields([$format_name]);
+
+        self::assertTrue(in_array($format_name, array_values(display_setting::get_display_fields())));
+        display_setting::remove_display_field_by_id($custom_profile_id);
+        self::assertFalse(in_array($format_name, array_values(display_setting::get_display_fields())));
+    }
 }
