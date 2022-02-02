@@ -541,6 +541,7 @@ Feature: Course category management interface performs as expected
     And I should see "Next" in the "#course-listing .listing-pagination" "css_element"
     And I should see "Last" in the "#course-listing .listing-pagination" "css_element"
 
+  @javascript
   Scenario: Test pagination is only shown when required
     Given the following "categories" exist:
       | name | category | idnumber |
@@ -567,7 +568,8 @@ Feature: Course category management interface performs as expected
     And I should see course listing "Course 3" before "Course 4"
     And I should see course listing "Course 4" before "Course 5"
     And "#course-listing .listing-pagination" "css_element" should not exist
-    And I click on "5" "link" in the ".course-listing-actions" "css_element"
+    And I click on "Per page: 20" "link" in the ".course-listing-actions" "css_element"
+    And I click on "5" "link" in the ".courses-per-page" "css_element"
     # Redirect
     And I should see "Per page: 5" in the ".course-listing-actions" "css_element"
     And I should see course listing "Course 1" before "Course 2"

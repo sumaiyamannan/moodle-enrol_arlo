@@ -50,10 +50,12 @@ Feature: Editing a grade item
       | Grade category | Cat 1 |
     And I press "Save changes"
 
+  @javascript
   Scenario: Being able to change the grade type, scale and maximum grade for a grade category when there are no overridden grades
     Given I click on "Edit" "link" in the "Cat 1" "table_row"
     When I click on "Edit settings" "link" in the "Cat 1" "table_row"
     Then I should not see "This category has associated grade items which have been overridden. Therefore some grades have already been awarded"
+    And I click on "Category total" "link"
     And I set the field "Grade type" to "Scale"
     And I press "Save changes"
     And I should see "Scale must be selected"
@@ -63,10 +65,12 @@ Feature: Editing a grade item
     And I click on "Edit" "link" in the "Cat 1" "table_row"
     And I click on "Edit settings" "link" in the "Cat 1" "table_row"
     And I should not see "This category has associated grade items which have been overridden. Therefore some grades have already been awarded"
+    And I click on "Category total" "link"
     And I set the field "Scale" to "Letter scale"
     And I press "Save changes"
     And I should not see "You cannot change the scale, as grades already exist for this item"
 
+  @javascript
   Scenario: Attempting to change a category item's grade type when overridden grades already exist
     Given I navigate to "View > Grader report" in the course gradebook
     And I turn editing mode on
@@ -75,12 +79,15 @@ Feature: Editing a grade item
     And I navigate to "Setup > Gradebook setup" in the course gradebook
     And I click on "Edit" "link" in the "Cat 1" "table_row"
     When I click on "Edit settings" "link" in the "Cat 1" "table_row"
+    And I click on "Category total" "link"
     Then I should see "This category has associated grade items which have been overridden. Therefore some grades have already been awarded, so the grade type cannot be changed. If you wish to change the maximum grade, you must first choose whether or not to rescale existing grades."
     And "//div[contains(concat(' ', normalize-space(@class), ' '), 'felement') and contains(text(), 'Value')]" "xpath_element" should exist
 
+  @javascript
   Scenario: Attempting to change a category item's scale when overridden grades already exist
     Given I click on "Edit" "link" in the "Cat 1" "table_row"
     And I click on "Edit settings" "link" in the "Cat 1" "table_row"
+    And I click on "Category total" "link"
     And I set the field "Grade type" to "Scale"
     And I set the field "Scale" to "ABCDEF"
     And I press "Save changes"
@@ -91,9 +98,11 @@ Feature: Editing a grade item
     And I navigate to "Setup > Gradebook setup" in the course gradebook
     And I click on "Edit" "link" in the "Cat 1" "table_row"
     When I click on "Edit settings" "link" in the "Cat 1" "table_row"
+    And I click on "Category total" "link"
     Then I should see "This category has associated grade items which have been overridden. Therefore some grades have already been awarded, so the grade type and scale cannot be changed."
     And "//div[contains(concat(' ', normalize-space(@class), ' '), 'felement') and contains(text(), 'ABCDEF')]" "xpath_element" should exist
 
+  @javascript
   Scenario: Attempting to change a category item's maximum grade when no rescaling option has been chosen
     Given I navigate to "View > Grader report" in the course gradebook
     And I turn editing mode on
@@ -102,6 +111,9 @@ Feature: Editing a grade item
     And I navigate to "Setup > Gradebook setup" in the course gradebook
     And I click on "Edit" "link" in the "Cat 1" "table_row"
     And I click on "Edit settings" "link" in the "Cat 1" "table_row"
+    And I click on "Category total" "link"
+    And the "Maximum grade" "field" should be disabled
+    And I set the field "Rescale overridden grades" to "yes"
     And I set the field "Maximum grade" to "50"
     When I press "Save changes"
-    Then I should see "You must choose whether to rescale existing grades or not."
+    Then I should not see "You must choose whether to rescale existing grades or not."

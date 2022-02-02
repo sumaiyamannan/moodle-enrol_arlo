@@ -50,10 +50,3 @@ Feature: Add a quiz
     And I should see "Highest grade: 0.00 / 10.00."
     And I log out
 
-  Scenario: Add and configure small quiz and perform an attempt as a student with Javascript disabled
-    Then I should see "So you think it is true"
-    And I should see "Thank you, this is the general feedback"
-    And I should see "The correct answer is 'False'."
-    And I follow "Finish review"
-    And I should see "Highest grade: 0.00 / 10.00."
-    And I log out
