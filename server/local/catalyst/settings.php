@@ -32,3 +32,26 @@ if ($hassiteconfig &&
     $ADMIN->add('localplugins', new admin_externalpage('local_catalyst', get_string('pluginname', 'local_catalyst'), $CFG->wwwroot.'/local/catalyst/testingsite.php'));
 
 }
+
+if ($hassiteconfig) {
+    $options = array(
+        0 => new lang_string('neverdeletelogs'),
+        120 => new lang_string('numdays', '', 120),
+        60 => new lang_string('numdays', '', 60)
+    );
+
+    $ADMIN->add('localplugins', new admin_category('local_catalyst_settings', new lang_string('pluginname', 'local_catalyst')));
+    $settingspage = new admin_settingpage('managelocalcatalyst', new lang_string('pluginnamesettings', 'local_catalyst'));
+
+    if ($ADMIN->fulltree) {
+        $settingspage->add(
+            new admin_setting_configselect('local_catalyst/hrimportlifetime',
+            new lang_string('hrimportlifetime', 'local_catalyst'),
+            new lang_string('hrimportlifetime_help', 'local_catalyst'),
+                60,
+                $options));
+    }
+
+    $ADMIN->add('localplugins', $settingspage);
+
+}

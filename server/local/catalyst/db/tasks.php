@@ -26,4 +26,13 @@ $tasks = [
         'dayoftheweek' => '*',
         'month' => '*',
     ],
+    [
+        'classname' => 'local_catalyst\task\clear_hrimport_logs',
+        'blocking' => 0,
+        'minute' => 'R',
+        'hour' => '*',
+        'day' => '*',
+        'dayoftheweek' => '*',
+        'month' => '*',
+    ],
 ];
