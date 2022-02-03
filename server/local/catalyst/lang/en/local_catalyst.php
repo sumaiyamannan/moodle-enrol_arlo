@@ -22,7 +22,8 @@
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$string['pluginname'] = 'Catalyst Customisations';
+$string['pluginname'] = 'Catalyst customisations';
+$string['pluginnamesettings'] = 'Catalyst settings page';
 $string['catalyst:totarasyncwsupload'] = 'Upload Totara Sync files via web services';
 $string['syncfileuploaded'] = 'Sync file uploaded';
 $string['taskclearlocalcache'] = 'Clear local cache of requests older than 24 hours';
@@ -37,3 +38,7 @@ $string['testingsiteallowlist'] = 'Email allowlist';
 $string['testingsiteallowlist_help'] = 'CSV list of email domains that can always access the site when closed (NO SPACES!).';
 $string['settingssaved'] = 'Settings saved';
 $string['testingsiteforced'] = 'This setting has been forced in config.php';
+// Clear HRImport logs.
+$string['taskclearhrimportlogs'] = 'Clear HR import logs';
+$string['hrimportlifetime'] = 'Keep HR import logs for';
+$string['hrimportlifetime_help'] = 'This specifies the length of time you want to keep hrimport logs. Logs that are older than this will be automatically deleted.';
