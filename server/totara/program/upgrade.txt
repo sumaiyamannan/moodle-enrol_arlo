@@ -1,6 +1,10 @@
 This files describes API changes in Totara Program,
 information provided here is intended especially for developers.
 
+=== 13.17 ===
+
+* Added new parameter $categoryid to totara_program_renderer::program_search_form(), to fix manage link button when user coming from a category.
+
 === 13.12 ===
 
 * Introduced new config setting $CFG->program_message_prevent_resend_on_schedule_change. When set to true, it switches
