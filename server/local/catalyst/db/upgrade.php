@@ -61,12 +61,12 @@ function xmldb_local_catalyst_upgrade($oldversion) {
         upgrade_plugin_savepoint(true, 2018102902, 'local', 'catalyst');
     }
 
-    if ($oldversion <= 2020100200) {
+    if ($oldversion < 2022021500) {
         // If site is existing then set HR import clear logs setting to 'neverdeletelogs'.
         set_config('hrimportlifetime', 0, 'local_catalyst');
 
         // Save point reached.
-        upgrade_plugin_savepoint(true, 2021123101, 'local', 'catalyst');
+        upgrade_plugin_savepoint(true, 2022021500, 'local', 'catalyst');
     }
 
     return true;
