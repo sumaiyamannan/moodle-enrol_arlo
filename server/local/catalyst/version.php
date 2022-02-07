@@ -24,6 +24,6 @@
 defined('MOODLE_INTERNAL') or die();
 
 $plugin->component = 'local_catalyst';
-$plugin->version   = 2021123101;
+$plugin->version   = 2022021500;
 $plugin->requires  = 2013111800;
 $plugin->cron      = 0;
