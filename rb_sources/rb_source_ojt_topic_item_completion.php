@@ -163,6 +163,16 @@ class rb_source_ojt_topic_item_completion extends rb_base_source {
             ),
             new rb_column_option(
                 'ojt_topic_item',
+                'completionreq',
+                get_string('mandatory', 'rb_source_ojt_topic_item_completion'),
+                'ojt_topic_item.completionreq',
+                array(
+                    'joins' => 'ojt_topic_item',
+                    'displayfunc' => 'yes_or_no',
+                )
+            ),
+            new rb_column_option(
+                'ojt_topic_item',
                 'name',
                 get_string('topicitem', 'rb_source_ojt_topic_item_completion'),
                 'ojt_topic_item.name',
@@ -236,6 +246,16 @@ class rb_source_ojt_topic_item_completion extends rb_base_source {
                 'text'
             ),
             new rb_filter_option(
+                'ojt_topic_item',
+                'completionreq',
+                get_string('mandatory', 'rb_source_ojt_topic_item_completion'),
+                'select',
+                array(
+                    'selectfunc' => 'yesno_list',
+                    'simplemode' => true,
+                )
+            ),
+            new rb_filter_option(
                 'base',
                 'comment',
                 get_string('comment', 'rb_source_ojt_topic_item_completion'),
@@ -270,32 +290,9 @@ class rb_source_ojt_topic_item_completion extends rb_base_source {
     }
 
     protected function define_contentoptions() {
-        $contentoptions = array(
-            new rb_content_option(
-                'current_pos',
-                get_string('currentpos', 'totara_reportbuilder'),
-                'position.path',
-                'position'
-            ),
-            new rb_content_option(
-                'current_org',
-                get_string('currentorg', 'totara_reportbuilder'),
-                'organisation.path',
-                'organisation'
-            ),
-            new rb_content_option(
-                'user',
-                get_string('user', 'rb_source_ojt_topic_item_completion'),
-                array(
-                    'userid' => 'base.userid',
-                    'managerid' => 'position_assignment.managerid',
-                    'managerpath' => 'position_assignment.managerpath',
-                    'postype' => 'position_assignment.type',
-                ),
-                'position_assignment'
-            ),
-        );
-        return $contentoptions;
+	$contentoptions = array();
+	$this->add_basic_user_content_options($contentoptions);
+	return $contentoptions;
     }
 
     protected function define_paramoptions() {
