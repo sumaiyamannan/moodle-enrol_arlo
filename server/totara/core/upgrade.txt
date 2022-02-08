@@ -1,6 +1,10 @@
 List of upgrade and API changes in Totara core,
 information provided here is intended especially for developers.
 
+=== 13.17 ===
+
+* Added totara_core_mnet_deprecated_check() which is used in Totara 14+ environment checks
+
 === 13.16 ===
 
 * Added field progress_summary to GraphQL type totara_core_learning_item

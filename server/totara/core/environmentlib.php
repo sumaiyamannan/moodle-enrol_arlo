@@ -190,6 +190,33 @@ function totara_core_mnet_deprecated_check(environment_results $result) {
 }
 
 /**
+ * @param environment_results $result
+ * @return environment_results
+ */
+function totara_core_mnet_removal_check(environment_results $result) {
+    global $DB;
+
+    if (!$DB->get_manager()->table_exists('mnet_application')) {
+        return null;
+    }
+
+    $sql = 'SELECT COUNT(DISTINCT mnethostid)
+              FROM "ttr_user"
+             WHERE deleted = 0';
+    $hostcount = $DB->get_field_sql($sql);
+
+    $result->setInfo(get_string('mnetremoval', 'totara_core'));
+    if ($hostcount > 1) {
+        $result->setStatus(false);
+        $result->setFeedbackStr(['mnetremovalblocked', 'totara_core']);
+    } else {
+        $result->setStatus(true);
+    }
+
+    return $result;
+}
+
+/**
  * Make sure top level directory is not shared via web server.
  *
  * @param environment_results $result
