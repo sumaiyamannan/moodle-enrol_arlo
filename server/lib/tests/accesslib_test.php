@@ -3786,9 +3786,15 @@ class core_accesslib_testcase extends advanced_testcase {
         // Fake state before upgrade.
         $DB->set_field('capabilities', 'name', 'moodle/site:restore', array('name'=>'moodle/restore:restorecourse'));
         $DB->set_field('role_capabilities', 'capability', 'moodle/site:restore', array('capability'=>'moodle/restore:restorecourse'));
-        $this->expectException('coding_exception');
-        $this->expectExceptionMessage("Capability 'moodle/site:restore' was not found! This has to be fixed in code.");
-        assign_capability('moodle/site:restore', CAP_PROHIBIT, $teacher->id, $froncontext->id, true);
+        try {
+            assign_capability('moodle/site:restore', CAP_PROHIBIT, $teacher->id, $froncontext->id, true);
+            $this->fail('Expected exception was not thrown');
+        } catch (coding_exception $e) {
+            $this->assertStringContainsString(
+                "Capability 'moodle/site:restore' was not found! This has to be fixed in code.",
+                $e->getMessage()
+            );
+        }
         $perms1 = array_values($DB->get_records('role_capabilities', array('capability'=>'moodle/site:restore', 'roleid'=>$teacher->id), 'contextid, permission', 'contextid, permission'));
 
         $DB->delete_records('role_capabilities', array('capability'=>'moodle/site:sendmessage'));

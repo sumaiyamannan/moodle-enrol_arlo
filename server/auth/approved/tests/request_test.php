@@ -259,7 +259,6 @@ class auth_approved_request_testcase extends advanced_testcase {
         $record->firstname = 'old';
         $this->expectException('coding_exception', 'Cannot update resolved request!');
         \auth_approved\request::update_request($record);
-        $this->assertEmpty($this->getExpectedException());
     }
 
     public function test_send_message() {
@@ -440,7 +439,6 @@ class auth_approved_request_testcase extends advanced_testcase {
         $DB->set_field('auth_approved_request', 'status', 3, ['id' => $request->id]);
         $this->expectException('coding_exception');
         \auth_approved\request::confirm_request($token);
-        $this->assertEmpty($this->getExpectedException());
     }
 
     public function test_confirm_request_requireapproval_off() {

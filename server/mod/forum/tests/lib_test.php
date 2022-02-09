@@ -3037,14 +3037,18 @@ class mod_forum_lib_testcase extends advanced_testcase {
         $this->assertFalse(forum_is_author_hidden($post, $forum));
 
         // Incorrect parameters: $post.
-        $this->expectException('coding_exception');
-        $this->expectExceptionMessage('$post->parent must be set.');
         unset($post->parent);
-        forum_is_author_hidden($post, $forum);
+        try {
+            forum_is_author_hidden($post, $forum);
+            $this->fail('Expected exception was not thrown');
+        } catch (coding_exception $e) {
+            $this->assertStringContainsString('$post->parent must be set.', $e->getMessage());
+        }
 
         // Incorrect parameters: $forum.
         $this->expectException('coding_exception');
         $this->expectExceptionMessage('$forum->type must be set.');
+        $post->parent = 1;
         unset($forum->type);
         forum_is_author_hidden($post, $forum);
     }

@@ -201,9 +201,6 @@ class tool_sitepolicy_policyversion_test extends \advanced_testcase {
     public function test_delete_exceptions() {
         global $DB;
 
-        $this->resetAfterTest();
-        $this->expectException('coding_exception');
-        $this->expectExceptionMessage('This version was published, so it cannot be deleted');
         /** @var \tool_sitepolicy_generator $generator */
         $generator = $this->getDataGenerator()->get_plugin_generator('tool_sitepolicy');
 
@@ -236,7 +233,10 @@ class tool_sitepolicy_policyversion_test extends \advanced_testcase {
         $rows = $DB->get_records('tool_sitepolicy_localised_consent');
         $this->assertEquals(1, count($rows));
 
-        // Now try to delete - error should be thrown and rows left intacked
+        // Now try to delete - error should be thrown and rows left intact
+        $this->expectException('coding_exception');
+        $this->expectExceptionMessage('This version was published, so it cannot be deleted');
+
         $version = policyversion::from_policy_latest($sitepolicy);
         $version->delete();
     }

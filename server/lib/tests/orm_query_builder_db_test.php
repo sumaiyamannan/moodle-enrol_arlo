@@ -305,10 +305,9 @@ class core_orm_query_builder_db_testcase extends advanced_testcase {
         $this->expectException(record_not_found_exception::class);
         $this->expectExceptionMessage('Can not find data record in database.');
 
-        $this->assertNull($this->new_builder($this->table_goods)
+        $this->new_builder($this->table_goods)
             ->where('cat_id', 6996)
-            ->value('discount', true)
-        );
+            ->value('discount', true);
     }
 
     public function test_it_selects_one_record() {

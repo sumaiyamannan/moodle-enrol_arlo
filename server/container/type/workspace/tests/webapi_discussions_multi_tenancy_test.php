@@ -126,14 +126,19 @@ class container_workspace_webapi_discussions_multi_tenancy_testcase extends adva
             ]
         );
 
-        self::assertCount(5, $result);
+        $this->assertCount(5, $result);
 
         // Move user two to new tenant, and check if user two is still access to the discussions or not.
         $tenant_two = $tenant_generator->create_tenant();
         $tenant_generator->migrate_user_to_tenant($user_two->id, $tenant_two->id);
 
-        self::expectException(coding_exception::class);
-        self::expectExceptionMessage("Cannot get the list of discussions");
+        // Even being moved to different tenant, user two is still an active member of a workspace.
+        $member->reload();
+        $this->assertTrue($member->is_active());
+        $this->assertFalse($member->is_suspended());
+
+        $this->expectException(coding_exception::class);
+        $this->expectExceptionMessage("Cannot get the list of discussions");
 
         $this->resolve_graphql_query(
             'container_workspace_discussions',
@@ -142,10 +147,5 @@ class container_workspace_webapi_discussions_multi_tenancy_testcase extends adva
                 'sort' => discussion_sort::get_code(discussion_sort::RECENT)
             ]
         );
-
-        // Even being moved to different tenant, user two is still an active member of a workspace.
-        $member->reload();
-        self::assertTrue($member->is_active());
-        self::assertFalse($member->is_suspended());
     }
 }

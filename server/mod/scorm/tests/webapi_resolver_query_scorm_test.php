@@ -176,9 +176,12 @@ class mod_scorm_webapi_resolver_query_scorm_testcase extends advanced_testcase {
         $modinfo = get_fast_modinfo($this->course);
         $cminfos = $modinfo->get_instances_of('scorm');
 
-        $this->expectException(require_login_exception::class);
-        $this->expectExceptionMessage('Course or activity not accessible. (Activity is hidden)');
-        $results = $this->resolve_graphql_query('mod_scorm_scorm', ['scormid' => $scorm->id]);
+        try {
+            $this->resolve_graphql_query('mod_scorm_scorm', ['scormid' => $scorm->id]);
+            $this->fail('Expected exception was not thrown');
+        } catch (require_login_exception $e) {
+            $this->assertStringContainsString('Course or activity not accessible. (Activity is hidden)', $e->getMessage());
+        }
 
         // Now hide the course and check the results are 0.
         $DB->set_field('course', 'visible', '0', ['id' => $this->course->id]);
@@ -186,9 +189,12 @@ class mod_scorm_webapi_resolver_query_scorm_testcase extends advanced_testcase {
         // Clear the course visibility cache
         cache_helper::purge_by_definition('totara_core', 'totara_course_is_viewable', ['userid' => $this->learner->id]);
 
-        $this->expectException(require_login_exception::class);
-        $this->expectExceptionMessage('Course or activity not accessible. (Course is hidden)');
-        $results = $this->resolve_graphql_query('mod_scorm_scorm', ['scormid' => $scorm->id]);
+        try {
+            $this->resolve_graphql_query('mod_scorm_scorm', ['scormid' => $scorm->id]);
+            $this->fail('Expected exception was not thrown');
+        } catch (require_login_exception $e) {
+            $this->assertStringContainsString('Course or activity not accessible. (Course is hidden)', $e->getMessage());
+        }
 
         // Check the admin can still see everything.
         $this->setAdminUser();

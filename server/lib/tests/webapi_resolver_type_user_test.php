@@ -69,14 +69,14 @@ class core_webapi_resolver_type_user_testcase extends advanced_testcase {
         $user->id = '100';
         $user->blah = 'test';
         $this->expectExceptionMessage('Coding error detected, it must be fixed by a programmer: Unknown user field');
-        self::assertNull($this->resolve_graphql_type('core_user', 'blah', $user, []));
+        $this->resolve_graphql_type('core_user', 'blah', $user, []);
     }
 
     public function test_resolver_fake_unset_field() {
         $user = new stdClass();
         $user->id = '100';
         $this->expectExceptionMessage('Coding error detected, it must be fixed by a programmer: Unknown user field');
-        self::assertNull($this->resolve_graphql_type('core_user', 'blah', $user, []));
+        $this->resolve_graphql_type('core_user', 'blah', $user, []);
     }
 
     public function test_inaccessible_field() {

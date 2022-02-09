@@ -98,10 +98,9 @@ class mod_perform_webapi_resolver_mutation_set_manual_participants_manual_testca
         $this->expectException(require_login_exception::class);
 
         self::setUser();
-        $result = $this->resolve_graphql_mutation(self::MUTATION, [
+        $this->resolve_graphql_mutation(self::MUTATION, [
             'subject_instance_id' => -1,
         ]);
-        $this->assert_webapi_operation_failed($result, 'not logged in');
     }
 
     public function test_ajax_mutation_fails_when_feature_disabled(): void {
@@ -109,10 +108,9 @@ class mod_perform_webapi_resolver_mutation_set_manual_participants_manual_testca
 
         self::setAdminUser();
         advanced_feature::disable('performance_activities');
-        $result = $this->resolve_graphql_mutation(self::MUTATION, [
+        $this->resolve_graphql_mutation(self::MUTATION, [
             'subject_instance_id' => -1,
         ]);
-        $this->assert_webapi_operation_failed($result, 'Feature performance_activities is not available.');
     }
 
 }

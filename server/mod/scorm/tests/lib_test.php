@@ -213,9 +213,15 @@ class mod_scorm_lib_testcase extends externallib_advanced_testcase {
 
         // Check exceptions does not broke anything.
         scorm_require_available($this->scorm, true, $this->context);
+
         // Now, expect exceptions.
-        $this->expectException('moodle_exception');
-        $this->expectExceptionMessage(get_string("notopenyet", "scorm", userdate($this->scorm->timeopen)));
+        $this->scorm->timeopen = time() + 1000;
+        try {
+            scorm_require_available($this->scorm, false);
+            $this->fail('Expected exception was not thrown');
+        } catch (moodle_exception $e) {
+            $this->assertStringContainsString(get_string("notopenyet", "scorm", userdate($this->scorm->timeopen)), $e->getMessage());
+        }
 
         // Now as student other condition.
         self::setUser($this->student);

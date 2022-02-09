@@ -44,8 +44,15 @@ class core_oauth2_testcase extends advanced_testcase {
         \core\oauth2\api::create_standard_issuer('microsoft');
         \core\oauth2\api::create_standard_issuer('nextcloud', 'https://dummy.local/nextcloud/');
 
-        $this->expectException(\moodle_exception::class);
-        \core\oauth2\api::create_standard_issuer('nextcloud');
+        try {
+            \core\oauth2\api::create_standard_issuer('nextcloud');
+            $this->fail('Expected exception was not thrown');
+        } catch (\moodle_exception $e) {
+            $this->assertStringContainsString(
+                'Nextcloud service type requires the baseurl parameter.',
+                $e->getMessage()
+            );
+        }
 
         $issuers = \core\oauth2\api::get_all_issuers();
 

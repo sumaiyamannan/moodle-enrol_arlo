@@ -85,9 +85,9 @@ class mod_assign_locallib_testcase extends advanced_testcase {
     }
 
     public function test_is_blind_marking() {
-        $this->resetAfterTest();
         $course = $this->getDataGenerator()->create_course();
         $teacher = $this->getDataGenerator()->create_and_enrol($course, 'teacher');
+        $editingteacher = $this->getDataGenerator()->create_and_enrol($course, 'editingteacher');
         $student = $this->getDataGenerator()->create_and_enrol($course, 'student');
 
         $this->setUser($teacher);
@@ -100,29 +100,31 @@ class mod_assign_locallib_testcase extends advanced_testcase {
         $this->assertEquals(true, strpos($output, get_string('hiddenuser', 'assign')));
 
         // Test students cannot reveal identities.
-        $nopermission = false;
-        $student->ignoresesskey = true;
         $this->setUser($student);
-        $this->expectException('required_capability_exception');
-        $assign->reveal_identities();
-        $student->ignoresesskey = false;
+        try {
+            $assign->reveal_identities();
+            $this->fail('Expected exception was not thrown');
+        } catch (required_capability_exception $e) {
+            $this->assertStringContainsString(
+                'Sorry, but you do not currently have permissions to do that (Reveal learner identities)',
+                $e->getMessage()
+            );
+        }
 
         // Test teachers cannot reveal identities.
-        $nopermission = false;
-        $teacher->ignoresesskey = true;
         $this->setUser($teacher);
-        $this->expectException('required_capability_exception');
-        $assign->reveal_identities();
-        $teacher->ignoresesskey = false;
+        try {
+            $assign->reveal_identities();
+            $this->fail('Expected exception was not thrown');
+        } catch (required_capability_exception $e) {
+            $this->assertStringContainsString(
+                'Sorry, but you do not currently have permissions to do that (Reveal learner identities)',
+                $e->getMessage()
+            );
+        }
 
-        // Test sesskey is required.
-        $this->setUser($teacher);
-        $this->expectException('moodle_exception');
-        $assign->reveal_identities();
-
-        // Test editingteacher can reveal identities if sesskey is ignored.
-        $teacher->ignoresesskey = true;
-        $this->setUser($teacher);
+        // Test editingteacher can reveal identities.
+        $this->setUser($editingteacher);
         $assign->reveal_identities();
         $this->assertEquals(false, $assign->is_blind_marking());
         $teacher->ignoresesskey = false;
