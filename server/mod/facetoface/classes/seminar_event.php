@@ -248,7 +248,7 @@ final class seminar_event implements seminar_iterator_item {
         // Notify affected trainers assigned to the session.
         $notifytrainers = role_list::get_distinct_users_from_seminarevent($this);
         foreach ($notifytrainers as $role) {
-            notice_sender::event_cancellation($role->get_userid(), $this);
+            notice_sender::event_trainer_cancellation($role->get_userid(), $this);
         }
 
         // Notify managers who had reservations.

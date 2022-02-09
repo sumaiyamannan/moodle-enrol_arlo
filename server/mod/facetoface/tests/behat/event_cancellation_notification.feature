@@ -147,7 +147,7 @@ Feature: Seminar event cancellation notifications
     When I log out
     And I log in as "teacher1"
     And I am on "Dashboard" page
-    Then I should see "Seminar event cancellation"
+    Then I should see "Seminar event trainer cancellation"
 
     When I click on "View all alerts" "link"
     And I follow "Show more..."
@@ -237,7 +237,7 @@ Feature: Seminar event cancellation notifications
     When I log out
     And I log in as "teacher1"
     And I am on "Dashboard" page
-    Then I should see "Seminar event cancellation"
+    Then I should see "Seminar event trainer cancellation"
 
     When I click on "View all alerts" "link"
     And I follow "Show more..."
@@ -319,7 +319,7 @@ Feature: Seminar event cancellation notifications
     And I should not see "Go to event" in the "9:00 AM - 3:00 PM" "table_row"
 
     When I am on "Dashboard" page
-    Then I should see "Seminar event cancellation"
+    Then I should see "Seminar event trainer cancellation"
 
     When I click on "View all alerts" "link"
     And I follow "Show more..."
@@ -378,7 +378,7 @@ Feature: Seminar event cancellation notifications
     And I should not see "Go to event" in the "9:00 AM - 3:00 PM" "table_row"
 
     When I am on "Dashboard" page
-    Then I should see "Seminar event cancellation"
+    Then I should see "Seminar event trainer cancellation"
 
     When I click on "View all alerts" "link"
     And I follow "Show more..."
