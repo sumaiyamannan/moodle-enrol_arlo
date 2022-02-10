@@ -23,7 +23,6 @@
       class="tui-resourceNavigationBar__backLink"
       :href="backButton.url"
       :title="backButton.label"
-      @click.prevent.stop="backClick"
     >
       <BackArrow class="tui-resourceNavigationBar__backIcon" size="200" />
       <span> {{ backButton.label }} </span>
@@ -86,21 +85,6 @@ export default {
     navigationButtons: {
       type: Object,
       required: false,
-    },
-  },
-  methods: {
-    /**
-     * Workaround for the catalog, we must use browser history
-     * for the back button instead. This will be addressed later,
-     * it's a workaround for now.
-     */
-    backClick() {
-      if (this.backButton.history) {
-        window.history.back();
-        return;
-      }
-
-      window.location.href = this.backButton.url;
     },
   },
 };
