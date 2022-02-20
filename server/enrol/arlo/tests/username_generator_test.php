@@ -23,12 +23,20 @@ defined('MOODLE_INTERNAL') || die();
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-class enrol_arlo_username_generator_testcase extends \core_privacy\tests\provider_testcase {
+class enrol_arlo_username_generator_testcase extends advanced_testcase {
 
     /**
      *  @var enrol_arlo_generator $plugingenerator handle to plugin generator.
      */
     protected $plugingenerator;
+
+    /**
+     * Teardown function
+     */
+    protected function tearDown(): void {
+        $this->plugingenerator = null;
+        parent::tearDown();
+    }
 
     /**
      * @throws coding_exception

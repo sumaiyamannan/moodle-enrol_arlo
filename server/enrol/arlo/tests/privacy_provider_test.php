@@ -29,7 +29,7 @@ defined('MOODLE_INTERNAL') || die();
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-class enrol_arlo_privacy_provider_testcase extends \core_privacy\tests\provider_testcase {
+class enrol_arlo_privacy_provider_testcase  extends advanced_testcase  {
 
     protected $plugingenerator;
 
