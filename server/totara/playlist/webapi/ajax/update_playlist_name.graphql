@@ -1,6 +1,6 @@
 mutation totara_playlist_update_playlist_name(
   $id: param_integer!
-  $name: param_text!
+  $name: String!
 ) {
   playlist: totara_playlist_update(id: $id, name: $name) {
     __typename

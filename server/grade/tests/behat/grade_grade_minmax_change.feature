@@ -33,6 +33,7 @@ Feature: We can change the maximum and minimum number of points for manual items
     And I set the field "Show contribution to course total" to "Show"
     And I press "Save changes"
 
+  @javascript
   Scenario: Change maximum number of points on a graded item.
     And I follow "Course 1"
     And I navigate to "View > Grader report" in the course gradebook
@@ -43,9 +44,8 @@ Feature: We can change the maximum and minimum number of points for manual items
     When I navigate to "Setup > Gradebook setup" in the course gradebook
     And I click on "Edit" "link" in the "Manual item 1" "table_row"
     And I click on "Edit settings" "link" in the "Manual item 1" "table_row"
-    And I set the following fields to these values:
-      | Maximum grade | 10 |
-      | Rescale existing grades | No |
+    And I set the field "Rescale existing grades" to "no"
+    And I set the field "Maximum grade" to "10"
     And I press "Save changes"
     And I navigate to "View > User report" in the course gradebook
     And I select "Student 1" from the "Select all or one user" singleselect
@@ -59,9 +59,8 @@ Feature: We can change the maximum and minimum number of points for manual items
     And I navigate to "Setup > Gradebook setup" in the course gradebook
     And I click on "Edit" "link" in the "Manual item 1" "table_row"
     And I click on "Edit settings" "link" in the "Manual item 1" "table_row"
-    And I set the following fields to these values:
-      | Maximum grade | 20 |
-      | Rescale existing grades | Yes |
+    And I set the field "Rescale existing grades" to "Yes"
+    And I set the field "Maximum grade" to "20"
     And I press "Save changes"
     And I navigate to "View > User report" in the course gradebook
     And I select "Student 1" from the "Select all or one user" singleselect

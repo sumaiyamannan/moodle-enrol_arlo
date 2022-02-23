@@ -555,8 +555,9 @@ final class settings {
                 'custom' => ['formcustom_field_customfooter'],
                 'tenant' => '*',
             ];
+            $theme_config = $this->theme_config;
 
-            $this->tenant_settings_hook = new tenant_customizable_theme_settings_hook($default_categories);
+            $this->tenant_settings_hook = new tenant_customizable_theme_settings_hook($default_categories, $theme_config);
             $this->tenant_settings_hook->execute();
         }
         return $this->tenant_settings_hook;

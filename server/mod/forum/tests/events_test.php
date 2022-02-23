@@ -2383,27 +2383,37 @@ class mod_forum_events_testcase extends advanced_testcase {
 
         // Without an invalid context.
         $params['context'] = \context_course::instance($course->id);
-        $this->expectException('coding_exception');
-        $this->expectExceptionMessage('Context level must be CONTEXT_MODULE.');
-        \mod_forum\event\discussion_deleted::create($params);
+        try {
+            \mod_forum\event\discussion_subscription_deleted::create($params);
+            $this->fail('Expected exception was not thrown');
+        } catch (coding_exception $e) {
+            $this->assertStringContainsString('Context level must be CONTEXT_MODULE.', $e->getMessage());
+        }
 
         // Without the discussion.
-        unset($params['discussion']);
-        $this->expectException('coding_exception');
-        $this->expectExceptionMessage('The \'discussion\' value must be set in other.');
-        \mod_forum\event\discussion_deleted::create($params);
+        $params['context'] = $context;
+        unset($params['other']['discussion']);
+        try {
+            \mod_forum\event\discussion_subscription_deleted::create($params);
+            $this->fail('Expected exception was not thrown');
+        } catch (coding_exception $e) {
+            $this->assertStringContainsString('The \'discussion\' value must be set in other.', $e->getMessage());
+        }
 
         // Without the forumid.
-        unset($params['forumid']);
-        $this->expectException('coding_exception');
-        $this->expectExceptionMessage('The \'forumid\' value must be set in other.');
-        \mod_forum\event\discussion_deleted::create($params);
+        unset($params['other']['forumid']);
+        try {
+            \mod_forum\event\discussion_subscription_deleted::create($params);
+            $this->fail('Expected exception was not thrown');
+        } catch (coding_exception $e) {
+            $this->assertStringContainsString('The \'forumid\' value must be set in other.', $e->getMessage());
+        }
 
         // Without the relateduserid.
         unset($params['relateduserid']);
         $this->expectException('coding_exception');
-        $this->expectExceptionMessage('The \'relateduserid\' value must be set in other.');
-        \mod_forum\event\discussion_deleted::create($params);
+        $this->expectExceptionMessage("The 'relateduserid' must be set.");
+        \mod_forum\event\discussion_subscription_deleted::create($params);
     }
 
     /**

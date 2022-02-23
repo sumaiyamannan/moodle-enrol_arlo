@@ -670,17 +670,17 @@ class core_user {
      * For instance: country, language, themes and etc.
      *
      * @param string $property property name to be retrieved.
-     * @throws coding_exception if the requested property name is invalid or if it does not has a list of choices.
+     * @throws coding_exception if the requested property name is invalid or if it does not have a list of choices.
      * @return array the property parameter type.
      */
     public static function get_property_choices($property) {
 
         self::fill_properties_cache();
 
-        if (!array_key_exists($property, self::$propertiescache) && !array_key_exists('choices',
+        if (!array_key_exists($property, self::$propertiescache) || !array_key_exists('choices',
                 self::$propertiescache[$property])) {
 
-            throw new coding_exception('Invalid property requested, or the property does not has a list of choices.');
+            throw new coding_exception('Invalid property requested, or the property does not have a list of choices.');
         }
 
         return self::$propertiescache[$property]['choices'];

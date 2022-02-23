@@ -201,7 +201,7 @@ input pathway_manual_rating_input {
   """
   Optional text comment about the rating
   """
-  comment: param_text
+  comment: String
 }
 
 extend type Mutation {

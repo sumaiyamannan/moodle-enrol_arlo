@@ -1,5 +1,5 @@
 mutation engage_article_update_article(
-  $name: param_text
+  $name: String
   $resourceid: param_integer!
   $content: String
   $access: totara_engage_access

@@ -101,42 +101,6 @@ Feature: Test we can resort course in the management interface.
       | "Sort by Course time created ascending"  | "Social studies"          | "Applied sciences"        | "Extended social studies" |
       | "Sort by Course time created descending" | "Extended social studies" | "Applied sciences"        | "Social studies" |
 
-  Scenario: Test moving courses up and down by one.
-    Given the following "categories" exist:
-      | name | category | idnumber |
-      | Cat 1 | 0 | CAT1 |
-    And the following "courses" exist:
-      | category | fullname | shortname | idnumber |
-      | CAT1 | Course 1 | Course 1 | C1 |
-      | CAT1 | Course 2 | Course 2 | C2 |
-      | CAT1 | Course 3 | Course 3 | C3 |
-
-    And I log in as "admin"
-    And I go to the courses management page
-    And I should see the "Course categories and courses" management page
-    And I click on category "Cat 1" in the management interface
-    # Redirect.
-    And I should see the "Course categories and courses" management page
-    And I should see "Course categories" in the "#category-listing h3" "css_element"
-    And I should see "Cat 1" in the "#category-listing" "css_element"
-    And I click on "Sort courses" "link"
-    And I click on "Sort by Course ID number ascending" "link" in the ".course-listing-actions" "css_element"
-    # Redirect.
-    And I should see the "Course categories and courses" management page
-    And I should see course listing "Course 1" before "Course 2"
-    And I should see course listing "Course 2" before "Course 3"
-    And I click to move course "C1" down one
-    # Redirect.
-    And I should see the "Course categories and courses" management page with a course selected
-    And I should see course listing "Course 2" before "Course 1"
-    And I should see course listing "Course 1" before "Course 3"
-    And I click to move course "C3" up one
-    # Redirect.
-    And I should see the "Course categories and courses" management page with a course selected
-    And I should see course listing "Course 2" before "Course 3"
-    And I should see course listing "Course 3" before "Course 1"
-
-  # Like the above test but with JavaScript enabled.
   @javascript
   Scenario: Test using AJAX to move courses up and down by one.
     Given the following "categories" exist:

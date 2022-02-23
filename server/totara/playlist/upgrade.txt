@@ -1,6 +1,11 @@
 This files describes API changes in /totara/totara_playlist,
 information provided here is intended especially for developers.
 
+=== 13.17 ===
+
+--- Update to graphQL ---
+* Updated field 'name' scalar type 'param_text' to 'String' for mutation 'totara_playlist_create' and 'totara_playlist_update'
+
 === 13.6 ===
 
 --- Update to graphQL ---

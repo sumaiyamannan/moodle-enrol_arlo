@@ -303,13 +303,24 @@ class core_user_testcase extends advanced_testcase {
         $this->assertEquals(PARAM_RAW_TRIMMED, $type);
         $type = core_user::get_property_type('timezone');
         $this->assertEquals(PARAM_TIMEZONE, $type);
+    }
 
-        // Try to fetch type of a non-existent properties.
-        $nonexistingproperty = 'userfullname';
+    public function invalid_property_type_data_provider(): array {
+        return [
+            ['userfullname'],
+            ['mobilenumber'],
+        ];
+    }
+
+    /**
+     * Try to fetch type of non-existent properties.
+     *
+     * @dataProvider invalid_property_type_data_provider
+     * @param string $nonexistingproperty
+     * @return void
+     */
+    public function test_get_invalid_property(string $nonexistingproperty): void {
         $this->expectException('coding_exception');
-        $this->expectExceptionMessage('Invalid property requested: ' . $nonexistingproperty);
-        core_user::get_property_type($nonexistingproperty);
-        $nonexistingproperty = 'mobilenumber';
         $this->expectExceptionMessage('Invalid property requested: ' . $nonexistingproperty);
         core_user::get_property_type($nonexistingproperty);
     }
@@ -317,7 +328,7 @@ class core_user_testcase extends advanced_testcase {
     /**
      * Test get_property_null() method.
      */
-    public function test_get_property_null() {
+    public function test_get_property_null(): void {
         // Fetch valid properties and verify if it is NULL_ALLOWED or NULL_NOT_ALLOWED.
         $property = core_user::get_property_null('username');
         $this->assertEquals(NULL_NOT_ALLOWED, $property);
@@ -327,13 +338,24 @@ class core_user_testcase extends advanced_testcase {
         $this->assertEquals(NULL_ALLOWED, $property);
         $property = core_user::get_property_null('middlename');
         $this->assertEquals(NULL_ALLOWED, $property);
+    }
 
-        // Try to fetch type of a non-existent properties.
-        $nonexistingproperty = 'lastnamefonetic';
+    public function invalid_property_null_data_provider(): array {
+        return [
+            ['lastnamefonetic'],
+            ['midlename'],
+        ];
+    }
+
+    /**
+     * Try to fetch type of non-existent properties.
+     *
+     * @dataProvider invalid_property_null_data_provider
+     * @param string $nonexistingproperty
+     * @return void
+     */
+    public function test_get_invalid_property_null(string $nonexistingproperty): void {
         $this->expectException('coding_exception');
-        $this->expectExceptionMessage('Invalid property requested: ' . $nonexistingproperty);
-        core_user::get_property_null($nonexistingproperty);
-        $nonexistingproperty = 'midlename';
         $this->expectExceptionMessage('Invalid property requested: ' . $nonexistingproperty);
         core_user::get_property_null($nonexistingproperty);
     }
@@ -362,15 +384,26 @@ class core_user_testcase extends advanced_testcase {
         $this->assertArrayHasKey('ventura', $choices);
         $this->assertArrayNotHasKey('unknowntheme', $choices);
         $this->assertArrayNotHasKey('wrongtheme', $choices);
+    }
 
-        // Try to fetch type of a non-existent properties.
-        $nonexistingproperty = 'language';
+    public function invalid_property_choices_data_provider(): array {
+        return [
+            ['language'],
+            ['coutries'],
+        ];
+    }
+
+    /**
+     * Try to fetch choices of non-existent properties.
+     *
+     * @dataProvider invalid_property_choices_data_provider
+     * @param string $nonexistingproperty
+     * @return void
+     */
+    public function test_get_invalid_property_choices(string $nonexistingproperty): void {
         $this->expectException('coding_exception');
-        $this->expectExceptionMessage('Invalid property requested: ' . $nonexistingproperty);
-        core_user::get_property_null($nonexistingproperty);
-        $nonexistingproperty = 'coutries';
-        $this->expectExceptionMessage('Invalid property requested: ' . $nonexistingproperty);
-        core_user::get_property_null($nonexistingproperty);
+        $this->expectExceptionMessage('Invalid property requested, or the property does not have a list of choices.');
+        core_user::get_property_choices($nonexistingproperty);
     }
 
     /**

@@ -23,7 +23,9 @@
 
 namespace container_workspace\totara_engage\link;
 
+use container_workspace\formatter\workspace\formatter;
 use container_workspace\workspace;
+use core\format;
 use moodle_url;
 use totara_engage\link\destination_generator;
 
@@ -63,11 +65,11 @@ final class workspace_destination extends destination_generator {
         }
 
         $workspace = workspace::from_id($this->attributes['id']);
-
+        $formatter = new formatter($workspace);
         return get_string(
             'back_button',
             'container_workspace',
-            $workspace->get_name()
+            $formatter->format('name', format::FORMAT_PLAIN)
         );
     }
 

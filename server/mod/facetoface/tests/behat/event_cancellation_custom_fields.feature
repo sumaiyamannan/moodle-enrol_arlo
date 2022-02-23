@@ -112,7 +112,7 @@ Feature: Seminar event cancellation custom fields
     And I press "Save changes"
 
     Given I navigate to "Notification templates" node in "Site administration > Seminars"
-    And I click on "Edit" "link" in the "Seminar event cancellation" "table_row"
+    And I click on "Edit" "link" in the "Seminar event trainer cancellation" "table_row"
 
     # Note: cannot use "I set the field 'Body' to multiline"; this field has an
     # HTML editor and for some reason, Selenium will fail at this step with an
@@ -234,7 +234,7 @@ Feature: Seminar event cancellation custom fields
   Scenario: mod_facetoface_cancel_502: use cancellation custom fields in notification template
     And I run all adhoc tasks
     When I am on "Dashboard" page
-    Then I should see "Seminar event cancellation"
+    Then I should see "Seminar event trainer cancellation"
 
     When I click on "View all alerts" "link"
     And I follow "Show more..."

@@ -257,8 +257,7 @@ class core_webapi_formatter_testcase extends advanced_testcase {
         $this->expectException(coding_exception::class);
         $this->expectExceptionMessage('Invalid format given');
 
-        $value = $formatter->format('multilangstring', null);
-        $this->assertEquals('Summer', $value);
+        $formatter->format('multilangstring', null);
     }
 
     protected function get_formatter($data): formatter {

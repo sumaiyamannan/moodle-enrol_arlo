@@ -156,9 +156,12 @@ class mod_resource_webapi_resolver_query_resource_testcase extends advanced_test
         $modinfo = get_fast_modinfo($resource->course);
         $cminfos = $modinfo->get_instances_of('resource');
 
-        $this->expectException(require_login_exception::class);
-        $this->expectExceptionMessage('Course or activity not accessible. (Activity is hidden)');
-        $this->resolve_graphql_query('mod_resource_resource', ['resourceid' => $resource->id]);
+        try {
+            $this->resolve_graphql_query('mod_resource_resource', ['resourceid' => $resource->id]);
+            $this->fail('Expected exception was not thrown');
+        } catch (require_login_exception $e) {
+            $this->assertStringContainsString('Course or activity not accessible. (Activity is hidden)', $e->getMessage());
+        }
 
         // Now hide the course and check the results are 0
         $DB->set_field('course', 'visible', '0', ['id' => $resource->course]);
@@ -166,9 +169,12 @@ class mod_resource_webapi_resolver_query_resource_testcase extends advanced_test
         // Clear the course visibility cache
         cache_helper::purge_by_definition('totara_core', 'totara_course_is_viewable', ['userid' => $user->id]);
 
-        $this->expectException(require_login_exception::class);
-        $this->expectExceptionMessage('Course or activity not accessible. (Course is hidden)');
-        $this->resolve_graphql_query('mod_resource_resource', ['resourceid' => $resource->id]);
+        try {
+            $this->resolve_graphql_query('mod_resource_resource', ['resourceid' => $resource->id]);
+            $this->fail('Expected exception was not thrown');
+        } catch (require_login_exception $e) {
+            $this->assertStringContainsString('Course or activity not accessible. (Course is hidden)', $e->getMessage());
+        }
 
         // Check the admin can still see everything.
         $this->setAdminUser();
@@ -177,7 +183,7 @@ class mod_resource_webapi_resolver_query_resource_testcase extends advanced_test
         $modinfo = get_fast_modinfo($resource->course);
 
         $results = $this->resolve_graphql_query('mod_resource_resource', ['resourceid' => $resource->id]);
-        $this->assertSame($resource->id, $results->id);
+        $this->assertSame($resource->id, $results['moduleinfo']->id);
     }
 
     /**

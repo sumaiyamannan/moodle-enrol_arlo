@@ -1,6 +1,6 @@
 mutation container_workspace_update_workspace(
   $id: param_integer!
-  $name: param_text
+  $name: String
   $description: String
   $description_format: param_integer
   $draft_id: param_integer

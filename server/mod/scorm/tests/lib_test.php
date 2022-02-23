@@ -213,9 +213,15 @@ class mod_scorm_lib_testcase extends externallib_advanced_testcase {
 
         // Check exceptions does not broke anything.
         scorm_require_available($this->scorm, true, $this->context);
+
         // Now, expect exceptions.
-        $this->expectException('moodle_exception');
-        $this->expectExceptionMessage(get_string("notopenyet", "scorm", userdate($this->scorm->timeopen)));
+        $this->scorm->timeopen = time() + 1000;
+        try {
+            scorm_require_available($this->scorm, false);
+            $this->fail('Expected exception was not thrown');
+        } catch (moodle_exception $e) {
+            $this->assertStringContainsString(get_string("notopenyet", "scorm", userdate($this->scorm->timeopen)), $e->getMessage());
+        }
 
         // Now as student other condition.
         self::setUser($this->student);
@@ -446,5 +452,35 @@ class mod_scorm_lib_testcase extends externallib_advanced_testcase {
 
         scorm_add_trusted_package_contenthash($hash1);
         $this->assertEquals(2, $DB->count_records('scorm_trusted_packages'));
+    }
+
+    public function test_scorm_get_completed_attempt_count_failed() {
+        $this->create_one_instance();
+        // Set to the student user.
+        self::setUser($this->student);
+
+        // Attempt and fail twice.
+        $scoes = scorm_get_scoes($this->scorm->id);
+        $sco = array_shift($scoes);
+        scorm_insert_track($this->student->id, $this->scorm->id, $sco->id, 1, 'cmi.core.lesson_status', 'failed');
+        scorm_insert_track($this->student->id, $this->scorm->id, $sco->id, 2, 'cmi.core.lesson_status', 'failed');
+
+        $result = scorm_get_completed_attempt_count($this->student->id, $this->scorm);
+        $this->assertEquals(2, $result);
+    }
+
+    public function test_scorm_get_completed_attempt_count_failed_and_passed() {
+        $this->create_one_instance();
+        // Set to the student user.
+        self::setUser($this->student);
+
+        // Create an attempt failing the status, and then passing in the next attempt.
+        $scoes = scorm_get_scoes($this->scorm->id);
+        $sco = array_shift($scoes);
+        scorm_insert_track($this->student->id, $this->scorm->id, $sco->id, 1, 'cmi.core.lesson_status', 'failed');
+        scorm_insert_track($this->student->id, $this->scorm->id, $sco->id, 2, 'cmi.core.lesson_status', 'passed');
+
+        $result = scorm_get_completed_attempt_count($this->student->id, $this->scorm);
+        $this->assertEquals(2, $result);
     }
 }

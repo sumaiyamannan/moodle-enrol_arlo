@@ -1037,9 +1037,10 @@ class totara_program_renderer extends plugin_renderer_base {
      *
      * @param string $value default value to populate the search field
      * @param string $format display format - 'plain' (default), 'short' or 'navbar'
+     * @param int $categoryid category ID use to make the manage program url
      * @return string
      */
-    function program_search_form($type = 'program', $value = '', $format = 'plain') {
+    function program_search_form($type = 'program', $value = '', $format = 'plain', $categoryid = 0) {
         static $count = 0;
         $formid = 'coursesearch';
         if ((++$count) > 1) {
@@ -1071,6 +1072,9 @@ class totara_program_renderer extends plugin_renderer_base {
         $form = array('id' => $formid, 'action' => $searchurl, 'method' => 'get', 'class' => "form-inline", 'role' => 'form');
         $output = html_writer::start_tag('form', $form);
         $output .= html_writer::empty_tag('input', array('type' => 'hidden', 'name' => 'viewtype', 'value' => $type));
+        if (!empty($categoryid)) {
+            $output .= html_writer::empty_tag('input', array('type' => 'hidden', 'name' => 'categoryid', 'value' => $categoryid));
+        }
         $output .= html_writer::start_div('input-group');
         $output .= html_writer::tag('label', $strsearchprograms, array('for' => $inputid, 'class' => 'sr-only'));
         $search = array('type' => 'text', 'id' => $inputid, 'size' => $inputsize, 'name' => 'search',

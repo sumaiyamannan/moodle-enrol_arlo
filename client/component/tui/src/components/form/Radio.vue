@@ -33,6 +33,7 @@
       :required="required"
       :value="value"
       @change="handleChange"
+      @blur="$emit('blur', $event)"
     />
     <label class="tui-radio__label" :for="id">
       <slot />

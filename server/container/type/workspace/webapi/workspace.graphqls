@@ -282,7 +282,7 @@ extend type Mutation {
   Mutation to create a workspace.
   """
   container_workspace_create(
-    name: param_text!
+    name: String!
     description: String
     description_format: param_integer
     """
@@ -304,7 +304,7 @@ extend type Mutation {
   """
   container_workspace_update(
     id: param_integer!
-    name: param_text
+    name: String
     """
     If it is null, then most likely the user wants to set it null.
     Only if the mutation does not specify the field then nothing will be updated.

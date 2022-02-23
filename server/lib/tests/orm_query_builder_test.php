@@ -438,7 +438,9 @@ class core_orm_builder_testcase extends orm_query_builder_base {
         );
 
         $builder = builder::table($this->table_name);
-        $this->assertNotSame($builder, clone $builder);
+        // There will be no result of the cloning operation assignable to any variable as it throws an exception, but
+        // we need a dummy var here to make IDE happy.
+        $dummy_var = clone $builder;
     }
 
     public function test_it_does_remove_conditions() {

@@ -23,8 +23,10 @@
 
 namespace totara_playlist\totara_engage\link;
 
+use core\format;
 use moodle_url;
 use totara_engage\link\destination_generator;
+use totara_playlist\formatter\playlist_formatter;
 use totara_playlist\playlist;
 
 /**
@@ -43,10 +45,13 @@ final class playlist_destination extends destination_generator {
      */
     public function label(): string {
         $playlist = playlist::from_id($this->attributes['id']);
+        $playlist_formatter = new playlist_formatter($playlist);
+
+
         return get_string(
             'back_button',
             'totara_playlist',
-            $playlist->get_name(false)
+            $playlist_formatter->format('name', format::FORMAT_PLAIN) ?? ''
         );
     }
 

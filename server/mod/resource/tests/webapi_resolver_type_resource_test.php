@@ -104,44 +104,89 @@ class mod_resource_webapi_resolver_type_resource_testcase extends advanced_testc
      * Test that the file type resolver only works when given the expected data
      * e.g. ['moduleinfo' => mdl_resource.record, 'fileinfo' => \stored_file]
      */
-    public function test_resolve_invalid_item() {
-        list($resource, $user) = $this->create_resource_data();
+    public function test_resolve_invalid_type(): void {
+        [$resource, ] = $this->create_resource_data();
 
         $cm = get_coursemodule_from_instance('resource', $resource->id, null, true, MUST_EXIST);
         $context = context_module::instance($cm->id);
-        $expected = $this->format_resource($resource);
 
         // Test failure with invalid type data.
         $data = new \stdClass();
         $this->expectException(Error::class);
         $this->expectExceptionMessage('Cannot use object of type stdClass as array');
-        $value = $this->resolve_graphql_type('mod_resource_resource', 'id', $data, [], $context);
+        $this->resolve_graphql_type('mod_resource_resource', 'id', $data, [], $context);
+    }
 
-        // Test failure with empty data.
+    /**
+     * Test failure with empty data.
+     *
+     * @return void
+     */
+    public function test_resolve_empty_data(): void {
+        [$resource,] = $this->create_resource_data();
+
+        $cm = get_coursemodule_from_instance('resource', $resource->id, null, true, MUST_EXIST);
+        $context = context_module::instance($cm->id);
+
         $data = [];
         $this->expectException(moodle_exception::class);
-        $this->expectExceptionMessage('Resource file type resolver did not recieve expected data');
-        $value = $this->resolve_graphql_type('mod_resource_resource', 'id', $data, [], $context);
+        $this->expectExceptionMessage('Resource file type resolver did not receive expected data');
+        $this->resolve_graphql_type('mod_resource_resource', 'id', $data, [], $context);
+    }
 
-        // Test failure with only moduleinfo.
+    /**
+     * Test failure with only moduleinfo.
+     *
+     * @return void
+     */
+    public function test_resolve_moduleinfo_only(): void {
+        [$resource,] = $this->create_resource_data();
+
+        $cm = get_coursemodule_from_instance('resource', $resource->id, null, true, MUST_EXIST);
+        $context = context_module::instance($cm->id);
+        $expected = $this->format_resource($resource);
+
         $data = ['moduleinfo' => $expected['moduleinfo']];
         $this->expectException(moodle_exception::class);
-        $this->expectExceptionMessage('Resource file type resolver did not recieve expected data');
-        $value = $this->resolve_graphql_type('mod_resource_resource', 'id', $data, [], $context);
+        $this->expectExceptionMessage('Resource file type resolver did not receive expected data');
+        $this->resolve_graphql_type('mod_resource_resource', 'id', $data, [], $context);
+    }
 
-        // Test failure with invalid fileinfo.
+    /**
+     * Test failure with invalid file info.
+     *
+     * @return void
+     */
+    public function test_resolve_invalid_fileinfo(): void {
+        [$resource,] = $this->create_resource_data();
+
+        $cm = get_coursemodule_from_instance('resource', $resource->id, null, true, MUST_EXIST);
+        $context = context_module::instance($cm->id);
+        $expected = $this->format_resource($resource);
+
         $finfo = new stdClass();
         $data = ['moduleinfo' => $expected['moduleinfo'], 'fileinfo' => $finfo];
         $this->expectException(moodle_exception::class);
-        $this->expectExceptionMessage('Resource file type resolver did not recieve expected data');
-        $value = $this->resolve_graphql_type('mod_resource_resource', 'id', $data, [], $context);
+        $this->expectExceptionMessage('Resource file type resolver did not receive expected data');
+        $this->resolve_graphql_type('mod_resource_resource', 'id', $data, [], $context);
+    }
 
-        // Test failure with only fileinfo.
-        $finfo = new stdClass();
+    /**
+     * Test failure with only fileinfo.
+     *
+     * @return void
+     */
+    public function test_resolve_fileinfo_only(): void {
+        [$resource,] = $this->create_resource_data();
+
+        $cm = get_coursemodule_from_instance('resource', $resource->id, null, true, MUST_EXIST);
+        $context = context_module::instance($cm->id);
+        $expected = $this->format_resource($resource);
+
         $data = ['fileinfo' => $expected['fileinfo']];
         $this->expectException(moodle_exception::class);
-        $this->expectExceptionMessage('Resource file type resolver did not recieve expected data');
-        $value = $this->resolve_graphql_type('mod_resource_resource', 'id', $data, [], $context);
+        $this->expectExceptionMessage('Resource file type resolver did not receive expected data');
+        $this->resolve_graphql_type('mod_resource_resource', 'id', $data, [], $context);
     }
 
     /**

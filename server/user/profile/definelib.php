@@ -22,6 +22,8 @@
  * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use core_user\profile\display_setting;
+
 /**
  * Class profile_define_base
  *
@@ -314,6 +316,8 @@ function profile_delete_category($id) {
 function profile_delete_field($id) {
     global $DB;
 
+    $transaction = $DB->start_delegated_transaction();
+
     // Remove any user data associated with this field.
     if (!$DB->delete_records('user_info_data', array('fieldid' => $id))) {
         print_error('cannotdeletecustomfield');
@@ -325,8 +329,12 @@ function profile_delete_field($id) {
     // Need to rebuild course cache to update the info.
     rebuild_course_cache(0, true);
 
+    // Try to remove the record from user profile summary card.
+    display_setting::remove_display_field_by_id($id);
+
     // Try to remove the record from the database.
     $DB->delete_records('user_info_field', array('id' => $id));
+    $transaction->allow_commit();
 
     // Reorder the remaining fields in the same category.
     profile_reorder_fields();

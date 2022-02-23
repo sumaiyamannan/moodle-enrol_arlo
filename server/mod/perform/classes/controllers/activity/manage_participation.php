@@ -190,6 +190,7 @@ class manage_participation extends perform_controller {
         $participants_created_count = $this->get_optional_param('participant_instance_created_count', false, PARAM_INT);
         $is_opened = $this->get_optional_param('is_open', false, PARAM_BOOL);
         $report_type = $this->get_optional_param('report_type', false, PARAM_TEXT);
+        $is_deleted = $this->get_optional_param('is_deleted', false, PARAM_BOOL);
 
         if (!$report_type && $participants_created_count < 1) {
             return '';
@@ -199,10 +200,19 @@ class manage_participation extends perform_controller {
             $lang_str = null;
             switch ($report_type) {
                 case subject_instance_manage_participation_actions::SUBJECT_INSTANCE_REPORT_TYPE:
-                    $lang_str = $is_opened ? 'subject_instance_reopen_confirmation' : 'subject_instance_closed_confirmation';
+                    if ($is_deleted) {
+                        $lang_str = 'subject_instance_delete_confirmation';
+                    } else {
+                        $lang_str = $is_opened ? 'subject_instance_reopen_confirmation' : 'subject_instance_closed_confirmation';
+                    }
                     break;
                 case participant_instance_manage_participation_actions::PARTICIPANT_INSTANCE_REPORT_TYPE:
-                    $lang_str = $is_opened ? 'participant_instances_reopen_confirmation' : 'participant_instances_close_confirmation';
+                    if ($is_deleted) {
+                        $lang_str = 'participant_instances_delete_confirmation';
+                    } else {
+                        $lang_str =
+                            $is_opened ? 'participant_instances_reopen_confirmation' : 'participant_instances_close_confirmation';
+                    }
                     break;
                 case participant_section_manage_participation_actions::PARTICIPANT_SECTION_REPORT_TYPE:
                     $lang_str = $is_opened ? 'participant_section_reopen_confirmation' : 'participant_section_close_confirmation';

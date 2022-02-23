@@ -83,7 +83,7 @@ extend type Mutation {
   """
   totara_reportbuilder_update_report_title(
     reportid: core_id!
-    title: param_text!
+    title: String!
   ): String!
 
   """

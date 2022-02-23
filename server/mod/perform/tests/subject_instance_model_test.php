@@ -22,10 +22,15 @@
  * @category test
  */
 
+use core\collection;
+use mod_perform\constants;
 use mod_perform\entity\activity\subject_instance as subject_instance_entity;
+use mod_perform\entity\activity\participant_instance as participant_instance_entity;
 use mod_perform\models\activity\subject_instance;
-
-require_once(__DIR__ . '/state_testcase.php');
+use mod_perform\state\subject_instance\active as subject_active;
+use mod_perform\state\subject_instance\pending as subject_pending;
+use mod_perform\testing\generator;
+use totara_core\relationship\relationship;
 
 /**
  * @group perform
@@ -81,4 +86,117 @@ class mod_perform_subject_instance_model_testcase extends advanced_testcase {
         ];
     }
 
+    /**
+     * Test to delete participant instance, participant sections and section element responses.
+     */
+    public function test_manually_delete(): void {
+
+        [$activity, $subject_instances] = $this->create_test_data();
+
+        /** @var subject_instance $subject_instance */
+        $subject_instance = subject_instance::load_by_entity(
+            subject_instance_entity::repository()->get()->first()
+        );
+
+        $subject_instance_id = $subject_instance->id;
+
+        $subject_instance->manually_delete();
+
+        foreach ($subject_instances as $si) {
+            $subject_instance_entity = subject_instance_entity::repository()->find($si->id);
+            $participant_instances = $si->get_participant_instances();
+            if ($si->id == $subject_instance_id) { // The one we deleted.
+                $this->assertNull($subject_instance_entity);
+                $this->assertEquals(0, $participant_instances->count());
+            } else {
+                $this->assertNotNull($subject_instance_entity->id);
+                foreach ($participant_instances as $pi) {
+                    $participant_instance_entity = participant_instance_entity::repository()->find($pi->get_id());
+                    $this->assertNotNull($participant_instance_entity);
+                }
+            }
+        }
+    }
+
+    private function create_test_data(
+        int $no_of_subject_instances = 5,
+        bool $subject_instance_active = true
+    ): array {
+        $this->setAdminUser();
+
+        $perform_generator = self::getDataGenerator()->get_plugin_generator('mod_perform');
+        $activity = $perform_generator->create_activity_in_container();
+
+        $core_generator = $this->getDataGenerator();
+        $si_data = [
+            'activity_id' => $activity->id,
+            'other_participant_id' => $core_generator->create_user()->id,
+            'subject_is_participating' => true,
+            'include_questions' => false,
+            'status' => $subject_instance_active ? subject_active::get_code() :subject_pending::get_code()
+        ];
+
+        $subject_instances = collection::new(range(1, $no_of_subject_instances))
+            ->map_to(
+                function (int $i) use ($core_generator): int {
+                    return $core_generator->create_user()->id;
+                }
+            )
+            ->map_to(
+                function (int $uid) use ($si_data, $perform_generator): subject_instance {
+                    $data = array_merge(['subject_user_id' => $uid], $si_data);
+                    $entity = $perform_generator->create_subject_instance($data);
+
+                    return subject_instance::load_by_entity($entity);
+                }
+            );
+
+        return [$activity, $subject_instances];
+    }
+
+    public function test_manually_close_pending_throws_exception(): void {
+        $subject_instance = $this->create_pending_subject_instance();
+
+        $this->expectException(coding_exception::class);
+        $this->expectExceptionMessage('Cannot close a pending subject instance');
+        $subject_instance->manually_close();
+    }
+
+    public function test_manually_close_pending_successful(): void {
+        $subject_instance = $this->create_pending_subject_instance();
+
+        $subject_instance->manually_close(true);
+
+        // Reload model.
+        $subject_instance = $subject_instance::load_by_id($subject_instance->id);
+
+        self::assertTrue($subject_instance->is_closed());
+        self::assertTrue($subject_instance->is_pending());
+    }
+
+    /**
+     * @return subject_instance
+     */
+    private function create_pending_subject_instance(): subject_instance {
+        self::setAdminUser();
+        $user = self::getDataGenerator()->create_user();
+        $perform_generator = self::getDataGenerator()->get_plugin_generator('mod_perform');
+
+        $subject_relationship = relationship::load_by_idnumber(constants::RELATIONSHIP_SUBJECT);
+        $peer_relationship = relationship::load_by_idnumber(constants::RELATIONSHIP_PEER);
+
+        $activity = $perform_generator->create_activity_in_container();
+        $perform_generator->create_manual_relationships_for_activity($activity, [
+            ['selector' => $subject_relationship->id, 'manual' => $peer_relationship->id],
+        ]);
+
+        $subject_instance_entity = $perform_generator->create_subject_instance_with_pending_selections(
+            $activity, $user, [$peer_relationship]
+        );
+        $subject_instance = subject_instance::load_by_entity($subject_instance_entity);
+        self::assertTrue($subject_instance->is_pending());
+        self::assertTrue($subject_instance->is_open());
+
+        return $subject_instance;
+    }
 }

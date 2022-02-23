@@ -169,7 +169,11 @@ class user_filter_courserole extends user_filter_type {
 
         if ($roleid) {
             $role = $DB->get_record('role', array('id' => $roleid));
-            $a->rolename = '"'.role_get_name($role).'"';
+            if ($role) {
+                $a->rolename = '"'.role_get_name($role).'"';
+            } else {
+                $a->rolename = get_string('anyrole', 'filters');
+            }
         } else {
             $a->rolename = get_string('anyrole', 'filters');
         }

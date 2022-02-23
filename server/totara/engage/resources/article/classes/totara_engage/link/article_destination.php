@@ -23,8 +23,10 @@
 
 namespace engage_article\totara_engage\link;
 
+use core\format;
 use engage_article\totara_engage\resource\article;
 use moodle_url;
+use totara_engage\formatter\resource_formatter;
 use totara_engage\link\destination_generator;
 
 /**
@@ -43,7 +45,13 @@ final class article_destination extends destination_generator {
      */
     public function label(): string {
         $article = article::from_resource_id($this->attributes['id']);
-        return get_string('back_button', 'engage_article', $article->get_name());
+
+        $resource_formatter = new resource_formatter($article);
+        return get_string(
+            'back_button',
+            'engage_article',
+            $resource_formatter->format('name', format::FORMAT_PLAIN) ?? ''
+        );
     }
 
     /**

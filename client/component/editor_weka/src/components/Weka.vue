@@ -17,7 +17,7 @@
 -->
 
 <template>
-  <div :id="uid" class="tui-weka no-yui-ids">
+  <div :id="uid" v-focus-within class="tui-weka no-yui-ids">
     <Toolbar v-if="showToolbar" :items="toolbarItems" />
     <div
       ref="editorHost"
@@ -380,6 +380,14 @@ export default {
   width: 100%;
   background-color: var(--color-neutral-1);
   border: var(--border-width-thin) solid var(--form-input-border-color);
+
+  &.tui-focusWithin {
+    background: var(--form-input-bg-color-focus);
+    border: var(--form-input-border-size) solid;
+    border-color: var(--form-input-border-color-focus);
+    outline: none;
+    box-shadow: var(--form-input-shadow-focus);
+  }
 
   &__placeholder {
     // Styling for the place holder.

@@ -21,6 +21,7 @@ import { createUniformInputWrapper } from './util';
 import RadioGroup from 'tui/components/form/RadioGroup';
 
 export default createUniformInputWrapper(RadioGroup, {
+  touchOnChange: true,
   passAriaLabelledby: true,
 });
 </script>

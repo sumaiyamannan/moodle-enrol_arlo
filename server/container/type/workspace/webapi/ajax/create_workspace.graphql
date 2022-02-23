@@ -1,5 +1,5 @@
 mutation container_workspace_create_workspace(
-  $name: param_text!
+  $name: String!
   $description: String
   $description_format: param_integer
   $draft_id: param_integer

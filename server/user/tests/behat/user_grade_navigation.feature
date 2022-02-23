@@ -50,6 +50,7 @@ Feature: The student can navigate to their grades page and user grade report.
       | AssignmentTest assignment two   | 25.00 %           | 67.00  | 0–100 | 67.00 %    | 16.75 %                      |
       | AssignmentTest assignment three | 0.00 %( Empty )   | -      | 0–150 | -          | 0.00 %                       |
 
+  @javascript
   Scenario: Change Grades settings to go to a custom url.
     When I log in as "admin"
     And I set the following administration settings values:

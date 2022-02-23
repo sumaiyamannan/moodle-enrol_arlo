@@ -1,6 +1,6 @@
 mutation totara_core_delete_draft_file(
   $draftid: param_integer!
-  $filename: param_text!
+  $filename: String!
 ) {
   result: totara_core_delete_draft_file(
     draftid: $draftid

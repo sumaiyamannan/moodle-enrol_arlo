@@ -93,10 +93,15 @@ class totara_program_assignment_external_testcase extends advanced_testcase {
         $reflection = new ReflectionClass('\totara_program\assignment\external');
         $method = $reflection->getMethod('ensure_user_can_manage_program_assignments');
         $method->setAccessible(true);
-        $this->expectException('required_capability_exception');
-        $this->expectExceptionMessage('Sorry, but you do not currently have permissions to do that (Configure program assignments)');
-        $result = $method->invokeArgs(null, [$setup->programs[1]->id]);
-        $this->assertFalse($result);
+        try {
+            $method->invokeArgs(null, [$setup->programs[1]->id]);
+            $this->fail('Expected exception was not thrown');
+        } catch (required_capability_exception $e) {
+            $this->assertStringContainsString(
+                'Sorry, but you do not currently have permissions to do that (Configure program assignments)',
+                $e->getMessage()
+            );
+        }
 
         $this->getDataGenerator()->role_assign($roleid, $manager->id);
 
@@ -104,8 +109,8 @@ class totara_program_assignment_external_testcase extends advanced_testcase {
         $reflection = new ReflectionClass('\totara_program\assignment\external');
         $method = $reflection->getMethod('ensure_user_can_manage_program_assignments');
         $method->setAccessible(true);
-        $result = $method->invokeArgs(null, [$setup->programs[1]->id]);
-        $this->assertTrue($result);
+        // Calling the method would throw an exception if the permission check fails (see above), so no assertion necessary.
+        $method->invokeArgs(null, [$setup->programs[1]->id]);
     }
 
     public function test_add_assignments() {

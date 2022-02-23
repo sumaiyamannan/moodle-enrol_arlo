@@ -1,5 +1,5 @@
 mutation totara_playlist_create_playlist(
-  $name: param_text!
+  $name: String!
   $summary: String
   $summary_format: param_integer
   $access: totara_engage_access

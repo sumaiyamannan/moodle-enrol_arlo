@@ -35,12 +35,12 @@ class resource implements \core\webapi\type_resolver {
 
         // Note: mdl_resource record called moduleinfo so it doesn't get confused with a modinfo class.
         if (!isset($resource['moduleinfo']) || !$resource['moduleinfo'] instanceof \stdclass) {
-            throw new \coding_exception('Resource file type resolver did not recieve expected data');
+            throw new \coding_exception('Resource file type resolver did not receive expected data');
         }
         $moduleinfo = $resource['moduleinfo'];
 
         if (!isset($resource['fileinfo']) || !$resource['fileinfo'] instanceof \stored_file) {
-            throw new \coding_exception('Resource file type resolver did not recieve expected data');
+            throw new \coding_exception('Resource file type resolver did not receive expected data');
         }
         $fileinfo = $resource['fileinfo'];
 
