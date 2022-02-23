@@ -1051,5 +1051,18 @@ function xmldb_facetoface_upgrade($oldversion) {
         upgrade_mod_savepoint(true, 2020100106, 'facetoface');
     }
 
+    /**
+     * Remove deleted roles from facetoface_session_roles config
+     */
+    if ($oldversion < 2020100107) {
+        $session_roles = get_config('', 'facetoface_session_roles');
+        if (!empty($session_roles)) {
+            list($sql, $params) = $DB->get_in_or_equal(explode(',', $session_roles));
+            $roles = $DB->get_fieldset_select('role', 'id', "id {$sql}", $params);
+            set_config('facetoface_session_roles', implode(',', $roles));
+        }
+        upgrade_mod_savepoint(true, 2020100107, 'facetoface');
+    }
+
     return true;
 }

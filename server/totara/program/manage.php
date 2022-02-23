@@ -360,7 +360,7 @@ if (can_edit_in_category()) {
     $PAGE->set_pagelayout('admin');
     $PAGE->set_title("$site->shortname: $coursecat->name");
     $PAGE->set_heading($site->fullname);
-    $PAGE->set_button($programrenderer->program_search_form($viewtype, '', 'navbar'));
+    $PAGE->set_button($programrenderer->program_search_form($viewtype, '', 'navbar', $id));
 }
 
 // Start output.
@@ -754,7 +754,7 @@ if (empty($searchcriteria)) {
 
 echo html_writer::end_tag('div');
 
-echo $programrenderer->program_search_form($viewtype);
+echo $programrenderer->program_search_form($viewtype, '', 'plain', $id);
 
 echo $OUTPUT->footer();
 

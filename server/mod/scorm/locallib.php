@@ -1413,10 +1413,18 @@ function scorm_get_completed_attempt_count ($userid, $scorm) {
         return 0;
     }
 
-    // Check if the last completed attempt is the last one we found.
-    $lastcompletedattempt = scorm_get_last_completed_attempt($scorm->id, $userid);
+    // Check status of last attempt.
+    // We previously used scorm_get_last_completed_attempt but in order not to mess with that function
+    // we are copying the logic and adding 'failed' as another possible value here.
+    $sql = "SELECT MAX(attempt)
+              FROM {scorm_scoes_track}
+             WHERE userid = ? AND scormid = ?
+               AND (".$DB->sql_compare_text('value')." = ".$DB->sql_compare_text('?')." OR ".
+                   $DB->sql_compare_text('value')." = ".$DB->sql_compare_text('?')." OR ".
+                   $DB->sql_compare_text('value')." = ".$DB->sql_compare_text('?').")";
+    $lastattempt = $DB->get_field_sql($sql, array($userid, $scorm->id, 'completed', 'passed', 'failed'));
 
-    return ($total == $lastcompletedattempt) ? $total : $total-1;
+    return ($total == $lastattempt) ? $total : $total-1;
 }
 
 /**

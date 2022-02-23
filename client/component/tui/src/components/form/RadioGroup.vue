@@ -67,6 +67,7 @@ export default {
         },
         listeners: {
           select: this.$_handleSelect,
+          blur: () => this.$emit('blur'),
         },
       };
     },

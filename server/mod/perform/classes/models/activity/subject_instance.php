@@ -31,6 +31,7 @@ use core\orm\entity\model;
 use core\orm\query\builder;
 use mod_perform\constants;
 use mod_perform\entity\activity\subject_instance as subject_instance_entity;
+use mod_perform\event\activity_subject_instances_closed;
 use mod_perform\event\subject_instance_manual_participants_selected;
 use mod_perform\models\activity\helpers\manual_participant_helper;
 use mod_perform\state\participant_instance\open as participant_instance_open;
@@ -44,6 +45,7 @@ use mod_perform\state\subject_instance\pending;
 use mod_perform\state\subject_instance\subject_instance_availability;
 use mod_perform\state\subject_instance\subject_instance_manual_status;
 use mod_perform\state\subject_instance\subject_instance_progress;
+use mod_perform\event\subject_instance_manually_deleted;
 use stdClass;
 use totara_core\relationship\relationship;
 use totara_job\entity\job_assignment as job_assignment_entity;
@@ -387,12 +389,17 @@ class subject_instance extends model {
      * - If participant instances progress is "Not yet started" or "In progress" then set progress to "Not submitted"
      * - Change participant sections availability to "Closed"
      * - If participant sections progress is "Not yet started" or "In progress" then set progress to "Not submitted"
+     *
+     * @param bool $close_pending  When true: close even if subject instance is in pending status.
+     * This should only be used before deletion of the subject instance.
+     *
+     * @return void
      */
-    public function manually_close(): void {
+    public function manually_close(bool $close_pending = false): void {
         if (!$this->is_open()) {
             throw new coding_exception('This function can only be called if the subject instance is open');
         }
-        if ($this->is_pending()) {
+        if (!$close_pending && $this->is_pending()) {
             throw new coding_exception('Cannot close a pending subject instance.');
         }
 
@@ -474,4 +481,25 @@ class subject_instance extends model {
         return $this->subject_user->deleted;
     }
 
+    /**
+     * Manually delete the subject instance and linked records
+     *
+     * @return void
+     */
+    public function manually_delete(): void {
+        $deleted_event = subject_instance_manually_deleted::create_from_subject_instance($this);
+        builder::get_db()->transaction(function () {
+
+            if (!($this->get_availability_state() instanceof closed)) {
+                $this->manually_close(true);
+            }
+
+            foreach ($this->participant_instances as $participant_instance) {
+                $participant_instance->manually_delete();
+            }
+
+            $this->entity->delete();
+        });
+        $deleted_event->trigger();
+    }
 }

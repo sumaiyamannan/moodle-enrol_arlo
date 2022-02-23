@@ -2823,12 +2823,12 @@ function facetoface_cancel_session($session, $fromform) {
     foreach ($notifyusers as $id => $user) {
         // Check if the user is waitlisted we should not attach an iCal.
         $invite = $user->signupstatus != MDL_F2F_STATUS_WAITLISTED;
-        notice_sender::event_cancellation($id, $seminarevent, $invite);
+        \mod_facetoface\notice_sender::event_cancellation($id, $seminarevent, $invite);
     }
 
     // Notify affected trainers.
     foreach ($notifytrainers as $id => $trainer) {
-        notice_sender::event_cancellation($id, $seminarevent);
+        \mod_facetoface\notice_sender::event_trainer_cancellation($id, $seminarevent);
     }
     // Notify managers who had reservations.
     facetoface_notify_reserved_session_deleted($facetoface, $session);
@@ -4789,7 +4789,7 @@ function facetoface_delete_session($session) {
     if ($trainers and count($trainers) > 0) {
         foreach ($trainers as $trainer) {
             if (!$sessionover) {
-                \mod_facetoface\notice_sender::event_cancellation($trainer->userid, $seminarevent);
+                \mod_facetoface\notice_sender::event_trainer_cancellation($trainer->userid, $seminarevent);
             }
         }
     }

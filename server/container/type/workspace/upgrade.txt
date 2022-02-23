@@ -1,6 +1,11 @@
 This files describes API changes in /container/type/workspace/*.
 The information here is intended only for developers.
 
+=== 13.17 ===
+
+--- Update to graphQL ---
+* Updated field 'name' scalar type 'param_text' to 'String' for mutation 'container_workspace_create' and 'container_workspace_update'
+
 === 13.6 ===
 
 --- Update to general functionality ---

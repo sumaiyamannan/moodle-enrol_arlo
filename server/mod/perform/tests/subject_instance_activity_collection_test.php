@@ -75,10 +75,7 @@ class mod_perform_subject_instance_activity_collection_test extends advanced_tes
         );
 
         $this->expectException(coding_exception::class);
-        $this->assertInstanceOf(
-            subject_instance_activity::class,
-            $subject_instance_activity_collection->get_activity_config($activity_3->id)
-        );
+        $subject_instance_activity_collection->get_activity_config($activity_3->id);
     }
 
     private function build_subject_activity(): activity {

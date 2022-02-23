@@ -30,6 +30,7 @@ $search    = optional_param('search', '', PARAM_RAW);  // search words
 $page      = optional_param('page', 0, PARAM_INT);     // which page to show
 $perpage   = optional_param('perpage', '', PARAM_RAW); // how many per page, may be integer or 'all'
 $viewtype  = optional_param('viewtype', 'program', PARAM_TEXT);
+$categoryid = optional_param('categoryid', 0, PARAM_INT);     // which category ID to show
 
 // List of minimum capabilities which user need to have for editing/moving program.
 $capabilities = array('totara/program:createprogram', 'moodle/category:manage');
@@ -56,6 +57,7 @@ if (!empty($page)) {
     $urlparams['page'] = $page;
 }
 $urlparams['viewtype'] = $viewtype;
+$urlparams['categoryid'] = $categoryid;
 
 $PAGE->set_url('/totara/program/search.php', $searchcriteria + $urlparams);
 $PAGE->set_context(context_system::instance());
@@ -88,7 +90,8 @@ if (empty($searchcriteria)) {
     $PAGE->set_title("$site->fullname : $strprogram $strsearchresults");
     // Link to manage search results should be visible if user have system or category level capability.
     if ((can_edit_in_category() || !empty($usercatlist))) {
-        $aurl = new moodle_url('/totara/program/manage.php', $searchcriteria);
+        $aurlparams = ['viewtype' => $viewtype, 'categoryid' => $categoryid];
+        $aurl = new moodle_url('/totara/program/manage.php', $searchcriteria + $aurlparams);
         $managestring = ($viewtype == 'program') ? get_string('manageprograms', 'admin') : get_string('managecertifications', 'totara_core');
         $searchform = $OUTPUT->single_button($aurl, $managestring, 'get');
     } else {

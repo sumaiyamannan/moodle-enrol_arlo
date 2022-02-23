@@ -18,6 +18,20 @@
 
 <template>
   <div>
+    <ParticipantDeleteActionModal
+      v-if="isParticipantReport"
+      :participant-instance-id="id"
+      :report-type="reportType"
+      :delete-modal-open="deleteModalOpen"
+      @modal-close="closeDeleteModal"
+    />
+    <SubjectDeleteActionModal
+      v-if="isSubjectReport"
+      :subject-instance-id="id"
+      :report-type="reportType"
+      :delete-modal-open="deleteModalOpen"
+      @modal-close="closeDeleteModal"
+    />
     <SubjectOpenCloseActionModal
       v-if="isSubjectReport"
       :modal-open="showModalOpen"
@@ -43,13 +57,13 @@
       @modal-close="modalClose"
     />
     <a
-      v-if="isSubjectReport && canAddParticipants"
+      v-if="isSubjectReport && canAddParticipants && !isParticipantPending"
       :href="participationManagementUrl"
       :title="$str('activity_participants_add', 'mod_perform')"
     >
       <ParticipantAddIcon />
     </a>
-    <template v-if="showActions">
+    <template v-if="showActions && !isParticipantPending">
       <ButtonIcon
         v-if="isOpen"
         :aria-label="$str('button_close', 'mod_perform')"
@@ -67,16 +81,29 @@
         <UnlockIcon />
       </ButtonIcon>
     </template>
+    <template v-if="showActions">
+      <ButtonIcon
+        v-if="isSubjectReport || isParticipantReport"
+        :aria-label="$str('button_delete', 'mod_perform')"
+        :styleclass="{ transparentNoPadding: true }"
+        @click="showDeleteModal()"
+      >
+        <DeleteIcon />
+      </ButtonIcon>
+    </template>
   </div>
 </template>
 <script>
 import ButtonIcon from 'tui/components/buttons/ButtonIcon';
 import LockIcon from 'tui/components/icons/Lock';
+import ParticipantDeleteActionModal from 'mod_perform/components/report/manage_participation/ParticipantDeleteActionModal';
 import ParticipantOpenCloseActionModal from 'mod_perform/components/report/manage_participation/ParticipantOpenCloseActionModal';
 import SectionOpenCloseActionModal from 'mod_perform/components/report/manage_participation/SectionOpenCloseActionModal';
 import SubjectOpenCloseActionModal from 'mod_perform/components/report/manage_participation/SubjectInstanceOpenCloseActionModal';
+import SubjectDeleteActionModal from 'mod_perform/components/report/manage_participation/SubjectInstanceDeleteActionModal';
 import ParticipantAddIcon from 'tui/components/icons/AddUser';
 import UnlockIcon from 'tui/components/icons/Unlock';
+import DeleteIcon from 'tui/components/icons/Delete';
 
 const REPORT_TYPE_SUBJECT_INSTANCE = 'SUBJECT_INSTANCE';
 const REPORT_TYPE_PARTICIPANT_INSTANCE = 'PARTICIPANT_INSTANCE';
@@ -86,11 +113,14 @@ export default {
   components: {
     ButtonIcon,
     LockIcon,
+    ParticipantDeleteActionModal,
     ParticipantOpenCloseActionModal,
     ParticipantAddIcon,
     SectionOpenCloseActionModal,
     SubjectOpenCloseActionModal,
+    SubjectDeleteActionModal,
     UnlockIcon,
+    DeleteIcon,
   },
   props: {
     reportType: {
@@ -110,10 +140,14 @@ export default {
     canAddParticipants: {
       type: Boolean,
     },
+    isParticipantPending: {
+      type: Boolean,
+    },
   },
   data() {
     return {
       showModalOpen: false,
+      deleteModalOpen: false,
     };
   },
   computed: {
@@ -147,6 +181,12 @@ export default {
     showModal() {
       this.showModalOpen = true;
     },
+    showDeleteModal() {
+      this.deleteModalOpen = true;
+    },
+    closeDeleteModal() {
+      this.deleteModalOpen = false;
+    },
   },
 };
 </script>
@@ -155,7 +195,8 @@ export default {
   "mod_perform": [
     "activity_participants_add",
     "button_reopen",
-    "button_close"
+    "button_close",
+    "button_delete"
   ]
   }
 </lang-strings>

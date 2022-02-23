@@ -21,6 +21,7 @@ import { createUniformInputWrapper } from './util';
 import CheckboxGroup from 'tui/components/form/CheckboxGroup';
 
 export default createUniformInputWrapper(CheckboxGroup, {
+  touchOnChange: true,
   passAriaLabelledby: true,
 });
 </script>

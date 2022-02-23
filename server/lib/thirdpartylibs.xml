@@ -308,7 +308,7 @@
     <version>v4.2.4+314e4831</version>
   </library>
   <library>
-    <location>lib/javascript_polyfill/src/fetch.js</location>
+    <location>javascript_polyfill/src/fetch.js</location>
     <name>window.fetch polyfill</name>
     <license>MIT</license>
     <version>2.0.4</version>

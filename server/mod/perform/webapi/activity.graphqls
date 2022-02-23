@@ -687,7 +687,7 @@ Create a new element and add it to a section
 """
 input mod_perform_create_new_element_input {
   plugin_name: param_text!
-  title: param_text!
+  title: String!
   is_required: param_boolean
   identifier: param_text!
   data: String
@@ -707,7 +707,7 @@ Update an existing element
 """
 input mod_perform_update_element_input {
   element_id: core_id!
-  title: param_text!
+  title: String!
   identifier: param_text
   is_required: param_boolean
   data: String! # We cannot use param_text here as it would do some cleaning
@@ -753,8 +753,8 @@ extend type Mutation {
   Create an activity
   """
   mod_perform_create_activity(
-    name: param_text!
-    description: param_text
+    name: String!
+    description: String
     type: core_id!
   ): mod_perform_activity_result!
 
@@ -763,8 +763,8 @@ extend type Mutation {
   """
   mod_perform_update_activity(
     activity_id: core_id!
-    name: param_text!
-    description: param_text
+    name: String!
+    description: String
     type_id: core_id
     anonymous_responses: param_boolean
     visibility_condition: param_integer

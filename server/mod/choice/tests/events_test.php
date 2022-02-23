@@ -188,12 +188,10 @@ class mod_choice_events_testcase extends advanced_testcase {
         $eventdata['courseid'] = $this->course->id;
         $eventdata['other'] = array();
 
-        $this->expectException(coding_exception::class);
-
         // Make sure content identifier is always set.
+        $this->expectException(coding_exception::class);
+        $this->expectExceptionMessage("The 'choiceid' value must be set in other.");
         $event = \mod_choice\event\answer_created::create($eventdata);
-        $event->trigger();
-        $this->assertEventContextNotUsed($event);
     }
 
     /**

@@ -309,4 +309,30 @@ class event_handler {
             $signup->get_notificationtype() == MDL_F2F_TEXT
         ) ? MDL_F2F_TEXT : MDL_F2F_BOTH;
     }
+
+    /**
+     * Triggered via role_deleted event.
+     * - Removes deleted role from facetoface_session_roles config
+     *
+     * @param \core\event\role_deleted $event
+     * @return bool true on success
+     */
+    public static function remove_role_from_facetoface_session_roles(\core\event\role_deleted $event) {
+        global $CFG;
+
+        // Remove role from facetoface_session_roles if present.
+        $roleid = $event->objectid;
+        if (!empty($CFG->facetoface_session_roles)) {
+            $facetoface_session_roles = explode(',', $CFG->facetoface_session_roles);
+            $session_roles = array_combine($facetoface_session_roles, $facetoface_session_roles);
+            if (isset($session_roles[$roleid])) {
+                unset($session_roles[$roleid]);
+                $CFG->facetoface_session_roles = implode(',', $session_roles);
+                set_config('facetoface_session_roles', $CFG->facetoface_session_roles);
+            }
+        }
+
+        return true;
+    }
+
 }

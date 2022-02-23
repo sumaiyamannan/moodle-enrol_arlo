@@ -1,6 +1,11 @@
 This files describes API changes in /totara/engage,
 information provided here is intended especially for developers.
 
+=== 13.17 ===
+
+--- Update to graphQL ---
+* Replaced 'param_text' scalar type for mutation and input type with 'String' default scalar type
+
 === 13.6 ===
 
 --- Update to general functionality ---

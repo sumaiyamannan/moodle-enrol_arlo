@@ -69,7 +69,7 @@ class totara_plan_webapi_resolver_type_learning_plan_testcase extends advanced_t
         $this->expectException(require_login_exception::class);
         $this->expectExceptionMessage('You are not logged in');
 
-        $this->assertEquals($plan1->id, $this->resolve($plan1, 'id'));
+        $this->resolve($plan1, 'id');
     }
 
     /**

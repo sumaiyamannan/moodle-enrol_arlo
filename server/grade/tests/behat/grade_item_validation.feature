@@ -35,6 +35,7 @@ Feature: Grade item validation
       | Item name | MI 1 |
     And I press "Save changes"
 
+  @javascript
   Scenario: Being able to change the grade type, scale and maximum grade for a manual grade item when there are no grades
     Given I click on "Edit" "link" in the "MI 1" "table_row"
     When I click on "Edit settings" "link" in the "MI 1" "table_row"
@@ -52,6 +53,7 @@ Feature: Grade item validation
     And I press "Save changes"
     And I should not see "You cannot change the scale, as grades already exist for this item"
 
+  @javascript
   Scenario: Attempting to change a manual item's grade type when grades already exist
     Given I navigate to "View > Grader report" in the course gradebook
     And I turn editing mode on
@@ -63,7 +65,8 @@ Feature: Grade item validation
     Then I should see "Some grades have already been awarded, so the grade type cannot be changed. If you wish to change the maximum grade, you must first choose whether or not to rescale existing grades."
     And "//div[contains(concat(' ', normalize-space(@class), ' '), 'felement') and contains(text(), 'Value')]" "xpath_element" should exist
 
-  Scenario: Attempting to change a manual item's scale when grades already exist
+  @javascript
+  Scenario: Attempting to change a manual items scale when grades already exist
     Given I click on "Edit" "link" in the "MI 1" "table_row"
     And I click on "Edit settings" "link" in the "MI 1" "table_row"
     And I set the field "Grade type" to "Scale"
@@ -79,6 +82,7 @@ Feature: Grade item validation
     Then I should see "Some grades have already been awarded, so the grade type and scale cannot be changed."
     And "//div[contains(concat(' ', normalize-space(@class), ' '), 'felement') and contains(text(), 'ABCDEF')]" "xpath_element" should exist
 
+  @javascript
   Scenario: Attempting to change a manual item's maximum grade when no rescaling option has been chosen
     Given I navigate to "View > Grader report" in the course gradebook
     And I turn editing mode on
@@ -87,6 +91,8 @@ Feature: Grade item validation
     And I navigate to "Setup > Gradebook setup" in the course gradebook
     And I click on "Edit" "link" in the "MI 1" "table_row"
     And I click on "Edit settings" "link" in the "MI 1" "table_row"
+    And the "Maximum grade" "field" should be disabled
+    And I set the field "Rescale existing grades" to "yes"
     And I set the field "Maximum grade" to "50"
     When I press "Save changes"
-    Then I should see "You must choose whether to rescale existing grades or not."
+    Then I should not see "You must choose whether to rescale existing grades or not."

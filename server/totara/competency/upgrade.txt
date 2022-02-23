@@ -1,6 +1,11 @@
 This files describes API changes in /totara/competency/*,
 information provided here is intended especially for developers.
 
+=== 13.17 ===
+
+--- Update to graphQL ---
+* Updated field 'comment' scalar type 'param_text' to 'String' for input 'pathway_manual_rating_input'
+
 === 13.3 ===
 
 * Added new method is_enabled() to \totara_competency\pathway so pathway plugins can define if they can be added to competencies.

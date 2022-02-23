@@ -1403,8 +1403,6 @@ class core_files_file_storage_testcase extends advanced_testcase {
         $this->expectException(file_exception::class);
         $this->expectExceptionMessage('Invalid file timecreated');
 
-        $this->expectException('file_exception');
-        $this->expectExceptionMessage('Invalid file timecreated');
         $file1 = $fs->create_file_from_string($filerecord, 'text contents');
     }
 

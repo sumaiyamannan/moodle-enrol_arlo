@@ -93,4 +93,8 @@ $observers = [
         'eventname' => \totara_job\event\job_assignment_deleted::class,
         'callback'  => '\mod_facetoface\event_handler::job_assignment_deleted',
     ],
+    [
+        'eventname' => \core\event\role_deleted::class,
+        'callback'  => '\mod_facetoface\event_handler::remove_role_from_facetoface_session_roles',
+    ],
 ];

@@ -1,6 +1,12 @@
 List of upgrade and API changes in Totara core,
 information provided here is intended especially for developers.
 
+=== 13.17 ===
+
+* Added totara_core_mnet_deprecated_check() which is used in Totara 14+ environment checks
+--- Update to graphQL ---
+* Updated field 'filename' scalar type 'param_text' to 'String' for mutation 'totara_core_delete_draft_file'
+
 === 13.16 ===
 
 * Added field progress_summary to GraphQL type totara_core_learning_item

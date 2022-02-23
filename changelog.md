@@ -1,3 +1,67 @@
+Release 13.17 (23rd February 2022):
+===================================
+
+Security issues:
+
+    TL-33487       Cherrypicked MDL-34411: Ensured that groups/groupings are respected by availability overrides in the Quiz module
+    TL-33489       Cherrypicked MDL-53689: Fixed missing CSRF token in the XMLDB editor.
+
+Improvements:
+
+    TL-33409       Added 'Delete' functionality for participant instances to the performance activity participation management report
+    TL-33434       Added 'Delete' functionality for subject instances to the performance activity participation management report
+
+Bug fixes:
+
+    TL-28203       Fixed the back button inside Engage Resources and Playlists when opening from the Find Learning page
+    TL-32729       Prevented action menu trigger from acting as an anchor link before JS loaded
+    TL-32779       Fixed graphql mutation parameters to prevent data loss due to stripping of tags
+    TL-33001       Ensured course users enrolled via Learning Plans are restored correctly from a course backup 
+    TL-33065       Fixed SCORM 'Lock after final attempt' setting behaviour
+
+                   Previously, a new SCORM attempt was allowed in review mode even if the setting
+                   indicated that no new attempts should be allowed.
+
+    TL-33195       Fixed error in bulk user actions when filtered for a deleted role
+    TL-33247       Fixed Tenant Domain Manager being redirected to Catalogue when choosing 'Manage programs' from program search results page
+    TL-33393       Fixed error in Seminar reports if seminar session role has been deleted
+    TL-33400       Fixed an issue where the user profile summary card throws an exception while attempting to display a deleted user custom fields
+    TL-33446       Fixed incorrect third-party library file paths in thirdpartylibs.xml
+    TL-33479       Fixed seminar cancellation to send the correct notification to the trainer
+
+                   Before when a trainer canceled an event, the 'Seminar event cancellation'
+                   notification was sent to everyone. Now the 'Seminar event cancellation'
+                   notification will be sent to learners and the 'Seminar event trainer
+                   cancellation' notification will be sent to a trainer.
+
+    TL-33488       Cherrypicked MDL-64623: Implemented validation to ensure Glossary belongs to the same activity when deleting
+    TL-33500       Fixed database error in competency migration task
+
+                   The competency migration runs the migration in batches of 1000 history records
+                   at a time. If a user / competency combination is included in two consecutive
+                   batches then the migration script threw a database error as the competency
+                   assignment got reset between the batches. This has now been fixed.
+
+    TL-33504       Added totara_core_mnet_deprecated_check() which is used in Totara 14+ environment checks
+    TL-33538       Removed unnecessary horizontal scrollbar from enhanced catalogue 
+
+Technical changes:
+
+    TL-33445       Added theme_config to the properties available in the tenant_customizable_theme_settings hook
+    TL-33470       Updated the server environment check page to prepare for the upcoming Totara 16 release
+
+                   We have added the minimum server requirements for Totara 16 to the Server
+                   Environment Check page in Totara 13, 14 and 15. The Admin -> Server ->
+                   Environment Check page can be used to see if the current server settings can
+                   support Totara 16 when it is released.
+
+Tui front end framework:
+
+    TL-25928       Weka editor now has the same focus outline as other inputs
+    TL-30760       Updated CheckboxGroup and RadioGroup TUI components to trigger required validation on blur
+
+
+
 Release 13.16 (27th January 2022):
 ==================================
 
