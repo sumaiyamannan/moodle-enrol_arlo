@@ -15,6 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 defined('MOODLE_INTERNAL') || die();
+require_once(__DIR__ . '/upgradelib.php');
 
 function xmldb_auth_catadmin_upgrade($oldversion) {
     global $CFG, $DB;
@@ -46,6 +47,13 @@ function xmldb_auth_catadmin_upgrade($oldversion) {
 
     if ($oldversion < 2021022400) {
         upgrade_plugin_savepoint(true, 2021022400, 'auth', 'catadmin');
+    }
+
+    if ($oldversion < 2021121000) {
+        $existingauths = get_config('core', 'auth');
+        $reorderedauths = get_catadmin_auth_install_order($existingauths);
+        set_config('auth', $reorderedauths);
+        upgrade_plugin_savepoint(true, 2021121000, 'auth', 'catadmin');
     }
 
     return true;

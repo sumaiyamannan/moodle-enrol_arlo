@@ -24,8 +24,6 @@
 
 use auth_saml2\event\cert_regenerated;
 
-defined('MOODLE_INTERNAL') || die();
-
 // @codingStandardsIgnoreStart
 /**
  * This function is mostly a direct cut and paste from SimpleSAMLPHP with
@@ -428,48 +426,26 @@ function auth_saml2_profile_get_custom_fields($onlyinuserobject = false) {
 function auth_saml2_get_idps($active = false, $asarray = false) {
     global $DB;
 
-    $conditions = array();
+    $conditions = [];
     if ($active) {
-        $conditions = array('activeidp' => 1);
+        $conditions = ['activeidp' => 1];
     }
 
     $idpentitiesrs = $DB->get_records('auth_saml2_idps', $conditions);
-    $idpentities = array();
+    $idpentities = [];
 
     foreach ($idpentitiesrs as $idpentity) {
         $idpentity->name = empty($idpentity->displayname) ? $idpentity->defaultname : $idpentity->displayname;
+        $idpentity->md5entityid = md5($idpentity->entityid);
 
         if (!isset($idpentities[$idpentity->metadataurl])) {
-            $idpentities[$idpentity->metadataurl] = array();
+            $idpentities[$idpentity->metadataurl] = [];
         }
 
-        $md5entityid = md5($idpentity->entityid);
-        if ($asarray) {
-            $idpentities[$idpentity->metadataurl][$md5entityid] = (array) $idpentity;
-        } else {
-            $idpentities[$idpentity->metadataurl][$md5entityid] = $idpentity;
-        }
-
+        $idpentities[$idpentity->metadataurl][$idpentity->md5entityid] = ($asarray) ? (array) $idpentity : $idpentity;
     }
 
     return $idpentities;
-}
-
-/**
- * This helper function returns the default IdP if it is configured.
- * @return object The default IdP object, or NULL if there is no default IdP set.
- */
-function auth_saml2_get_default_idp() {
-    global $DB;
-
-    $defaultidps = $DB->get_records('auth_saml2_idps', array('activeidp' => 1, 'defaultidp' => 1));
-
-    // There should only be 1 but just in case we will use the first one.
-    $defaultidp = array_shift($defaultidps);
-    if ($defaultidp) {
-        $defaultidp->name = empty($defaultidp->displayname) ? $defaultidp->defaultname : $defaultidp->displayname;
-    }
-    return $defaultidp;
 }
 
 /**

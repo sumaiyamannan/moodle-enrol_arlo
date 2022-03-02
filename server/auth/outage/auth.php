@@ -58,19 +58,11 @@ class auth_plugin_outage extends auth_plugin_base {
     /**
      * Always returns false (password wrong or user does not exist).
      *
-     * @inheritdoc PHPMD will not warn about unused parameters if overriding.
      * @param string $username Not used in this plugin.
      * @param string $password Not used in this plugin.
      * @return bool False
      */
     public function user_login($username, $password) {
         return false;
-    }
-
-    /**
-     * Login page hook.
-     */
-    public function loginpage_hook() {
-        outagelib::inject();
     }
 }

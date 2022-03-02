@@ -31,8 +31,6 @@ use finfo;
 use invalid_parameter_exception;
 use moodle_url;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * maintenance_static_page_io class.
  *
@@ -44,11 +42,13 @@ defined('MOODLE_INTERNAL') || die();
 class maintenance_static_page_io {
     /**
      * Checks if the given string starts with "http://" or "https://".
-     * @param $url
+     * Also checks for "//" at the start of image, which setting_file_url still uses.
+     *
+     * @param string $url url string for check
      * @return bool
      */
     public static function is_url($url) {
-        return (bool)preg_match('#^http(s)?://#', $url);
+        return ((bool) preg_match('#^http(s)?://#', $url) || (bool) preg_match('#^//#', $url));
     }
 
     /**
@@ -80,6 +80,7 @@ class maintenance_static_page_io {
     protected $preview = false;
 
     /**
+     * Sets preview
      * @param boolean $preview
      */
     public function set_preview($preview) {

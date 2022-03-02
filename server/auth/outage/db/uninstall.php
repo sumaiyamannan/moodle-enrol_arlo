@@ -24,14 +24,11 @@
  */
 use auth_outage\local\controllers\maintenance_static_page;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Auth Outage plugin uninstall code.
  * @return bool result
  * @throws moodle_exception
  */
-
 function xmldb_auth_outage_uninstall() {
     global $DB;
 

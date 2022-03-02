@@ -40,9 +40,8 @@ require_once(__DIR__.'/../base_testcase.php');
  * @author      Daniel Thee Roperto <daniel.roperto@catalyst-au.net>
  * @copyright   2016 Catalyst IT
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @SuppressWarnings(public) Allow as many methods as needed.
  */
-class outagelib_test extends auth_outage_base_testcase {
+class auth_outage_outagelib_test extends auth_outage_base_testcase {
     /**
      * Check if maintenance message is disabled as needed.
      */
@@ -63,8 +62,8 @@ class outagelib_test extends auth_outage_base_testcase {
         set_config('maintenance_message', 'A message.');
         outagedb::save($outage);
         self::assertFalse((bool)get_config('moodle', 'maintenance_message'));
-        self::assertCount(2, phpunit_util::get_debugging_messages());
-        phpunit_util::reset_debugging();
+        self::assertCount(2, $this->getDebuggingMessages());
+        $this->resetDebugging();
     }
 
     /**
@@ -82,7 +81,7 @@ class outagelib_test extends auth_outage_base_testcase {
      * Check outagelib::inject() works as expected.
      */
     public function test_inject() {
-        global $CFG;
+        global $OUTPUT;
 
         $this->resetAfterTest(true);
         self::setAdminUser();
@@ -96,16 +95,18 @@ class outagelib_test extends auth_outage_base_testcase {
             'description' => 'Description',
         ]);
         $outage->id = outagedb::save($outage);
-        self::assertEmpty($CFG->additionalhtmltopofbody);
 
-        outagelib::reinject();
-        self::assertStringContainsString('<style>', $CFG->additionalhtmltopofbody);
-        self::assertStringContainsString('<script>', $CFG->additionalhtmltopofbody);
+        outagelib::reset_injectcalled();
+        // Get full header to avoid interactions with other single inject plugins.
+        $header1 = $OUTPUT->standard_top_of_body_html();
+        self::assertStringContainsString('<style>', $header1);
+        self::assertStringContainsString('<script>', $header1);
 
-        // Should not inject more than once with the inject() function.
-        $size = strlen($CFG->additionalhtmltopofbody);
-        outagelib::inject();
-        self::assertSame($size, strlen($CFG->additionalhtmltopofbody));
+        // Should not inject more than once.
+        $size = strlen($OUTPUT->standard_top_of_body_html());
+        self::assertSame($size, strlen($OUTPUT->standard_top_of_body_html()));
+        // Check styles aren't reinjected.
+        self::assertStringNotContainsString('<style>', $OUTPUT->standard_top_of_body_html());
     }
 
     /**
@@ -113,9 +114,10 @@ class outagelib_test extends auth_outage_base_testcase {
      */
     public function test_inject_broken() {
         $_GET = ['auth_outage_break_code' => '1'];
-        outagelib::reinject();
-        self::assertCount(2, phpunit_util::get_debugging_messages());
-        phpunit_util::reset_debugging();
+        outagelib::reset_injectcalled();
+        $header = outagelib::get_inject_code();
+        self::assertCount(2, $this->getDebuggingMessages());
+        $this->resetDebugging();
     }
 
     /**
@@ -135,12 +137,13 @@ class outagelib_test extends auth_outage_base_testcase {
             'description' => 'Description',
         ]);
         $outage->id = outagedb::save($outage);
-        self::assertEmpty($CFG->additionalhtmltopofbody);
+
         $_GET = ['auth_outage_preview' => (string)$outage->id];
 
-        outagelib::reinject();
-        self::assertStringContainsString('<style>', $CFG->additionalhtmltopofbody);
-        self::assertStringContainsString('<script>', $CFG->additionalhtmltopofbody);
+        outagelib::reset_injectcalled();
+        $header = outagelib::get_inject_code();
+        self::assertStringContainsString('<style>', $header);
+        self::assertStringContainsString('<script>', $header);
     }
 
     /**
@@ -148,11 +151,12 @@ class outagelib_test extends auth_outage_base_testcase {
      */
     public function test_inject_preview_notfound() {
         global $CFG;
-        self::assertEmpty($CFG->additionalhtmltopofbody);
+
         $_GET = ['auth_outage_preview' => '1'];
         // Should not throw exception or halt anything, silently ignore it.
-        outagelib::reinject();
-        self::assertEmpty($CFG->additionalhtmltopofbody);
+        outagelib::reset_injectcalled();
+        $header = outagelib::get_inject_code();
+        self::assertEmpty($header);
     }
 
     /**
@@ -172,18 +176,20 @@ class outagelib_test extends auth_outage_base_testcase {
             'description' => 'Description',
         ]);
         $outage->id = outagedb::save($outage);
-        self::assertEmpty($CFG->additionalhtmltopofbody);
+
         $_GET = ['auth_outage_preview' => (string)$outage->id, 'auth_outage_delta' => '500'];
-        outagelib::reinject();
+        outagelib::reset_injectcalled();
+        $header = outagelib::get_inject_code();
         // Still empty, delta is too high (outage ended).
-        self::assertEmpty($CFG->additionalhtmltopofbody);
+        self::assertEmpty($header);
     }
 
     /**
      * Test injection without active outage.
      */
     public function test_inject_noactive() {
-        outagelib::reinject();
+        outagelib::reset_injectcalled();
+        outagelib::get_inject_code();
     }
 
     /**
@@ -273,17 +279,20 @@ class outagelib_test extends auth_outage_base_testcase {
             'description' => 'Description',
         ]);
         $outage->id = outagedb::save($outage);
-        self::assertEmpty($CFG->additionalhtmltopofbody);
 
         // Pretend we are there...
         $_SERVER['SCRIPT_FILENAME'] = '/var/www/alternativepath/admin/settings.php'; // Issue #88 regression test.
         $_SERVER['SCRIPT_NAME'] = '/admin/settings.php';
         $_GET['section'] = 'additionalhtml';
-        outagelib::reinject();
+        outagelib::reset_injectcalled();
+        $header = outagelib::get_inject_code();
 
-        self::assertEmpty($CFG->additionalhtmltopofbody);
+        self::assertEmpty($header);
     }
 
+    /**
+     * Test create maintenance php code
+     */
     public function test_createmaintenancephpcode() {
         $expected = <<<'EOT'
 <?php
@@ -325,6 +334,9 @@ EOT;
         self::assertSame($expected, $found);
     }
 
+    /**
+     * Test create maintenance php code without age
+     */
     public function test_createmaintenancephpcode_withoutage() {
         global $CFG;
         $this->resetAfterTest(true);
@@ -376,6 +388,9 @@ EOT;
         self::assertSame($found, $expected);
     }
 
+    /**
+     * Test create maintenance php code without IPs
+     */
     public function test_createmaintenancephpcode_withoutips() {
         global $CFG;
         $this->resetAfterTest(true);
@@ -389,16 +404,29 @@ EOT;
 
         touch($file);
         outagelib::update_climaintenance_code($outage);
-        self::assertFileNotExists($file);
+        // Backwards compatibility with older PHPUnit - use old assertFile method.
+        if (method_exists($this, 'assertFileDoesNotExist')) {
+            self::assertFileDoesNotExist($file);
+        } else {
+            self::assertFileNotExists($file);
+        }
     }
 
+    /**
+     * Test create maintenance php code without outage
+     */
     public function test_createmaintenancephpcode_withoutoutage() {
         global $CFG;
         $file = $CFG->dataroot.'/climaintenance.php';
 
         touch($file);
         outagelib::update_climaintenance_code(null);
-        self::assertFileNotExists($file);
+        // Backwards compatibility with older PHPUnit - use old assertFile method.
+        if (method_exists($this, 'assertFileDoesNotExist')) {
+            self::assertFileDoesNotExist($file);
+        } else {
+            self::assertFileNotExists($file);
+        }
     }
 
     /**
@@ -425,9 +453,7 @@ EOT;
         $this->create_outage();
 
         // Change settings.
-        admin_write_settings((object)[
-            's_auth_outage_allowedips' => '127',
-        ]);
+        set_config('s_auth_outage_allowedips', '127', 'auth_outage');
 
         // The method outagelib::prepare_next_outage() should have been called from admin_write_settings().
         foreach ([$CFG->dataroot.'/climaintenance.template.html', $CFG->dataroot.'/climaintenance.php'] as $file) {
@@ -445,9 +471,7 @@ EOT;
         $this->create_outage();
 
         // Change settings.
-        admin_write_settings((object)[
-            's_auth_outage_remove_selectors' => '.something',
-        ]);
+        set_config('s_auth_outage_remove_selectors', '.something', 'auth_outage');
 
         // The method outagelib::prepare_next_outage() should have been called from admin_write_settings().
         foreach ([$CFG->dataroot.'/climaintenance.template.html', $CFG->dataroot.'/climaintenance.php'] as $file) {
@@ -478,7 +502,12 @@ EOT;
         // The method outagelib::prepare_next_outage() should have been called by save().
         self::assertFalse(get_config('moodle', 'maintenance_later'));
         // This file should not exist even if the statement above fails as Moodle does not create it immediately but test anyway.
-        self::assertFileNotExists($CFG->dataroot.'/climaintenance.html');
+        // Backwards compatibility with older PHPUnit - use old assertFile method.
+        if (method_exists($this, 'assertFileDoesNotExist')) {
+            self::assertFileDoesNotExist($CFG->dataroot.'/climaintenance.html');
+        } else {
+            self::assertFileNotExists($CFG->dataroot.'/climaintenance.html');
+        }
     }
 
     /**
@@ -499,17 +528,20 @@ EOT;
             'description' => 'Description',
         ]);
         $outage->id = outagedb::save($outage);
-        self::assertEmpty($CFG->additionalhtmltopofbody);
 
         // Pretend we are there...
         $_SERVER['SCRIPT_FILENAME'] = '/var/www/alternativepath/admin/settings.php'; // Issue #88 regression test.
         $_SERVER['SCRIPT_NAME'] = '/admin/settings.php';
         $_GET['section'] = 'notadditionalhtml';
-        outagelib::reinject();
+        outagelib::reset_injectcalled();
 
-        self::assertNotEmpty($CFG->additionalhtmltopofbody);
+        $header = outagelib::get_inject_code();
+        self::assertNotEmpty($header);
     }
 
+    /**
+     * Creates outage for tests.
+     */
     private function create_outage() {
         $this->resetAfterTest(true);
         self::setAdminUser();

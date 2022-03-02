@@ -30,7 +30,9 @@
  */
 
 // This call is required by Moodle, but this script should have been called by config.php anyway.
+// @codingStandardsIgnoreStart
 require_once(__DIR__.'/../../config.php');
+// @codingStandardsIgnoreEnd
 
 // We need the CFG->dataroot, if not set yet this script is called too early in config.php file.
 if (!isset($CFG->dataroot)) {
@@ -71,7 +73,7 @@ if (!empty($_SERVER['REQUEST_URI'])) {
     $rooturl = parse_url($CFG->wwwroot);
     $path = '';
     if (array_key_exists('path', $rooturl) && !empty($rooturl['path'])) {
-        $path = $rooturl['url'];
+        $path = $rooturl['path'];
     }
     $url = $path.'/auth/outage/info.php';
     $outageinfo = strpos($_SERVER['REQUEST_URI'], $url) === 0 ? true : false;
@@ -79,7 +81,8 @@ if (!empty($_SERVER['REQUEST_URI'])) {
 $allowed = !file_exists($CFG->dataroot.'/climaintenance.php') // Not in maintenance mode.
            || (defined('ABORT_AFTER_CONFIG') && ABORT_AFTER_CONFIG) // Only config requested.
            || (defined('CLI_SCRIPT') && CLI_SCRIPT) // Allow CLI scripts.
-           || $outageinfo; // Allow outage info requests.
+           || $outageinfo // Allow outage info requests.
+           || (defined('NO_AUTH_OUTAGE') && NO_AUTH_OUTAGE); // Allow any page should not be blocked by maintenance mode.
 if (!$allowed) {
     // Call the climaintenance.php which will check for allowed IPs.
     $CFG->dirroot = dirname(dirname(dirname(__FILE__))); // It is not defined yet but the script below needs it.

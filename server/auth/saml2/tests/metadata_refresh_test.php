@@ -25,8 +25,6 @@
 
 use auth_saml2\task\metadata_refresh;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Testcase class for metadata_refresh task class.
  *
@@ -53,7 +51,7 @@ class auth_saml2_metadata_refresh_testcase extends advanced_testcase {
      * Tear down after every test.
      */
     protected function tearDown(): void {
-        $this->prophet = null;
+        $this->prophet = null;  // Required for Totara 12+ support (see issue #578).
     }
 
     public function test_metadata_refresh_disabled() {

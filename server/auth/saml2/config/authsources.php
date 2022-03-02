@@ -30,28 +30,16 @@ global $saml2auth, $CFG, $SITE, $SESSION;
 
 $config = [];
 
-// Case for specifying no $SESSION IdP, select the first configured IdP as the default.
-$arr = array_reverse($saml2auth->metadataentities);
-$metadataentities = array_pop($arr);
-$idpentity = array_pop($metadataentities);
-
-// This must always be a valid saml entityId.
-$idpentityid = $idpentity->entityid;
-
-if (!empty($SESSION->saml2idp)) {
-    foreach ($saml2auth->metadataentities as $idpentities) {
-        foreach ($idpentities as $md5entityid => $idpentity) {
-            if ($SESSION->saml2idp === $md5entityid) {
-                $idpentityid = $idpentity->entityid;
-                break 2;
-            }
-        }
-    }
+if (!empty($SESSION->saml2idp) && array_key_exists($SESSION->saml2idp, $saml2auth->metadataentities)) {
+    $idpentityid = $saml2auth->metadataentities[$SESSION->saml2idp]->entityid;
+} else {
+    // Case for specifying no $SESSION IdP, select the first configured IdP as the default.
+    $idpentityid = reset($saml2auth->metadataentities)->entityid;
 }
 
 $config[$saml2auth->spname] = [
     'saml:SP',
-    'entityID' => "$CFG->wwwroot/auth/saml2/sp/metadata.php",
+    'entityID' => !empty($saml2auth->config->entityid) ? $saml2auth->config->entityid : "$CFG->wwwroot/auth/saml2/sp/metadata.php",
     'discoURL' => !empty($CFG->auth_saml2_disco_url) ? $CFG->auth_saml2_disco_url : null,
     'idp' => empty($CFG->auth_saml2_disco_url) ? $idpentityid : null,
     'NameIDPolicy' => $saml2auth->config->nameidpolicy,
@@ -70,7 +58,16 @@ $config[$saml2auth->spname] = [
     'sign.logout' => true,
     'redirect.sign' => true,
     'signature.algorithm' => $saml2auth->config->signaturealgorithm,
+    'WantAssertionsSigned' => $saml2auth->config->wantassertionssigned == 1,
 ];
+
+if (!empty($saml2auth->config->assertionsconsumerservices)) {
+    $config[$saml2auth->spname]['acs.Bindings'] = explode(',', $saml2auth->config->assertionsconsumerservices);
+}
+
+if (!empty($saml2auth->config->authncontext)) {
+    $config[$saml2auth->spname]['AuthnContextClassRef'] = $saml2auth->config->authncontext;
+}
 
 /*
  * If we're configured to expose the nameid as an attribute, set this authproc filter up

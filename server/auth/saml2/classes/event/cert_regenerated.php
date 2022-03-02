@@ -27,8 +27,6 @@ namespace auth_saml2\event;
 use core\event\base;
 use moodle_url;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * cert_regenerated class.
  *
@@ -43,10 +41,10 @@ class cert_regenerated extends base {
      */
     public function get_description() {
         $userregenerated = '';
-        if ($this->other['userid']) {
+        if (!empty($this->other['userid'])) {
             $userregenerated .= "'{$this->other['userid']}'";
         } else {
-            $userregenerated .= 'unkown';
+            $userregenerated .= 'unknown';
         }
         return "The saml certificates were regenerated: '{$this->other['reason']}' by user $userregenerated";
     }

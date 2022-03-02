@@ -25,8 +25,6 @@
 
 namespace auth_saml2;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Class group_rule.
  */
@@ -131,5 +129,4 @@ class group_rule {
     public function is_allowed() {
         return $this->status == self::STATUS_ALLOW;
     }
-
 }

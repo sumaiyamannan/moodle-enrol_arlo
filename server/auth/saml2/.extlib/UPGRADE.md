@@ -18,7 +18,7 @@ cp -r metadata-templates/* metadata/
 ### Install composer
 ```bash
 php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
-php -r "if (hash_file('sha384', 'composer-setup.php') === 'a5c698ffe4b8e849a443b120cd5ba38043260d5c4023dbf93e1558871f1f07f58274fc6f4c93bcfd858c6bd0775cd8d1') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;"
+php -r "if (hash_file('sha384', 'composer-setup.php') === '756890a4488ce9024fc62c56153228907f1545c228516cbf63f885e036d37e9a59d27d63f46af1d4d07ee0f76181c7d3') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;"
 php composer-setup.php
 php -r "unlink('composer-setup.php');"
 ```
@@ -33,10 +33,15 @@ php composer.phar install --no-dev
 npm install
 npm run build
 ```
+
+### Review simplesamlphp bin/build-release.sh
+Simplesamlphp uses a bin/build-release.sh to generate their release
+This script removes a number of system files that are not required like .gitignore, composer.* files, node_modules directory.
+
+Review the latest version of this file and remove anything not required:
+https://github.com/simplesamlphp/simplesamlphp/blob/master/bin/build-release.sh
 ### Copy into auth_saml2
 Copy the updated simplesaml files into auth/saml/.extlib/simplesaml.
-
-Exclude stuff like .gitignore, other hidden system files that shouldnt be needed - also exclude the composer.* files and the node_modules directory.
 
 enter the simplesaml folder and run the following to fix file permission for Totara:
 ```bash
@@ -46,6 +51,13 @@ Commit the changes directly into the repo.
 
 ### Cherry-pick previous changes.
 Look at the previous history on /.extlib/simplesaml and cherry-pick our custom changes.
+
+
+### Make sure you fix README.md
+
+Update the version of SSP in the supported branches. Make sure you do this is ALL supported branches
+even if you have only updated SSP in one branch. It shouldn't matter which README you look at they
+should be consistent.
 
 # Using a published release 
 Sometimes you might get away with using a published release with the following instructions.

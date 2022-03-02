@@ -26,10 +26,11 @@ defined('MOODLE_INTERNAL') || die;
 if ($ADMIN->fulltree) {
     $authplugin = get_auth_plugin('catadmin');
 
-    $options = array(
-        'on' => get_string('yes'),
-        'off' => get_string('no'),
-    );
+    $options = [
+        auth_plugin_catadmin::AUTOADMIN_YES => get_string('yes'),
+        auth_plugin_catadmin::AUTOADMIN_NO_PRESERVE => get_string('autoadmin_nopreserve', 'auth_catadmin'),
+        auth_plugin_catadmin::AUTOADMIN_NO_STRICT => get_string('autoadmin_nostrict', 'auth_catadmin'),
+    ];
 
     $settings->add(new admin_setting_heading('auth_catadmin/pluginname', '',
         new lang_string('auth_catadmindescription', 'auth_catadmin')));
@@ -39,7 +40,7 @@ if ($ADMIN->fulltree) {
 
     $settings->add(new admin_setting_configselect('auth_catadmin/autoadmin',
         get_string('autoadmin', 'auth_catadmin'),
-        get_string('autoadmin_desc', 'auth_catadmin'), 'on', $options));
+        get_string('autoadmin_desc', 'auth_catadmin'), auth_plugin_catadmin::AUTOADMIN_YES, $options));
 
     $settings->add(new admin_setting_configduration('auth_catadmin/suspendafter',
         get_string('suspendafter', 'auth_catadmin'),

@@ -32,8 +32,12 @@ $string['debug_help'] = '<p>This adds extra debugging to the normal moodle log |
 $string['select_idp_button'] = 'IdP Login';
 $string['ipsubnets'] = 'IP based IdP Discovery';
 
+$string['autoadmin_nopreserve'] = 'No (preserve)';
+$string['autoadmin_nostrict'] = 'No (strict)';
 $string['autoadmin'] = 'Auto admin';
-$string['autoadmin_desc'] = 'If checked all Catalyst staff will automatically become site administrators.';
+$string['autoadmin_desc'] = 'If "Yes", all Catalyst staff will automatically become site administrators. '.
+                            'If "No (preserve)", existing admins will keep their admin access, but new Catalyst staff users will become normal users. '.
+                            'If "No (strict)", all Catalyst staff will become non-admins upon login.';
 $string['removeadminafter'] = 'Remove admin after';
 $string['removeadminafter_desc'] = 'Period of time after which admin is removed';
 $string['suspendafter'] = 'Suspend user after';

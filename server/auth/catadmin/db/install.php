@@ -26,18 +26,22 @@ defined('MOODLE_INTERNAL') || die();
 global $CFG;
 
 require_once("{$CFG->dirroot}/auth/catadmin/setuplib.php");
+require_once(__DIR__ . '/upgradelib.php');
 
 /**
  * Enable the plugin on installation
  */
 function xmldb_auth_catadmin_install() {
-    set_config('privatekeypass', get_site_identifier(), 'auth_catadmin');
-    $existingauths = get_config('core', 'auth');
-    set_config('auth', (!empty($existingauths) ? $existingauths . "," : "") . "catadmin");
+    if (!defined('PHPUNIT_TEST') || !PHPUNIT_TEST) {
+        set_config('privatekeypass', get_site_identifier(), 'auth_catadmin');
+        $existingauths = get_config('core', 'auth');
+        $reorderedauths = get_catadmin_auth_install_order($existingauths);
+        set_config('auth', $reorderedauths);
 
-    $catadminsaml = new auth_plugin_catadmin();
-    $catadminsaml->initialise();
+        $catadminsaml = new auth_plugin_catadmin();
+        $catadminsaml->initialise();
 
-    $metadata = new \auth_catadmin\task\metadata_refresh();
-    $metadata->execute();
+        $metadata = new \auth_catadmin\task\metadata_refresh();
+        $metadata->execute();
+    }
 }

@@ -32,8 +32,6 @@ use coding_exception;
 use context_system;
 use moodle_url;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * infopage class.
  *
@@ -49,6 +47,11 @@ class infopage {
     private $outage;
 
     /**
+     * @var bool|null Defines if the page is generated for a static outage page.
+     */
+    private $static;
+
+    /**
      * infopage_controller constructor.
      * @param array $params Parameters to use or null to get from Moodle API (request).
      */
@@ -62,11 +65,13 @@ class infopage {
             $params = [
                 'id' => optional_param('id', null, PARAM_INT),
                 'outage' => null,
+                'static' => optional_param('static', false, PARAM_BOOL),
             ];
         } else {
             $defaults = [
                 'id' => null,
                 'outage' => null,
+                'static' => false,
             ];
             $params = array_merge($defaults, $params);
         }
@@ -93,7 +98,6 @@ class infopage {
     /**
      * Generates and outputs the HTML for the info page.
      * @uses    redirect
-     * @SuppressWarnings(PHPMD.UnusedLocalVariable) $viewbag is used inside 'require'.
      */
     public function output() {
         global $PAGE, $CFG, $OUTPUT;
@@ -102,13 +106,17 @@ class infopage {
             redirect(new moodle_url('/'));
         }
 
+        // If it's not static outage page, then check access, then redirect if not allowed.
+        if (!$this->static && !has_capability('auth/outage:viewinfo', context_system::instance())) {
+            redirect(new moodle_url('/'));
+        }
         $PAGE->set_context(context_system::instance());
         $PAGE->set_title($this->outage->get_title());
         $PAGE->set_heading($this->outage->get_title());
         $PAGE->set_url(new moodle_url('/auth/outage/info.php'));
 
         // No hooks injecting into this page, do it manually.
-        outagelib::inject();
+        echo outagelib::get_inject_code();
 
         echo $OUTPUT->header();
         $viewbag = [
@@ -144,5 +152,6 @@ class infopage {
         }
 
         $this->outage = $params['outage'];
+        $this->static = $params['static'];
     }
 }

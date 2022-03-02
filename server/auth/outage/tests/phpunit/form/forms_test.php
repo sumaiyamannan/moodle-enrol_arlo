@@ -39,7 +39,7 @@ require_once(__DIR__.'/../base_testcase.php');
  * @copyright   2016 Catalyst IT
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class forms_test extends auth_outage_base_testcase {
+class auth_outage_forms_test extends auth_outage_base_testcase {
     /**
      * Create a delete form.
      */
@@ -146,8 +146,8 @@ class forms_test extends auth_outage_base_testcase {
         $_POST['description'] = ['text' => 'The <b>description</b>.', 'format' => '2'];
         $edit = new edit();
         self::assertNull($edit->get_data());
-        self::assertCount(1, phpunit_util::get_debugging_messages());
-        phpunit_util::reset_debugging();
+        self::assertCount(1, $this->getDebuggingMessages());
+        $this->resetDebugging();
     }
 
     /**
@@ -198,6 +198,10 @@ class forms_test extends auth_outage_base_testcase {
         ];
     }
 
+    /**
+     * Skip tests for moodle below 30.
+     * @param string $reason reason to be filled
+     */
     private function skip_because_moodle_is_below_30($reason = '') {
         global $CFG;
 

@@ -94,6 +94,31 @@ Feature: Automatically log in
     And I am on site homepage
     Then I should see "Eigh Person" in the ".userbutton" "css_element"
 
+  Scenario: Autologin to activity page within a course
+    Given the authentication plugin saml2 is enabled # auth_saml2
+    And the mock SAML IdP is configured # auth_saml2
+    And the following "users" exist:
+      | username | auth  | firstname | lastname |
+      | student1 | saml2 | Eigh      | Person   |
+    And the following "courses" exist:
+      | shortname | fullname |
+      | C1        | Course 1 |
+    And the following "activities" exist:
+      | activity | course | idnumber | name           | content               |
+      | page     | C1     | page1    | Test page name | Test page description |
+    And the following "course enrolments" exist:
+      | user     | course | role    |
+      | student1 | C1     | student |
+    And the following config values are set as admin:
+      | auth            | saml2 |            |
+      | autologinguests | 1     |            |
+      | autologin       | 1     | auth_saml2 |
+    When I am on the "page1" "Activity" page
+    And the mock SAML IdP allows passive login with the following attributes: # auth_saml2
+      | uid | student1 |
+    Then I should see "Test page description"
+    And I should see "Eigh Person" in the ".userbutton" "css_element"
+
   Scenario: Situations which are excluded from autologin
     Given the authentication plugin saml2 is enabled # auth_saml2
     And the mock SAML IdP is configured # auth_saml2
@@ -135,7 +160,7 @@ Feature: Automatically log in
     And I follow "Site home"
     And I navigate to "Turn editing on" in current page administration
     And I add the "Course/site summary" block
-    And I log out
+    And I click on "Log out" "link" in the "#page-footer" "css_element"
 
     # Situation 4: Autologin does not run on POST requests.
     When the following config values are set as admin:

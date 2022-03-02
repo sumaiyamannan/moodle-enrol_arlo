@@ -32,6 +32,21 @@ require_once($CFG->dirroot . '/login/lib.php');
 class auth_plugin_catadmin extends auth_plugin_base {
 
     /**
+     * Entrypoint for the catadmin auth. This is also used to check redirects for
+     * the after login page.
+     */
+    const LOGIN_PATH = '/auth/catadmin/login.php';
+
+    /** Yes (autoadmin) - upon login, unless denied admin, makes user siteadmin, always */
+    const AUTOADMIN_YES = 'on';
+
+    /** No, but preserve (autoadmin) - upon login, makes new users normal, but keep existing settings for existing users */
+    const AUTOADMIN_NO_PRESERVE = 'off';
+
+    /** No, strict mode (autoadmin) - upon login, unless denied admin, makes user non-siteadmin, always */
+    const AUTOADMIN_NO_STRICT = 'no(strict)';
+
+    /**
      * @var array Our hard coded values
      */
     public $defaults = [
@@ -171,7 +186,7 @@ class auth_plugin_catadmin extends auth_plugin_base {
         }
 
         if ($this->should_login_redirect()) {
-            redirect(new moodle_url('/auth/catadmin/login.php'));
+            redirect(new moodle_url(self::LOGIN_PATH));
         }
     }
 
@@ -527,7 +542,7 @@ class auth_plugin_catadmin extends auth_plugin_base {
         }
 
         $idpicon = new pix_icon('i/user', 'Login');
-        $idpurl = new moodle_url('/auth/catadmin/login.php', ['wants' => $wantsurl]);
+        $idpurl = new moodle_url(self::LOGIN_PATH, ['wants' => $wantsurl]);
         $idpname = get_string('pluginname', 'auth_catadmin');
 
         return [[
@@ -634,16 +649,25 @@ class auth_plugin_catadmin extends auth_plugin_base {
         // We have a user now. Apply custom mappings.
         $this->update_user_profile_fields($user, $attributes, $newuser);
 
+        // Preserve - users not automatically made into admins, but it does
+        // preserve the existing admins.
+        $preserveadmins = get_config('auth_catadmin', 'autoadmin') === self::AUTOADMIN_NO_PRESERVE;
+        // Autoadmin - if not set, or is set to 'on' will ensure the user when
+        // logged in will be set as an admin.
+        $autoadmin = get_config('auth_catadmin', 'autoadmin') == null || self::AUTOADMIN_YES;
+        // Should not be admin - this is when the IdP returns a SAML attribute
+        // specifically denying this user of admin rights. This should override
+        // any other existing setting which might indicate the user should get
+        // admin, such as 'autoadmin'.
+        $shouldnotbeadmin = isset($attributes['denyAdmin']);
+
         // Deny user admin rights based on SAML attribute.
-        if (isset($attributes['denyAdmin'])) {
+        // Or if they should not autmatically be admins, and they shouldn't be preserved either.
+        if ($shouldnotbeadmin || (!$autoadmin && !$preserveadmins)) {
             $this->remove_admin_from_user($user->id);
-        } else {
+        } else if ($autoadmin) {
             // Only add as admin if config has not been set or it is turned on.
-            if (get_config('auth_catadmin', 'autoadmin') == null || get_config('auth_catadmin', 'autoadmin') === 'on') {
-                $this->give_user_admin($user->id);
-            } else {
-                $this->remove_admin_from_user($user->id);
-            }
+            $this->give_user_admin($user->id);
         }
 
         // Make sure all user data is fetched.
@@ -657,6 +681,13 @@ class auth_plugin_catadmin extends auth_plugin_base {
         // Clear any autologin prevention cookies now that we have a successful login.
         setcookie('catadmin_logout_cookie', -1, time() + 10 * YEARSECS, $CFG->sessioncookiepath,
                 $CFG->sessioncookiedomain, is_moodle_cookie_secure(), $CFG->cookiehttponly);
+
+        // If the page is set to redirect to the login page, this will cause
+        // issues, so in this case it's better to let Moodle handle the
+        // resulting path.
+        if (strpos($SESSION->wantsurl, self::LOGIN_PATH) !== false) {
+            unset($SESSION->wantsurl);
+        }
 
         $urltogo = core_login_get_return_url();
         // If we are not on the page we want, then redirect to it.

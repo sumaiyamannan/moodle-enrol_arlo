@@ -29,10 +29,10 @@ $string['anyauth_help'] = 'Yes: Allow SAML login for all users? No: Only users w
 $string['anyauthotherdisabled'] = 'You have logged in successfully as \'{$a->username}\' but your auth type of \'{$a->auth}\' is disabled.';
 $string['attemptsignout'] = 'Attempt IdP Signout';
 $string['attemptsignout_help'] = 'This will attempt to communicate with the IdP to send a sign out request';
-$string['auth_saml2description'] = 'Authenticate with a SAML2 IdP';
+$string['auth_saml2description'] = 'Authenticate with a SAML2 Identity Provider (IdP)';
 $string['auth_saml2blockredirectdescription'] = 'Redirect or display message to SAML2 logins based on configured group restrictions';
 $string['autocreate'] = 'Auto create users';
-$string['autocreate_help'] = 'If users are in the IdP but not in moodle create a moodle account.';
+$string['autocreate_help'] = 'Allow creation of Moodle users on demand';
 $string['autologin'] = 'Auto-login';
 $string['autologin_help'] = 'On pages that allow guest access without login, automatically log users into Moodle with a real user account if they are logged in to the IdP (using passive authentication).';
 $string['autologinbysession'] = 'Check once per session';
@@ -47,6 +47,10 @@ $string['attrsimple'] = 'Simplify attributes';
 $string['attrsimple_help'] = 'Various IdP\'s such as ADFS use long attribute keys such as urns or namespaced xml schema names. If set to Yes this will simplify these, eg map http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname to such \'givenname\'.';
 $string['certificatedetails'] = 'Certificate details';
 $string['certificatedetailshelp'] = '<h1>SAML2 auto generated public certificate contents</h1><p>The path for the cert is here:</p>';
+$string['checkcertificateexpiry'] = 'SAML certificate expiry';
+$string['checkcertificateexpired'] = 'SAML certificate has expired {$a} ago';
+$string['checkcertificatewarn'] = 'SAML certificate will expire in {$a}';
+$string['checkcertificateok'] = 'SAML certificate will expire in {$a}';
 $string['certificate_help'] = 'Regenerate the Private Key and Certificate used by this SP. | <a href=\'{$a}\'>View SP certificate</a>';
 $string['certificatelock_help'] = 'Locking the certificates will prevent them from being overwritten once generated.';
 $string['certificatelock'] = 'Lock certificate';
@@ -105,9 +109,19 @@ $string['logdir_help'] = 'The log directory SSPHP will write to, the file will b
 $string['logdir'] = 'Log Directory';
 $string['logtofile'] = 'Enable logging to file';
 $string['logtofile_help'] = 'Turning this on will redirect SSPHP log output to a file in the logdir';
-$string['manageidpsheading'] = 'Manage available IdPs';
+$string['manageidpsheading'] = 'Manage available Identity Providers (IdPs)';
 $string['mdlattr_help'] = 'Which Moodle user field should the IdP attribute be matched to?';
 $string['mdlattr'] = 'Mapping Moodle';
+$string['wantassertionssigned'] = 'Want assertions signed';
+$string['wantassertionssigned_help'] = 'Whether assertions received by this SP must be signed';
+$string['assertionsconsumerservices'] = 'Assertions consumer services';
+$string['assertionsconsumerservices_help'] = 'List of bindings the SP should support';
+$string['entityid'] = 'Entity ID';
+$string['entityid_help'] = 'Unique name of the entity provider. Leave blank unless required';
+$string['allowcreate'] = 'Allow create';
+$string['allowcreate_help'] = 'Allow creation of IdP users on demand';
+$string['authncontext'] = 'AuthnContext';
+$string['authncontext_help'] = 'Allows augmentation of assertions. Leave blank unless required';
 $string['metadatafetchfailed'] = 'Metadata fetch failed: {$a}';
 $string['metadatafetchfailedstatus'] = 'Metadata fetch failed: Status code {$a}';
 $string['metadatafetchfailedunknown'] = 'Metadata fetch failed: Unknown cURL error';
@@ -115,7 +129,8 @@ $string['multiidp:label:displayname'] = 'Display name';
 $string['multiidp:label:alias'] = 'Alias';
 $string['multiidp:label:active'] = 'Active';
 $string['multiidp:label:defaultidp'] = 'Default IdP';
-$string['multiidp:label:admin'] = 'Admin';
+$string['multiidp:label:admin'] = 'For admin users only';
+$string['multiidp:label:admin_help'] = 'Any users that log in using this IdP will automatically be made an site administrator';
 $string['multiidp:label:whitelist'] = 'Redirected IP addresses';
 $string['multiidp:label:whitelist_help'] = 'If set, it will force clients to this IdP. Format: xxx.xxx.xxx.xxx/bitmask. Separate multiple subnets on a new line.';
 $string['multiidpinfo'] = '
@@ -123,7 +138,6 @@ $string['multiidpinfo'] = '
 <li>An IdP can only be used if it is set as Active</li>
 <li>When duallogin has been turned on all active IdPs will be displayed on the login page</li>
 <li>When an IdP has been set as Default and duallogin is not turned on, this IdP will automatically be used unless ?multiidp=on or saml=off is passed on /login/index.php</li>
-<li>When an IdP has been set as Admin any users that log in using this IdP will automatically be made an admin</li>
 <li>An IdP can be given an Alias, when going to /login/index.php?idpalias={alias} the alias can be passed to directly use that IdP</li>
 </ul>';
 $string['multiidpbuttons'] = 'Buttons with icons';
@@ -151,6 +165,7 @@ $string['required'] = 'This field is required';
 $string['requireint'] = 'This field is required and needs to be a positive integer';
 $string['showidplink'] = 'Display IdP link';
 $string['showidplink_help'] = 'This will display the IdP link when the site is configured.';
+$string['source'] = 'Source: {$a}';
 $string['spmetadata_help'] = '<a href=\'{$a}\'>View Service Provider Metadata</a> | <a href=\'{$a}?download=1\'>Download SP Metadata</a>
 <p>You may need to give this to the IdP admin to whitelist you.</p>';
 $string['spmetadatasign_help'] = 'Sign the SP Metadata.';
@@ -158,6 +173,7 @@ $string['spmetadatasign'] = 'SP Metadata signature';
 $string['spmetadata'] = 'SP Metadata';
 $string['sspversion'] = 'SimpleSAMLphp version';
 $string['stateorprovincename'] = 'State or Province';
+$string['status'] = 'Status';
 $string['suspendeduser'] = 'You have logged in successfully as \'{$a}\' but your account has been suspended in Moodle.';
 $string['taskmetadatarefresh'] = 'Metadata refresh task';
 $string['test_auth_button_login'] = 'IdP Login';
@@ -165,8 +181,14 @@ $string['test_auth_button_logout'] = 'IdP Logout';
 $string['test_auth_str'] = 'Test isAuthenticated and login';
 $string['test_noticetestrequirements'] = 'In order to use this test, plugin needs to be configired, enabled and debugging mode should be enabled in plugin settings.';
 $string['test_passive_str'] = 'Test using isPassive';
-$string['tolower_help'] = 'Apply lowercase to IdP attribute before matching?';
-$string['tolower'] = 'Lowercase';
+$string['tolower'] = 'Case matching';
+$string['tolower:exact'] = 'Exact';
+$string['tolower:lowercase'] = 'Lower case';
+$string['tolower:caseinsensitive'] = 'Case insensitive';
+$string['tolower_help'] = '
+<p>Exact: match is case sensitive (default).</p>
+<p>Lower case: applies lower case to the IdP attribute before matching.</p>
+<p>Case insensitive: ignore case when matching.</p>';
 $string['wrongauth'] = 'You have logged in successfully as \'{$a}\' but are not authorized to access Moodle.';
 $string['auth_data_mapping'] = 'Data mapping';
 $string['auth_fieldlockfield'] = 'Lock value ({$a})';

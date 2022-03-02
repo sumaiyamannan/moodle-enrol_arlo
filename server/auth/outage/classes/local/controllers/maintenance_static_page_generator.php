@@ -27,12 +27,11 @@ namespace auth_outage\local\controllers;
 
 use auth_outage\local\outagelib;
 use coding_exception;
+use core_php_time_limit;
 use DOMDocument;
 use DOMElement;
 use invalid_state_exception;
 use moodle_url;
-
-defined('MOODLE_INTERNAL') || die();
 
 /**
  * maintenance_static_page_generator class.
@@ -43,6 +42,15 @@ defined('MOODLE_INTERNAL') || die();
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class maintenance_static_page_generator {
+    /** PATTERN
+     * The pattern should match the attribute values that
+     * go as 'url(xxxxx)', but make sure 'url(data:xxxxx)' is not
+     * rewritten. Must be case insensitive to match 'URL(xxxxx)'.
+     * It should be possible to specify other background attributes as
+     * 'background: color url(xxxxx) no-repeat'.
+     */
+    protected const PATTERN = '/url\s*\(\s*[\'"]?(?![\'"]?data:)([^\s\'"]+)[\'"]?\s*\)/i';
+
     /** @var DOMDocument */
     protected $dom;
 
@@ -75,6 +83,10 @@ class maintenance_static_page_generator {
         $this->io->cleanup();
 
         if (!is_null($this->dom)) {
+
+            // This can take a while to process using repeated curls.
+            core_php_time_limit::raise();
+
             $this->io->create_resources_path();
 
             $this->remove_script_tags();
@@ -83,6 +95,7 @@ class maintenance_static_page_generator {
             $this->update_link_favicon();
             $this->update_images();
             $this->remove_configured_css_selectors();
+            $this->update_inline_background_images();
 
             $html = $this->dom->saveHTML();
             if (trim($html) == '') {
@@ -95,6 +108,7 @@ class maintenance_static_page_generator {
     }
 
     /**
+     * Gets maintenance_static_page_io.
      * @return maintenance_static_page_io
      */
     public function get_io() {
@@ -148,6 +162,18 @@ class maintenance_static_page_generator {
         preg_match_all('#url\([\'"]?(?!data:)([^\'"\)]+)#', $contents, $matches);
         return $matches;
     }
+
+    /**
+     * Retrieves a URL from inline style using regular expressions.
+     *
+     * @param string $style Content of the style attribute
+     * @return array Array containing match
+     */
+    public function get_url_from_inline_style($style) {
+        preg_match(self::PATTERN, $style, $match);
+        return $match;
+    }
+
 
     /**
      * Checks for urls inside filename.
@@ -218,6 +244,31 @@ class maintenance_static_page_generator {
     }
 
     /**
+     * Fetch and fixes all inline background images.
+     */
+    private function update_inline_background_images() {
+        global $CFG;
+        $xpath = new \DOMXPath($this->dom);
+        $elements = $xpath->query("//*[contains(@style,'background')]");
+
+        foreach ($elements as $element) {
+            $style = $element->getAttribute("style");
+            $matches = $this->get_url_from_inline_style($style);
+            if (isset($matches[1])) {
+                // Allow incomplete URLs in style, assume it is from moodle root.
+                if (maintenance_static_page_io::is_url($matches[1])) {
+                    $fullurl = $matches[1];
+                } else {
+                    $fullurl = (string) new moodle_url($matches[1]);
+                }
+                $newurl = $this->io->generate_file_url($fullurl);
+                $updated = preg_replace(self::PATTERN, ' url('.$newurl.') ', $style);
+                $element->setAttribute('style', $updated);
+            }
+        }
+    }
+
+    /**
      * Remove from DOM the CSS selectores defined in the plugin settings.
      */
     private function remove_configured_css_selectors() {
@@ -252,7 +303,7 @@ class maintenance_static_page_generator {
     /**
      * Fetches all elements based on the given selector.
      *
-     * @param $selector
+     * @param string $selector element selector
      *
      * @return DOMElement[]
      */
@@ -270,7 +321,7 @@ class maintenance_static_page_generator {
     /**
      * Fetch all elements which contains the given class.
      *
-     * @param $class
+     * @param string $class element class
      *
      * @return DOMElement[]
      */
@@ -286,6 +337,9 @@ class maintenance_static_page_generator {
         return $matches;
     }
 
+    /**
+     * Adds meta refresh to head element.
+     */
     private function add_meta_refresh() {
         $meta = $this->dom->createElement('meta');
         $meta->setAttribute('http-equiv', 'refresh');
@@ -298,6 +352,7 @@ class maintenance_static_page_generator {
     }
 
     /**
+     * Gets refresh time.
      * @return int
      */
     public function get_refresh_time() {
@@ -305,6 +360,7 @@ class maintenance_static_page_generator {
     }
 
     /**
+     * Sets refresh time.
      * @param int $refreshtime
      */
     public function set_refresh_time($refreshtime) {
