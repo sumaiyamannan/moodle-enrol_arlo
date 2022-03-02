@@ -25,7 +25,7 @@ require_once("$CFG->dirroot/login/lib.php");
 require_once(__DIR__ . '/classes/idpselectform.php');
 
 $PAGE->set_context(context_system::instance());
-$PAGE->set_url('/auth/catadmin/login.php');
+$PAGE->set_url(auth_plugin_catadmin::LOGIN_PATH);
 $PAGE->set_title('Catalyst SSO Login');
 $PAGE->set_heading('Catalyst SSO Login');
 
@@ -60,7 +60,7 @@ if (!empty($SESSION->catadminidp)) {
     $auth->requireAuth();
 }
 
-$action = new moodle_url('/auth/catadmin/login.php');
+$action = new moodle_url(auth_plugin_catadmin::LOGIN_PATH);
 $mform = new \auth_catadmin\idpselectform($action, $data);
 if ($form = $mform->get_data()) {
     if (!$auth->isAuthenticated()) {

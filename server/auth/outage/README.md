@@ -1,6 +1,4 @@
-<a href="https://travis-ci.org/catalyst/moodle-auth_outage">
-<img src="https://travis-ci.org/catalyst/moodle-auth_outage.svg?branch=master">
-</a>
+[![Build Status](https://github.com/catalyst/moodle-auth_outage/workflows/Run%20all%20tests%20for%20Moodle%2039+/badge.svg)](https://github.com/catalyst/moodle-auth_outage/actions)
 
 # Moodle Outage manager plugin
 * [Version Support](#version-support)
@@ -26,10 +24,7 @@ this plugin creates the concept of graduated outages where at predefined times b
 an outage and after, different levels of warning and access can be provided to students
 and testers letting them know what is about to happen and why.
 
-<img alt="Default" src="https://cdn.rawgit.com/catalyst/moodle-auth_outage/master/docs/default.svg" width="520">
-
-<img alt="Manager" src="https://cdn.rawgit.com/catalyst/moodle-auth_outage/master/docs/outage.svg" width="520">
-
+![image](https://user-images.githubusercontent.com/187449/149717343-1d2c5237-dbc6-4d2a-a08c-2bdb343e87d2.png)
 
 Moodle Requirements
 -------------------
@@ -42,12 +37,12 @@ need to manually add one extra plugin, please check:
 
 Branches
 --------
-| Moodle version     | Branch      | PHP  |
-| ----------------- | ----------- | ---- |
-| Moodle 2.7 to 3.2 | MOODLE_32_STABLE | 5.5+ |
-| Totara up to 10 | TOTARA_10 | 5.5+ |
-| Moodle 3.3+ | master | 7.0+ |
-| Totara 11+ | master | 7.0+ |
+| Moodle version     | Totara          | Branch           | PHP  |
+| ------------------ | --------------- | ---------------- | ---- |
+| Moodle 3.9+        | Totara 13+      | MOODLE_39_STABLE | 7.2+ |
+| Moodle 3.3 to 3.8  | Totara 11 to 12 | MOODLE_38_STABLE | 7.1+ |
+| Moodle 2.7 to 3.2  |                 | MOODLE_32_STABLE | 5.5+ |
+|                    | Totara up to 10 | TOTARA_10        | 5.5+ |
 
 Screenshots
 -----------

@@ -57,7 +57,6 @@ header('Accept-Ranges: none');
 
 /**
  * Callback used in bootstrap.
- * @SupressWarnings(PHPMD)
  */
 function auth_outage_bootstrap_callback() {
     // Not using classes as classloader has not been initialized yet. Keep it minimalist.
@@ -74,7 +73,9 @@ function auth_outage_bootstrap_callback() {
     exit(0);
 }
 
+// @codingStandardsIgnoreStart
 require_once(__DIR__.'/../../config.php');
+// @codingStandardsIgnoreEnd
 
 // We should never reach here if config.php and auth/outage/bootstrap.php intercepted it correctly.
 // If config.php did not execute the callback function we can use the debugging function here.

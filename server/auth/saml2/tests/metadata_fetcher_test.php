@@ -24,8 +24,6 @@
  */
 use auth_saml2\metadata_fetcher;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Testcase class for metadata_fetcher class.
  *
@@ -51,7 +49,7 @@ class auth_saml2_metadata_fetcher_testcase extends advanced_testcase {
      * Tear down after every test.
      */
     protected function tearDown(): void {
-        $this->prophet = null;
+        $this->prophet = null; // Required for Totara 12+ support (see issue #578).
     }
 
     public function test_fetch_metadata_404() {

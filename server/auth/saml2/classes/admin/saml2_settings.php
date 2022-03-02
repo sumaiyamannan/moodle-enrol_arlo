@@ -23,8 +23,6 @@
 
 namespace auth_saml2\admin;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * @package     auth_saml2
  * @author      Daniel Thee Roperto <daniel.roperto@catalyst-au.net>
@@ -51,4 +49,10 @@ abstract class saml2_settings {
     const OPTION_AUTO_LOGIN_SESSION = 1;
 
     const OPTION_AUTO_LOGIN_COOKIE = 2;
+
+    const OPTION_TOLOWER_EXACT = 0;
+
+    const OPTION_TOLOWER_LOWER_CASE = 1;
+
+    const OPTION_TOLOWER_CASE_INSENSITIVE = 2;
 }

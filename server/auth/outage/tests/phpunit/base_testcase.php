@@ -32,8 +32,7 @@
  */
 
 use auth_outage\dml\outagedb;
-
-defined('MOODLE_INTERNAL') || die();
+use auth_outage\local\outage;
 
 /**
  * auth_outage_base_testcase class.
@@ -42,7 +41,6 @@ defined('MOODLE_INTERNAL') || die();
  * @author     Daniel Thee Roperto <daniel.roperto@catalyst-au.net>
  * @copyright  2016 Catalyst IT
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @SuppressWarnings(public) Allow as many methods as needed.
  */
 abstract class auth_outage_base_testcase extends advanced_testcase {
     /**
@@ -66,12 +64,50 @@ abstract class auth_outage_base_testcase extends advanced_testcase {
         }
     }
 
+    /**
+     * Revoke permission to see info page.
+     */
+    protected function revoke_info_page_permissions() {
+        global $DB;
+
+        $guestrole = $DB->get_record('role', array('shortname' => 'guest'));
+        role_change_permission($guestrole->id, context_system::instance(), 'auth/outage:viewinfo', CAP_PREVENT);
+
+        $this->setGuestUser();
+    }
+
+    /**
+     * Get an outage object.
+     *
+     * @return \auth_outage\local\outage
+     */
+    protected function get_dummy_outage() {
+        $now = time();
+
+        return new outage([
+            'id' => 1,
+            'autostart' => false,
+            'warntime' => $now - 100,
+            'starttime' => $now + 100,
+            'stoptime' => $now + 200,
+            'title' => 'Title',
+            'description' => 'Description',
+        ]);
+    }
+
+    /**
+     * Setup testcase.
+     */
     public function setUp(): void {
         global $CFG;
 
         parent::setUp();
+        $this->resetAfterTest(true);
     }
 
+    /**
+     * Tear down to restore the original DB reference.
+     */
     public function tearDown(): void {
         global $DB;
 

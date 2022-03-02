@@ -29,6 +29,7 @@ use auth_outage\dml\outagedb;
 use auth_outage\local\controllers\maintenance_static_page;
 use auth_outage\output\renderer;
 use coding_exception;
+use curl;
 use Exception;
 use file_exception;
 use invalid_parameter_exception;
@@ -48,8 +49,10 @@ require_once(__DIR__.'/../../lib.php');
  */
 class outagelib {
 
+    /** Outage start. */
     const OUTAGE_START = '<!-- OUTAGESTART -->';
 
+    /** Outage end. */
     const OUTAGE_END = '<!-- OUTAGEEND -->';
 
     /**
@@ -57,30 +60,35 @@ class outagelib {
      */
     private static $injectcalled = false;
 
+    /**
+     * Fetches page.
+     * @param string $file file to be fetched
+     */
     public static function fetch_page($file) {
-        $curl = curl_init();
-        curl_setopt($curl, CURLOPT_URL, $file);
-        curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($curl, CURLOPT_SSL_VERIFYHOST, false);
-        curl_setopt($curl, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($curl, CURLOPT_CONNECTTIMEOUT, 5); // It is localhost, time to connect is enough.
-        curl_setopt($curl, CURLOPT_TIMEOUT, 60);
-        $contents = curl_exec($curl);
-        $mime = curl_getinfo($curl, CURLINFO_CONTENT_TYPE);
-        curl_close($curl);
+        global $CFG;
+        require_once($CFG->libdir . '/filelib.php');
+
+        $curl = new curl();
+        $contents = $curl->get($file);
+        $info = $curl->get_info();
+        if (!empty($info['content_type'])) {
+            $mime = $info['content_type'];
+        } else {
+            $mime = '';
+        }
         return compact('contents', 'mime');
     }
 
     /**
-     * Calls inject even if it was already called before.
+     * Resets inject called to allow the code to be regenerated.
      */
-    public static function reinject() {
+    public static function reset_injectcalled() {
         self::$injectcalled = false;
-        self::inject();
     }
 
     /**
      * Given a time, usually now, when is the next outage window?
+     * @param int $time time for next window
      */
     public static function get_next_window($time = null) {
 
@@ -100,19 +108,18 @@ class outagelib {
 
 
     /**
-     * Will check for ongoing or warning outages and will attach the message bar as required.
+     * Will check for ongoing or warning outages and will return the message bar as required.
+     *
+     * @return string|void CSS and HTML for the warning bar if it should be displayed
      */
-    public static function inject() {
-        global $CFG;
-
+    public static function get_inject_code() {
+        global $PAGE;
         // Ensure we do not kill the whole website in case of an error.
         try {
             // Check if we should inject the code.
             if (!self::injection_allowed()) {
                 return;
             }
-
-            self::clean_outages();
 
             // Check for a previewing outage, then for an active outage.
             $previewid = optional_param('auth_outage_preview', null, PARAM_INT);
@@ -136,8 +143,8 @@ class outagelib {
             }
 
             // There is a previewing or active outage.
-            $CFG->additionalhtmltopofbody = renderer::get()->render_warningbar($active, $time, false, $preview).
-                                            $CFG->additionalhtmltopofbody;
+            $renderer = $PAGE->get_renderer('auth_outage');
+            return $renderer->render_warningbar($active, $time, false, $preview);
         } catch (Exception $e) {
             debugging('Exception occured while injecting our code: '.$e->getMessage());
             debugging($e->getTraceAsString(), DEBUG_DEVELOPER);
@@ -205,6 +212,9 @@ class outagelib {
         }
     }
 
+    /**
+     * Checks if wwwroot accessible.
+     */
     private static function check_wwwroot_accessible() {
         global $CFG;
         $result = self::fetch_page($CFG->wwwroot);
@@ -362,16 +372,14 @@ EOT;
      * Generates a warning message in case the plugin is not active and configured.
      *
      * @return string
-     *
-     * @internal stdClass $CFG
-     * @internal bootstrap_renderer $OUTPUT
      */
     public static function generate_plugin_configuration_warning() {
         global $CFG, $OUTPUT, $PAGE;
 
         $message = [];
 
-        if (trim(self::get_config()->allowedips) != '' && (!isset($CFG->auth_outage_bootstrap_loaded) || !$CFG->auth_outage_bootstrap_loaded)) {
+        if (trim(self::get_config()->allowedips) != ''
+                && (!isset($CFG->auth_outage_bootstrap_loaded) || !$CFG->auth_outage_bootstrap_loaded)) {
             $message[] = get_string('configurationwarning', 'auth_outage');
         }
 
@@ -396,27 +404,5 @@ EOT;
         }
 
         return $message;
-    }
-
-    /**
-     * Checks $CFG->additionalhtmltopofbody for saved outages and removes them.
-     * We should only be temporarily injecting into that variable and not saving them to the database.
-     *
-     * @return string the cleaned content
-     */
-    public static function clean_outages() {
-        global $CFG;
-
-        // Replace the content to clean up pages that do not have the injection.
-        $re = '/' . self::OUTAGE_START . '[\s\S]*' . self::OUTAGE_END . '/m';
-        $replaced = preg_replace($re, '', $CFG->additionalhtmltopofbody);
-
-        // We have removed the outages and any duplicates as it should be injected and not saved to $CFG.
-        if ($CFG->additionalhtmltopofbody != $replaced) {
-            set_config('additionalhtmltopofbody', $replaced);
-            return $replaced;
-        }
-
-        return '';
     }
 }

@@ -26,8 +26,6 @@
 use auth_outage\dml\outagedb;
 use auth_outage\local\outage;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * events_test tests class.
  *
@@ -39,7 +37,7 @@ defined('MOODLE_INTERNAL') || die();
  * @copyright       Catalyst IT
  * @license         http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class events_test extends advanced_testcase {
+class auth_outage_events_test extends advanced_testcase {
     /**
      * @var outage|null Outage used in the tests.
      */
