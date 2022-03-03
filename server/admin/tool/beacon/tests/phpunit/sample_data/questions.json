@@ -1,0 +1,51 @@
+[
+  {
+    "type": "registration",
+    "id": "registration_query"
+  },
+  {
+    "type": "version_host",
+    "id": "moodle_version_query"
+  },
+  {
+    "type": "version_plugins",
+    "id": "moodle_plugin_versions",
+    "params": {
+      "extraplugins": ["auth_saml2", "mod_hvp"]
+    }
+  },
+  {
+    "type": "config",
+    "id": "saml_stats",
+    "params": {
+      "plugin": "auth_saml2",
+      "names": ["showidplink", "duallog"]
+    }
+  },
+  {
+    "type": "config",
+    "id": "core_config",
+    "params": {
+      "plugin": "core",
+      "names": ["version", "wwwroot"]
+    }
+  },
+  {
+    "type": "cfg",
+    "id": "config",
+    "params": {
+      "names": {
+          "wwwroot": "wwwroot",
+          "valuedoesnotexist": "value.does.not.exist",
+          "customkey": "tool_beacon_test.value.was.added"
+      }
+    }
+  },
+  {
+    "type": "sql_menu",
+    "id": "auth_plugin_stats",
+    "params": {
+      "sql": "select auth, count(auth) from {user} where deleted = 0 group by auth"
+    }
+  }
+]
