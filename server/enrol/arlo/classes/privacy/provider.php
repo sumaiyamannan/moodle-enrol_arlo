@@ -100,8 +100,7 @@ class provider implements
             'enrol_arlo_templateassociate',
             [
                 'usermodified' => 'privacy:metadata:field:usermodified'
-            ],
-            'privacy:metadata:enrol_arlo_templateassociate'
+            ]
         );
         $collection->add_subsystem_link('core_group', [], 'privacy:metadata:core_group');
         return $collection;
