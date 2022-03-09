@@ -1,7 +1,0 @@
-query totara_engage_access_options {
-  options: totara_engage_access_options {
-    __typename
-    value
-    label
-  }
-}

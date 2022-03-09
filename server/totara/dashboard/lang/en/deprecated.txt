@@ -1,2 +1,0 @@
-makedashboardmyhomepage,totara_dashboard
-makesitemyhomepage,totara_dashboard

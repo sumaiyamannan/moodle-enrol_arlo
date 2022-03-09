@@ -1,3 +1,0 @@
-mutation totara_mobile_set_fcmtoken($token: String) {
-  set_fcmtoken: totara_mobile_set_fcmtoken(token: $token)
-}

@@ -1,2 +1,0 @@
-enablefeedback360,totara_feedback360
-configenablefeedback360,totara_feedback360

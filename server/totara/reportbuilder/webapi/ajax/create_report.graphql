@@ -1,3 +1,0 @@
-mutation totara_reportbuilder_create_report($key: param_alphanumext!) {
-  totara_reportbuilder_create_report(key: $key)
-}

@@ -1,5 +1,0 @@
-mutation mod_perform_manually_delete_participant_instance(
-  $input: mod_perform_manually_delete_participant_input!
-) {
-  mod_perform_manually_delete_participant_instance(input: $input)
-}

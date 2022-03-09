@@ -1,6 +1,0 @@
-query mod_perform_participant_manageable_activities {
-  mod_perform_participant_manageable_activities {
-    id
-    name
-  }
-}

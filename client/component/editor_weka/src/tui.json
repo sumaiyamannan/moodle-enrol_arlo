@@ -1,5 +1,0 @@
-{
-  "component": "editor_weka",
-  "vendor": "totara",
-  "dependencies": ["ext_prosemirror"]
-}

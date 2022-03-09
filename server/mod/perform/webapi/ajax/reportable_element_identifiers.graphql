@@ -1,6 +1,0 @@
-query mod_perform_reportable_element_identifiers {
-  mod_perform_reportable_element_identifiers {
-    id
-    identifier
-  }
-}

@@ -1,3 +1,0 @@
-description_help,totara_appraisal
-enableappraisals,totara_appraisal
-configenableappraisals,totara_appraisal

@@ -1,3 +1,0 @@
-query message_popup_unread_count {
-  message_popup_unread_count
-}

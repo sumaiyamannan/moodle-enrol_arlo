@@ -1,6 +1,0 @@
-query pathway_manual_roles($subject_user: core_id) {
-  pathway_manual_roles(subject_user: $subject_user) {
-    name
-    display_name
-  }
-}

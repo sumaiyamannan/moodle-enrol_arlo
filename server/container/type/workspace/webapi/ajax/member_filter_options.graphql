@@ -1,7 +1,0 @@
-query container_workspace_member_filter_options {
-  sorts: container_workspace_member_sorts {
-    __typename
-    value
-    label(format: PLAIN)
-  }
-}

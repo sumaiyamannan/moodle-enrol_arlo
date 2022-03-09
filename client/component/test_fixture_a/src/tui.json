@@ -1,5 +1,0 @@
-{
-  "component": "test_fixture_a",
-  "vendor": "totara",
-  "dependencies": ["samples"]
-}

@@ -1,7 +1,0 @@
-query container_workspace_user_table_fields {
-  fields: container_workspace_user_table_fields {
-    __typename
-    position
-    label
-  }
-}

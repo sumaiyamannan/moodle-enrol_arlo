@@ -1,5 +1,0 @@
-nocsvfilepath,tool_totara_sync
-notifymessagestart,tool_totara_sync
-enablescheduledsync,tool_totara_sync
-generalsettings,tool_totara_sync
-managerjobassignmentidnumber,tool_totara_sync

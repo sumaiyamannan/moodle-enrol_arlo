@@ -1,6 +1,0 @@
-query mod_perform_manual_relationship_selector_options($activity_id: core_id!) {
-  mod_perform_manual_relationship_selector_options(activity_id: $activity_id) {
-    id
-    name
-  }
-}

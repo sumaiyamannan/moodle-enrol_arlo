@@ -1,8 +1,0 @@
-{
-  "component": "criteria_othercompetency",
-  "bundleWith": "totara_core",
-  "vendor": "totara",
-  "dependencies": [
-    "totara_criteria"
-  ]
-}

@@ -1,2 +1,0 @@
-redirect_message_go_to_active_catalog_link,totara_catalog
-catalog_title,totara_catalog

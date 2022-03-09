@@ -1,10 +1,23 @@
 {
-  "name": "totara/totara_meta",
-  "description": "Totara is a fully supported Open Source learning platform specifically designed for the requirements of corporate, industry and vocational training.",
-  "license": "proprietary",
-  "type": "metapackage",
-  "homepage": "https://www.totaralearning.com",
-  "require": {
-    "php": ">=7.2.10 <7.5"
-  }
+    "name": "arlo/moodle-enrol_arlo",
+    "description": "Arlo integration for Moodle",
+    "require": {
+        "php": ">=7.0 <7.3",
+        "ext-curl": "*",
+        "ext-date": "*",
+        "ext-dom": "*",
+        "guzzlehttp/guzzle": "6.3.*"
+    },
+    "authors": [
+        {
+            "name": "Troy Williams",
+            "email": "troy.williams@learningworks.co.nz",
+            "role": "Developer"
+        },
+        {
+            "name": "Mathew May",
+            "email": "mathew.may@learningworks.co.nz",
+            "role": "Developer"
+        }
+    ]
 }

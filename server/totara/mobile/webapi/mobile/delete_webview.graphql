@@ -1,3 +1,0 @@
-mutation totara_mobile_delete_webview($secret: String!) {
-  delete_webview: totara_mobile_delete_webview(secret: $secret)
-}

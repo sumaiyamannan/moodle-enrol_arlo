@@ -1,26 +1,35 @@
 <?php
-/**
- * This file is part of Totara Enterprise Extensions.
- *
- * Copyright (C) 2020 onwards Totara Learning Solutions LTD
- *
- * Totara Enterprise Extensions is provided only to Totara
- * Learning Solutions LTD’s customers and partners, pursuant to
- * the terms and conditions of a separate agreement with Totara
- * Learning Solutions LTD or its affiliate.
- *
- * If you do not have an agreement with Totara Learning Solutions
- * LTD, you may not access, use, modify, or distribute this software.
- * Please contact [licensing@totaralearning.com] for more information.
- *
- * @author Sam Hemelryk <sam.hemelryk@totaralearning.com>
- * @package totara
- */
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * This is here for Totara CI/CD and automatic deployment tools.
- * We intend to update our tools to not require this file in the future, at which point it will be removed.
+ * Version information.
+ *
+ * @author    Troy Williams
+ * @author    Corey Davis
+ * @package   enrol_arlo
+ * @copyright 2015 LearningWorks Ltd {@link http://www.learningworks.co.nz}
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$TOTARA = new \stdClass;
-$TOTARA->version    = '13.17';          // Please keep as string.
+defined('MOODLE_INTERNAL') || die();
+
+$plugin            = new stdClass();
+$plugin->version   = 2020073112;
+$plugin->requires  = 2017111300;        // See http://docs.moodle.org/dev/Moodle_Version
+$plugin->component = 'enrol_arlo';      // Full name of the plugin (used for diagnostics).
+$plugin->release   = '3.9.2';           // Human-friendly version name.
+$plugin->maturity  = MATURITY_STABLE;   // This version's maturity level.
+$plugin->dependencies = [];

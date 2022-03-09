@@ -1,6 +1,0 @@
-{
-    "plugins": ["../../.stylelint_plugins.js"],
-    "rules": {
-        "totara/at-extend-only-placeholders": true,
-    }
-}

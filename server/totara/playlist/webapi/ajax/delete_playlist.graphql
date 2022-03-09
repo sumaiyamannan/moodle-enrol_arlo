@@ -1,3 +1,0 @@
-mutation totara_playlist_delete_playlist($id: param_integer!) {
-  result: totara_playlist_delete(id: $id)
-}

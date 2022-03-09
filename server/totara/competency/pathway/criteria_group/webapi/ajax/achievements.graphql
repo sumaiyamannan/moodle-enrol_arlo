@@ -1,6 +1,0 @@
-query pathway_criteria_group_achievements($instance_id: core_id!) {
-  pathway_criteria_group_achievements(instance_id: $instance_id) {
-    instance_id
-    type
-  }
-}

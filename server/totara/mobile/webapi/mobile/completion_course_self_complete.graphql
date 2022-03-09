@@ -1,3 +1,0 @@
-mutation totara_mobile_completion_course_self_complete($courseid: core_id!) {
-  core_completion_course_self_complete(courseid: $courseid)
-}

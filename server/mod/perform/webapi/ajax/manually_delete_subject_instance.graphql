@@ -1,5 +1,0 @@
-mutation mod_perform_manually_delete_subject_instance(
-  $input: mod_perform_manually_delete_subject_input!
-) {
-  mod_perform_manually_delete_subject_instance(input: $input)
-}

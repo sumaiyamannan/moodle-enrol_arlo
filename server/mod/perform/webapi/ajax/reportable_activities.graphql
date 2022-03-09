@@ -1,6 +1,0 @@
-query mod_perform_reportable_activities {
-  mod_perform_reportable_activities {
-    id
-    name
-  }
-}

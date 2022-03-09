@@ -1,3 +1,0 @@
-query totara_tui_themes_with_variables($theme: param_component!) {
-  totara_tui_themes_with_variables(theme: $theme)
-}

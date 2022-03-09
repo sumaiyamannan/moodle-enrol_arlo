@@ -1,1 +1,0 @@
-requiredandlockednotallowed,totara_customfield
